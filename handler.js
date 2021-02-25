@@ -28,10 +28,12 @@ function initialize(directory, prefix) {
 
   pfix = prefix || pfix || "/";
 
+  if (directory.endsWith("/")) directory = directory.substring(0, directory.length - 1);
+
   //Import commands:
     var cmdfiles = fs.readdirSync(directory);
     cmdfiles.forEach((item) => {
-        var file = require(`./${directory}/${item.substring(0, item.length - 3)}`);
+        var file = require(`${directory}/${item.substring(0, item.length - 3)}`);
         if (file instanceof Command) {
             requisites.push(file);
         }
@@ -118,40 +120,58 @@ var presenceInterval = false;
  * A randomized presence message.
  * @returns {Presence}
  */
-function Presence(presences) {
+class Presence {
 
-    var options = presences;
-    var selected = options[index];
+  #options;
+  #selected;
+
+  /**
+   * 
+   * @param {String[]} presences - A list of presences to cycle through.
+   */
+  constructor(presences) {
+
+    this.#options = presences;
+    this.#selected = this.#options[index];
     index += 1;
-    if (index == options.length) index = 0;
+    if (index == this.#options.length)
+      index = 0;
 
-    this.get = () => {
-        return selected;
-    }
+  }
+
+  get get() { return this.#selected;}
 }
 
 /**
  * Extended Discord Client by Cannicide#2753
  * @author Cannicide#2753
  * @param {Object} p0 - Client options
- * @param {Array} p0.intents - List of discord intents to use.
- * @param {String} p0.name - The discord bot's name.
- * @param {Array} p0.presences - Presences ("playing _" statuses) to cycle through every 10 minutes.
- * @param {Object} p0.logs - Logging options
+ * @param {Array} [p0.intents] - List of discord intents to use.
+ * @param {String} [p0.name] - The discord bot's name.
+ * @param {Array} [p0.presences] - Presences ("playing _" statuses) to cycle through every 10 minutes.
+ * @param {Object} [p0.logs] - Logging options
  * @param {String} p0.logs.guildID - ID of the guild in which logging will occur.
  * @param {String} p0.logs.channelName - Name of the channel in which logging will occur.
- */
-function ExtendedClient({intents, name, presences, logs}) {
+ * @param {String} [p0.prefix] - The prefix to use for the bot's commands
+ * @param {Number} [p0.port] - The port for Express to listen on when initializing the Client. Defaults to the PORT environment variable.
+ * @param {String} [p0.twitch] - The twitch channel URL to use for the bot's presence. Defaults to Cannicide's twitch channel.
+ * @param {Object} [p0.autoInitialize] - Auto-initialization options.
+ * @param {Boolean} p0.autoInitialize.enabled - Automatically initializes the command handler and all commands.
+ * @param {String} [p0.autoInitialize.path] - The full path to your commands folder. Must be a path to a directory containing your command files.
+ */ 
+function ExtendedClient({intents, name, presences, logs, prefix, port, twitch, autoInitialize}) {
 
   if (client) return client;
   bot_intents = intents || bot_intents;
   name = name || "Discord Bot";
-  presences = presences || ["/help"];
   logs = logs || false;
 
   app.use(express.static('public'));
 
-  const listener = app.listen(process.env.PORT, function() {
+  port = port || process.env.PORT;
+  if (!port) throw new Error("Please specify a port to listen on when initializing your Elisif Client.");
+
+  const listener = app.listen(port, function() {
     console.log(`${name} listening on port ${listener.address().port}`);
   });
 
@@ -170,9 +190,13 @@ function ExtendedClient({intents, name, presences, logs}) {
     set: setPrefix
   };
 
+  if (prefix) client.prefix.set(prefix);
+
   client.intents = bot_intents;
   client.name = name;
   client.port = listener.address().port;
+  presences = presences || [`${client.prefix.get()}help`];
+  twitch = twitch || 'https://twitch.tv/cannicide';
 
   client.presenceCycler = (presenceArray) => {
 
@@ -182,7 +206,7 @@ function ExtendedClient({intents, name, presences, logs}) {
         var presence = new Presence(presenceArray);
 
         //Allows the status of the bot to be PURPLE (I don't stream on twitch anyways)
-        client.user.setActivity(presence.get(), { type: 'STREAMING', url: 'https://twitch.tv/cannicide' });
+        client.user.setActivity(presence.get(), { type: 'STREAMING', url: twitch });
     }
 
     //Cycles the presence every 10 minutes
@@ -209,7 +233,10 @@ function ExtendedClient({intents, name, presences, logs}) {
           if (!logChannel) return console.log(message);
           logChannel.messages.fetch(messageID).then(m => m.edit(message));
         }
-    }
+    };
+
+    if (autoInitialize && autoInitialize.enabled && autoInitialize.path) client.commands.initialize(autoInitialize.path, client.prefix.get());
+
   });
 
   return client;
