@@ -1,4 +1,5 @@
 var Command = require("../command");
+const client = new (require("../handler").Client)();
 
 module.exports = new Command("help", {
   desc: "Gets a list of all commands, parameters, and their descriptions.\nFormat: [optional] parameters, <required> parameters, optional (flag) parameters.",
@@ -12,13 +13,12 @@ module.exports = new Command("help", {
       flag: "Displays only basic command info."
     }
   ],
-  aliases: ["bothelp", "scavenger"]
+  aliases: ["bothelp", client.name ? client.name.replace(/[^a-zA-Z0-9]/g, "") : "elisifhelp"]
 }, (message) => {
 
     var cmds = new Command(false, {}).getCommands();
     var prefix = message.prefix;
     var args = message.args;
-    //var thumb = "https://cdn.discordapp.com/attachments/728320173009797190/751494625298219057/scavlogo.png";
     var thumb = message.guild.iconURL({dynamic: true});
 
     function getCommandUsage(item) {
@@ -100,7 +100,7 @@ module.exports = new Command("help", {
         ];
       }
 
-      if (res.name == "Eval Command" && fields) fields.find(field => field.name == "Use Requirements").value = "**Users:** Cannicide only";
+      if (res.name == "Eval Command" && fields) fields.find(field => field.name == "Use Requirements").value = "**Users:** Bot developers only";
 
       message.channel.embed({
         title: res.name,
@@ -123,7 +123,7 @@ module.exports = new Command("help", {
 
       message.channel.paginate({
         title: "**Commands**",
-        desc: "Scavenger is the official ScavengerCraft Discord Bot, created by Cannicide#2753.",
+        desc: client.description || "Now viewing the commands for this discord bot.",
         fields: pages.slice(0, 2),
         thumbnail: thumb
       }, pages, 2);

@@ -1,22 +1,12 @@
-//A command to allow me to execute code and determine values of variables from in Discord itself
+//A command to allow the bot developers to execute code and determine values of variables from in Discord itself
 
 const Command = require("../command");
 const evg = require("../evg");
-const Reactions = evg.resolve("giveaway");
 const Interface = require("../interface");
 const client = new (require("../handler").Client)();
 
-const utilities = {
-    drawGiveaway: (message) => {
-        require("./giveaway").drawWinners(message.client, Reactions.find(element => element.type == "giveaway"));
-    },
-    timeToMs: (time) => {
-        return require("./giveaway").convertToTime(time);
-    }
-}
-
 module.exports = new Command("eval", {
-    desc: "Command to allow the bot developer to evaluate code from within Discord.",
+    desc: "Command to allow the bot developers to evaluate code from within Discord.",
     args: [
         {
             name: "code",
