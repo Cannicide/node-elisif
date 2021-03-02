@@ -34,8 +34,14 @@ function initialize(directory, prefix) {
   //Get user's commands:
   var cmdfiles = fs.readdirSync(directory);
 
-  //Get aliases defined through Command constructor as well as enabled expansions:
+  //Get aliases defined through Command constructor:
   cmdfiles.push(aliases);
+
+  //Get enabled expansions:
+  var expansions = fs.readdirSync(__dirname + "/expansions");
+  expansions.forEach(expansion => {
+    if (client.expansions.includes(expansion.substring(0, expansion.length - 3))) cmdfiles.push(require(`${__dirname + "/expansions"}/${expansion.substring(0, expansion.length - 3)}`));
+  });
 
   //Import commands:
   cmdfiles.forEach((item) => {
@@ -173,8 +179,9 @@ class ExtendedClient extends Discord.Client {
    * @param {String} p0.authors[].username - The username of this developer. Does not need to match the actual discord username of this developer.
    * @param {String} p0.authors[].id - The Discord ID of this developer. Required for some features and expansions, such as the eval expansion.
    * @param {String} [p0.description] - The description of this discord bot. Used in some features and expansions, such as the help expansion.
+   * @param {["eval", "help"]} [p0.expansions] - Expansions, also known as prewritten command packs, to add to this discord bot.
    */ 
-  constructor({intents, name, presences, logs, prefix, port, twitch, autoInitialize, presenceDuration, authors, description}) {
+  constructor({intents, name, presences, logs, prefix, port, twitch, autoInitialize, presenceDuration, authors, description, expansions}) {
 
     super({intents: intents || bot_intents, ws:{intents: intents || bot_intents}});
 
@@ -210,6 +217,7 @@ class ExtendedClient extends Discord.Client {
 
     this.authors = authors;
     this.description = description;
+    this.expansions = expansions;
 
     this.intents = intents || bot_intents;
     this.name = name;
@@ -235,6 +243,8 @@ class ExtendedClient extends Discord.Client {
 
     }
 
+    client = this;
+
     this.once("ready", () => {
       this.presenceCycler(presences);
 
@@ -257,8 +267,6 @@ class ExtendedClient extends Discord.Client {
       if (autoInitialize && autoInitialize.enabled && autoInitialize.path) this.commands.initialize(autoInitialize.path, this.prefix.get());
 
     });
-
-    client = this;
 
   }
 
