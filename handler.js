@@ -169,8 +169,11 @@ class ExtendedClient extends Discord.Client {
    * @param {Boolean} p0.autoInitialize.enabled - Automatically initializes the command handler and all commands.
    * @param {String} [p0.autoInitialize.path] - The full path to your commands folder. Must be a path to a directory containing your command files.
    * @param {Number} [p0.presenceDuration] - How often to cycle through presences, in minutes. Defaults to 10 minutes.
+   * @param {Object[]} [p0.authors] - Details of the developer(s) and/or owner(s) of this bot.
+   * @param {String} p0.authors[].username - The username of this developer. Does not need to match the actual discord username of this developer.
+   * @param {String} p0.authors[].id - The Discord ID of this developer. Required for some features and expansions, such as the eval expansion.
    */ 
-  constructor({intents, name, presences, logs, prefix, port, twitch, autoInitialize, presenceDuration}) {
+  constructor({intents, name, presences, logs, prefix, port, twitch, autoInitialize, presenceDuration, authors}) {
 
     super({intents: intents || bot_intents, ws:{intents: intents || bot_intents}});
 
@@ -203,6 +206,8 @@ class ExtendedClient extends Discord.Client {
     };
 
     if (prefix) this.prefix.set(prefix);
+
+    this.authors = authors;
 
     this.intents = intents || bot_intents;
     this.name = name;
