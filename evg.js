@@ -18,7 +18,8 @@ const db = require("quick.db");
  * @param {boolean} [isTable] - Whether or not the filename is a path to a database table
  * @param {boolean} [ignoreErrors] - If true, does not send error message. Used for JSON importation in EvG 3.0.
  */
-function LegacyEvg(filename, isTable, ignoreErrors) {
+class LegacyEvg {
+  constructor(filename, isTable, ignoreErrors) {
 
     var storageSrc = __dirname + "/storage/" + filename + ".json";
 
@@ -30,20 +31,22 @@ function LegacyEvg(filename, isTable, ignoreErrors) {
         storage = filename == "" ? db.all() : db.get(filename);
       }
       else {
-        if (!fs.existsSync(storageSrc)) return false;
+        if (!fs.existsSync(storageSrc))
+          return false;
 
         try {
-            //Gets json file, and converts into JS object
-            storage = JSON.parse(fs.readFileSync(storageSrc));
+          //Gets json file, and converts into JS object
+          storage = JSON.parse(fs.readFileSync(storageSrc));
         }
         catch (err) {
-            if (!ignoreErrors) console.log("Reading JSON was not possible due to error: " + err);
-            return false;
+          if (!ignoreErrors)
+            console.log("Reading JSON was not possible due to error: " + err);
+          return false;
         }
       }
 
-        //Returns the storage object
-        return storage;
+      //Returns the storage object
+      return storage;
     }
 
     function setLS(newStorage) {
@@ -71,194 +74,208 @@ function LegacyEvg(filename, isTable, ignoreErrors) {
 
       var output = func(storage);
 
-      if (output) setLS(output);
-      else console.warn("Failed to update the storage, because no output was provided when using the LegacyEvg.edit() method.");
-    }
+      if (output)
+        setLS(output);
+      else
+        console.warn("Failed to update the storage, because no output was provided when using the LegacyEvg.edit() method.");
+    };
 
     if (isTable) {
       this.toModern = () => new Evg(filename);
     }
 
+  }
 }
 
-function Evg(tablePath, parentPath) {
+class Evg {
+  constructor(tablePath, parentPath) {
 
-  parentPath = parentPath || "";
-  if (parentPath != "") parentPath += ".";
+    parentPath = parentPath || "";
+    if (parentPath != "")
+      parentPath += ".";
 
-  var fullPath = parentPath + tablePath;
+    var fullPath = parentPath + tablePath;
 
-  var table = db;
+    var table = db;
 
-  this.get = (key) => {
-    if (!key) return this.all();
+    this.get = (key) => {
+      if (!key)
+        return this.all();
 
-    return table.get(`${fullPath}.${key}`);
+      return table.get(`${fullPath}.${key}`);
 
-  }
+    };
 
-  /**
-   * Returns a new EvG object containing the db table/sub-table at the specified key.
-   */
-  this.table = (key) => {
-    if (!key) return this.all();
+    /**
+     * Returns a new EvG object containing the db table/sub-table at the specified key.
+     */
+    this.table = (key) => {
+      if (!key)
+        return this.all();
 
-    return new Evg(key, fullPath);
-  }
+      return new Evg(key, fullPath);
+    };
 
-  this.all = () => {
-    var arr = db.get(fullPath);
+    this.all = () => {
+      var arr = db.get(fullPath);
 
-    if (arr && typeof arr === "object" && !Array.isArray(arr)) {
-      var inc = [];
-      Object.keys(arr).forEach(item => inc.push({key: item, value: arr[item]}));
+      if (arr && typeof arr === "object" && !Array.isArray(arr)) {
+        var inc = [];
+        Object.keys(arr).forEach(item => inc.push({ key: item, value: arr[item] }));
 
-      arr = inc;
-    }
-    else if (Array.isArray(arr)) arr = arr;
-    else arr = [];
-
-    return arr;
-  }
-
-  this.values = () => {
-    var arr = db.get(fullPath);
-
-    if (arr && typeof arr === "object" && !Array.isArray(arr)) {
-      arr = Object.values(arr);
-    }
-    else if (Array.isArray(arr)) arr = arr;
-    else arr = [];
-
-    return arr;
-  }
-
-  this.find = (func) => this.values().find(func);
-
-  this.filter = (func) => this.values().filter(func);
-
-  this.set = (key, value) => {
-
-    table.set(`${fullPath}.${key}`, value);
-
-    return this;
-
-  }
-
-  this.add = (key, amount) => {
-
-    table.add(`${fullPath}.${key}`, amount);
-
-    return this;
-
-  }
-
-  this.subtract = (key, amount) => {
-
-    table.subtract(`${fullPath}.${key}`, amount);
-
-    return this;
-
-  }
-
-  this.has = (key) => {
-    return table.has(`${fullPath}.${key}`);
-  }
-
-  this.remove = (key) => {
-    table.delete(`${fullPath}.${key}`);
-
-    return this;
-  }
-
-  this.splice = (index) => {
-    var arr = this.values();
-    arr.splice(index, 1);
-
-    table.set(fullPath, arr);
-    return this;
-  }
-
-  this.push = (key, value) => {
-    if (!key) return console.error("No key was specified at Evg.push()");
-
-    var path = `${fullPath}.${key}`;
-    if (!value) {
-      value = key;
-      path = `${fullPath}`;
-    }
-
-    table.push(path, value);
-    return this;
-
-  }
-
-  /**
-   * The full database object (root table).
-   */
-  this.root = () => db;
-
-  /**
-   * The parent database table (original tablePath).
-   */
-  this.parent = () => new Evg(parentPath.split(".")[0]);
-
-  /**
-   * Converts to LegacyEvg object (more backwards compatible with EvG 
-   * 2.0).
-   */
-  this.toLegacy = () => new LegacyEvg(fullPath, true);
-
-  /**
-   * Returns the full path to the current db table.
-   */
-  this.fullTablePath = () => fullPath;
-
-  /**
-   * Clears the entirety of the current db table.
-   */
-  this.clear = () => {
-    db.delete(fullPath);
-  }
-
-  /**
-   * Import data from a JSON file and insert it into the database. 
-   * Allows for importing EvG 2.0 data into EvG 3.0 storage. Any data 
-   * already in the EvG object storage is not replaced; only 
-   * insertions occur. Supports both objects and arrays stored in 
-   * JSON files.
-   * 
-   * @param {String} filename - Name of the JSON file
-   * @param {boolean} [del] - Delete the JSON file after importing (one-time import)
-   */
-  this.importJSON = (filename, del) => {
-    var filepath = __dirname + "/storage/" + filename + ".json";
-    if (!fs.existsSync(filepath)) return this;
-    
-    var legacy = new LegacyEvg(filename, false, false);
-    var json = legacy.get();
-
-    if (typeof json === "object" && !Array.isArray(json)) {
-      Object.keys(json).forEach(key => !this.has(key) ? this.set(key, json[key]) : "");
-    }
-    else if (Array.isArray(json)) {
-      json.forEach(item => !this.find(val => val == item) ? this.push(item) : "");
-    }
-
-    if (del && fs.existsSync(filepath)) {
-      try {
-        fs.unlinkSync(filepath);
+        arr = inc;
       }
-      catch (err) {
-        //File already deleted.
-        //Catch the error
-        console.log("An error occurred when deleting a JSON file.");
+      else if (Array.isArray(arr))
+        arr = arr;
+      else
+        arr = [];
+
+      return arr;
+    };
+
+    this.values = () => {
+      var arr = db.get(fullPath);
+
+      if (arr && typeof arr === "object" && !Array.isArray(arr)) {
+        arr = Object.values(arr);
       }
-    }
+      else if (Array.isArray(arr))
+        arr = arr;
+      else
+        arr = [];
 
-    return this;
+      return arr;
+    };
+
+    this.find = (func) => this.values().find(func);
+
+    this.filter = (func) => this.values().filter(func);
+
+    this.set = (key, value) => {
+
+      table.set(`${fullPath}.${key}`, value);
+
+      return this;
+
+    };
+
+    this.add = (key, amount) => {
+
+      table.add(`${fullPath}.${key}`, amount);
+
+      return this;
+
+    };
+
+    this.subtract = (key, amount) => {
+
+      table.subtract(`${fullPath}.${key}`, amount);
+
+      return this;
+
+    };
+
+    this.has = (key) => {
+      return table.has(`${fullPath}.${key}`);
+    };
+
+    this.remove = (key) => {
+      table.delete(`${fullPath}.${key}`);
+
+      return this;
+    };
+
+    this.splice = (index) => {
+      var arr = this.values();
+      arr.splice(index, 1);
+
+      table.set(fullPath, arr);
+      return this;
+    };
+
+    this.push = (key, value) => {
+      if (!key)
+        return console.error("No key was specified at Evg.push()");
+
+      var path = `${fullPath}.${key}`;
+      if (!value) {
+        value = key;
+        path = `${fullPath}`;
+      }
+
+      table.push(path, value);
+      return this;
+
+    };
+
+    /**
+     * The full database object (root table).
+     */
+    this.root = () => db;
+
+    /**
+     * The parent database table (original tablePath).
+     */
+    this.parent = () => new Evg(parentPath.split(".")[0]);
+
+    /**
+     * Converts to LegacyEvg object (more backwards compatible with EvG
+     * 2.0).
+     */
+    this.toLegacy = () => new LegacyEvg(fullPath, true);
+
+    /**
+     * Returns the full path to the current db table.
+     */
+    this.fullTablePath = () => fullPath;
+
+    /**
+     * Clears the entirety of the current db table.
+     */
+    this.clear = () => {
+      db.delete(fullPath);
+    };
+
+    /**
+     * Import data from a JSON file and insert it into the database.
+     * Allows for importing EvG 2.0 data into EvG 3.0 storage. Any data
+     * already in the EvG object storage is not replaced; only
+     * insertions occur. Supports both objects and arrays stored in
+     * JSON files.
+     *
+     * @param {String} filename - Name of the JSON file
+     * @param {boolean} [del] - Delete the JSON file after importing (one-time import)
+     */
+    this.importJSON = (filename, del) => {
+      var filepath = __dirname + "/storage/" + filename + ".json";
+      if (!fs.existsSync(filepath))
+        return this;
+
+      var legacy = new LegacyEvg(filename, false, false);
+      var json = legacy.get();
+
+      if (typeof json === "object" && !Array.isArray(json)) {
+        Object.keys(json).forEach(key => !this.has(key) ? this.set(key, json[key]) : "");
+      }
+      else if (Array.isArray(json)) {
+        json.forEach(item => !this.find(val => val == item) ? this.push(item) : "");
+      }
+
+      if (del && fs.existsSync(filepath)) {
+        try {
+          fs.unlinkSync(filepath);
+        }
+        catch (err) {
+          //File already deleted.
+          //Catch the error
+          console.log("An error occurred when deleting a JSON file.");
+        }
+      }
+
+      return this;
+    };
+
   }
-
 }
 
 /**
