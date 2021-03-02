@@ -1,7 +1,7 @@
 //Jay's Command Class v2.0
 //Now includes simplified constructor, command cooldown, alias options, channel restrictions, and DM-only commands.
 
-const aliasCache = require("./commands/aliases");
+const aliasCache = require("./aliases");
 const Interface = require("./interface");
 const Interpreter = require("./interpreter");
 const evg = require("./evg");

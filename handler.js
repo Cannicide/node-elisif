@@ -25,31 +25,37 @@ function initialize(directory, prefix) {
   * @type Command[]
   */
   var requisites = [];
+  var aliases = require("./aliases");
 
   pfix = prefix || pfix || "/";
 
   if (directory.endsWith("/")) directory = directory.substring(0, directory.length - 1);
 
+  //Get user's commands:
+  var cmdfiles = fs.readdirSync(directory);
+
+  //Get aliases defined through Command constructor as well as enabled expansions:
+  cmdfiles.push(aliases);
+
   //Import commands:
-    var cmdfiles = fs.readdirSync(directory);
-    cmdfiles.forEach((item) => {
-        var file = require(`${directory}/${item.substring(0, item.length - 3)}`);
-        if (file instanceof Command) {
-            requisites.push(file);
-        }
-        else if ("commands" in file) {
-            file.commands.forEach((alias) => {
-                if (alias instanceof Command) requisites.push(alias);
-            })
+  cmdfiles.forEach((item) => {
+      var file = require(`${directory}/${item.substring(0, item.length - 3)}`);
+      if (file instanceof Command) {
+          requisites.push(file);
+      }
+      else if ("commands" in file) {
+          file.commands.forEach((alias) => {
+              if (alias instanceof Command) requisites.push(alias);
+          })
 
-            if (typeof file.initialize === 'function') {
-              file.initialize();
-            }
-        }
-    });
+          if (typeof file.initialize === 'function') {
+            file.initialize();
+          }
+      }
+  });
 
-    commands = requisites[requisites.length - 1].getCommands();
-    return commands;
+  commands = requisites[requisites.length - 1].getCommands();
+  return commands;
 
 }
 
