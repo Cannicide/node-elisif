@@ -155,7 +155,7 @@ function Interface(message, question, callback, type, options) {
  * @param {function(message, reaction)} callback - Callback to execute on collect
  * @param {Number} [time] - Optional time in milliseconds to wait for reaction
  */
-function ReactionInterface(message, question, reactions, callback, time) {
+function ReactionInterface(message, question, reactions, callback, time, allUsers) {
 
     message.channel.send(question).then(m => {
 
@@ -166,7 +166,7 @@ function ReactionInterface(message, question, reactions, callback, time) {
             if (previous) previous = previous.then(r => {return m.react(reaction)})
             else previous = m.react(reaction);
 
-            let collector = m.createReactionCollector((r, user) => (r.emoji.name === reaction || r.emoji.id === reaction) && user.id === message.author.id, { time: time || 120000 });
+            let collector = m.createReactionCollector((r, user) => (r.emoji.name === reaction || r.emoji.id === reaction) && (allUsers || user.id === message.author.id), { time: time || 120000 });
 
             collector.on("collect", r => {
                 r.users.remove(message.author);
@@ -189,7 +189,7 @@ function ReactionInterface(message, question, reactions, callback, time) {
  * @param {String} elements[].value - Field content
  * @param {Number} perPage - Number of elements per page
  */
-function Paginator(message, embed, elements, perPage) {
+function Paginator(message, embed, elements, perPage, allUsers) {
 
     var insertions = 0;
     var pages = [];
@@ -242,7 +242,7 @@ function Paginator(message, embed, elements, perPage) {
             }
         }
 
-    }, 1000 * 60 * 60);
+    }, 1000 * 60 * 60, allUsers);
 
 }
 
