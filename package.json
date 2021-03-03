@@ -1,11 +1,8 @@
 {
   "name": "elisif",
-  "version": "1.0.0",
+  "version": "1.8.3",
   "description": "A powerful Discord Bot container, command handler, and partial extension of discord.js.",
-  "main": "server.js",
-  "scripts": {
-    "start": "node server.js"
-  },
+  "main": "index.js",
   "dependencies": {
     "express": "^4.17.1",
     "discord.js": "^12.5.1",
@@ -27,6 +24,8 @@
     "discord",
     "discord.js",
     "discord bot",
-    "command handler"
+    "command handler",
+    "elisif",
+    "cannicide"
   ]
 }
