@@ -13,7 +13,7 @@ module.exports = new Command("help", {
       flag: "Displays only basic command info."
     }
   ],
-  aliases: ["bothelp", client.name ? client.name.replace(/[^a-zA-Z0-9]/g, "") : "elisifhelp"]
+  aliases: ["bothelp", client.name ? client.name.toLowerCase().replace(/[^a-z0-9]/g, "") : "elisifhelp"]
 }, (message) => {
 
     var cmds = new Command(false, {}).getCommands();

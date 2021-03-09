@@ -4,6 +4,9 @@
 //Command class
 const Command = require("./command");
 
+//Global settings
+const Settings = require("./settings").Global();
+
 //Express app initialized
 const express = require('express');
 const app = express();
@@ -20,6 +23,9 @@ const fs = require("fs");
 
 var commands = [];
 var pfix = "/";
+/**
+ * @type ExtendedClient
+ */
 var client = false;
 
 function initialize(directory, prefix) {
@@ -65,7 +71,7 @@ function initialize(directory, prefix) {
 
   commands = requisites[requisites.length - 1].getCommands();
 
-  console.log("Loaded commands:", commands.map(v => v.name));
+  if (Settings.get("debug_mode")) console.log("Loaded commands:", commands.map(v => v.name));
 
   return commands;
 
@@ -231,6 +237,8 @@ class ExtendedClient extends Discord.Client {
     presences = presences || [`${this.prefix.get()}help`];
     twitch = twitch || 'https://twitch.tv/cannicide';
 
+    if (!Settings.exists()) Settings.setGlobalDefaults();
+
     this.presenceCycler = (presenceArray) => {
 
       if (presenceInterval) clearInterval(presenceInterval);
@@ -277,6 +285,9 @@ class ExtendedClient extends Discord.Client {
 
   }
 
+  /**
+   * @return ExtendedClient
+   */
   static getInstance() {
     return client;
   }

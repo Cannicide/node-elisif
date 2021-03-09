@@ -66,9 +66,11 @@ class Command {
     aliases = aliases || [];
     channels = channels || [];
 
+    const client = require("./index").Client.getInstance();
+
     //Add default, bot-specific alias
     if (name && method && !isalias)
-      aliases.push("scav:" + name);
+      aliases.push(`${client.name ? client.name.toLowerCase().replace(/[^a-z0-9]/g, "") : "elisif"}:` + name);
 
     //Add restricted channel if non-existent
     channels.forEach(channel => {

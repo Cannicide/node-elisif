@@ -22,12 +22,21 @@ class LocalSettings {
         return this.#table.get(setting);
     }
 
+    exists() {
+        return evg.has(this.getLocale()) && evg.get(this.getLocale()) != null;
+    }
+
     getLocale() {
         return this.#id;
     }
 
     set(setting, value) {
         this.#table.set(setting, value);
+    }
+
+    setLocalDefaults() {
+        this.set("channelfx", []);
+        this.set("nickname", false);
     }
 
     isLocal() {
@@ -57,50 +66,27 @@ class GlobalSettings extends LocalSettings {
         return true;
     }
 
-}
-
-class DefaultGlobalSettings extends GlobalSettings {
-
-    #presence_cycler = true;
-
-    /**
-     * The default Global settings for the bot
-     */
-    constructor() {
-        super();
-    }
-
     setGlobalDefaults() {
-        this.set("presence_cycler", this.#presence_cycler);
-    }
-
-}
-
-class DefaultLocalSettings extends LocalSettings {
-
-    #channelfx = [];
-    #nickname = false;
-
-    /**
-     * The default Local settings for any given guild.
-     * @param {String} locale - Location at which to save local settings. Usually a guild ID.
-     */
-    constructor(locale) {
-        super(locale);
+        this.set("presence_cycler", true);
+        this.set("debug_mode", false)
     }
 
     setLocalDefaults() {
-        this.set("channelfx", this.#channelfx);
-        this.set("nickname", this.#nickname);
+        this.setGlobalDefaults();
+        console.warn("Warning: setLocalDefaults() was called on Global Settings object.");
     }
 
 }
 
-module.exports = {
-    Global: GlobalSettings,
-    Local: LocalSettings,
-    default: {
-        Local: DefaultLocalSettings,
-        Global: DefaultGlobalSettings
+class Settings {
+
+    static Global() { 
+        return new GlobalSettings();
+    }
+    
+    static Local(locale) {
+        return new LocalSettings(locale);
     }
 }
+
+module.exports = Settings;
