@@ -19,6 +19,7 @@ class NodeElisif extends Handler {
     #instance;
 
     constructor() {
+        super();
         this.#instance = this;
     }
 

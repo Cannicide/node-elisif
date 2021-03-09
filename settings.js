@@ -22,7 +22,7 @@ class LocalSettings {
         return this.#table.get(setting);
     }
 
-    get getLocale() {
+    getLocale() {
         return this.#id;
     }
 

@@ -1,5 +1,5 @@
 var Command = require("../command");
-const client = new (require("../handler").Client)();
+const client = require("../index").Client.getInstance();
 
 module.exports = new Command("help", {
   desc: "Gets a list of all commands, parameters, and their descriptions.\nFormat: [optional] parameters, <required> parameters, optional (flag) parameters.",

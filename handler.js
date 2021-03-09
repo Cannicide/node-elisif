@@ -10,7 +10,10 @@ const app = express();
 
 //Discord.js initialized
 const Discord = require('discord.js');
-var bot_intents = [];
+var bot_intents = ["GUILDS", "GUILD_BANS", "GUILD_VOICE_STATES", "GUILD_MESSAGES", "GUILD_MESSAGE_REACTIONS", "GUILD_MESSAGE_TYPING", "DIRECT_MESSAGES"];
+const allIntents = Object.assign([], bot_intents);
+allIntents.push("GUILD_MEMBERS");
+allIntents.push("GUILD_PRESENCES");
 
 //File system initialized
 const fs = require("fs");
@@ -45,7 +48,7 @@ function initialize(directory, prefix) {
 
   //Import commands:
   cmdfiles.forEach((item) => {
-      var file = require(`${directory}/${item.substring(0, item.length - 3)}`);
+      var file = typeof item === 'string' ? require(`${directory}/${item.substring(0, item.length - 3)}`) : item;
       if (file instanceof Command) {
           requisites.push(file);
       }
@@ -61,6 +64,9 @@ function initialize(directory, prefix) {
   });
 
   commands = requisites[requisites.length - 1].getCommands();
+
+  console.log("Loaded commands:", commands.map(v => v.name));
+
   return commands;
 
 }
@@ -151,7 +157,7 @@ class Presence {
 
   }
 
-  get get() { return this.#selected;}
+  get() { return this.#selected;}
 }
 
 class ExtendedClient extends Discord.Client {
@@ -163,6 +169,7 @@ class ExtendedClient extends Discord.Client {
    * @author Cannicide#2753
    * @param {Object} p0 - Client options
    * @param {Array} [p0.intents] - List of discord intents to use.
+   * @param {boolean} [p0.privilegedIntents] - Whether to enable priveleged intents.
    * @param {String} [p0.name] - The discord bot's name.
    * @param {Array} [p0.presences] - Presences ("playing _" statuses) to cycle through (every 10 minutes or as set in presenceDuration).
    * @param {Object} [p0.logs] - Logging options
@@ -181,12 +188,11 @@ class ExtendedClient extends Discord.Client {
    * @param {String} [p0.description] - The description of this discord bot. Used in some features and expansions, such as the help expansion.
    * @param {["eval", "help"]} [p0.expansions] - Expansions, also known as prewritten command packs, to add to this discord bot.
    */ 
-  constructor({intents, name, presences, logs, prefix, port, twitch, autoInitialize, presenceDuration, authors, description, expansions}) {
+  constructor({intents, privilegedIntents, name, presences, logs, prefix, port, twitch, autoInitialize, presenceDuration, authors, description, expansions}) {
 
-    super({intents: intents || bot_intents, ws:{intents: intents || bot_intents}});
+    super({intents: privilegedIntents ? allIntents : intents || bot_intents, ws:{intents: privilegedIntents ? allIntents : intents || bot_intents}});
 
     if (client) {
-      this = client;
       return client;
     }
 
@@ -246,6 +252,7 @@ class ExtendedClient extends Discord.Client {
     client = this;
 
     this.once("ready", () => {
+      console.log(`${name} is up and running!`);
       this.presenceCycler(presences);
 
       const logGuild = logs ? this.guilds.cache.get(logs.guildID) : false;
@@ -268,6 +275,10 @@ class ExtendedClient extends Discord.Client {
 
     });
 
+  }
+
+  static getInstance() {
+    return client;
   }
 
 }
@@ -373,8 +384,8 @@ class ExtendedClient extends Discord.Client {
 
 // }
 
-module.exports = {
-  Client: ExtendedClient,
-  express: app,
-  Discord: Discord
+module.exports = class Handler {
+  Client = ExtendedClient;
+  express = app;
+  Discord = Discord
 }
