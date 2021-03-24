@@ -177,12 +177,29 @@ function ExtendedChannel(ExtendableChannel) {
             return this.send(embed);
         }
 
-        textInterface(question, callback) {
-            return new Elisif.interface.Interface(this.lastMessage, question, callback);
+        /**
+         * Creates an interface to receive message input from users.
+         * @param {*} question - The question or prompt to send to users for their input.
+         * @returns Promise; (message, questionMessage) => {}
+         */
+        textInterface(question) {
+            return new Promise(function(resolve, reject) {
+                new Elisif.interface.Interface(this.lastMessage, question, resolve);
+            });
         }
 
-        reactionInterface(question, reactions, callback) {
-            return new Elisif.interface.ReactionInterface(this.lastMessage, question, reactions, callback);
+        /**
+         * Creates an interface to receive reaction input from users.
+         * @param {*} question - The question or prompt to send to users for their input.
+         * @param {*} reactions - The specific reactions to look for.
+         * @param {*} time - The amount of time to keep the interface open.
+         * @param {*} allUsers - Whether or not to receive input from all users, or just from the message author.
+         * @returns Promise; (message, reaction) => {}
+         */
+        reactionInterface(question, reactions, time, allUsers) {
+            return new Promise(function(resolve, reject) {
+                new Elisif.interface.ReactionInterface(this.lastMessage, question, reactions, resolve, time, allUsers);
+            });
         }
 
         /**
@@ -205,6 +222,15 @@ function ExtendedChannel(ExtendableChannel) {
             return new Elisif.interpreter.ReactionLode(type);
         }
 
+        /**
+         * Creates a new Pagination menu, a reaction collector that cycles through pages on user reaction
+         * @param {Object} message - Discord message object
+         * @param {EmbedMessage} embed - Message to send and paginate
+         * @param {Object[]} elements - Array of fields to cycle through when paginating
+         * @param {String} elements[].name - Field title
+         * @param {String} elements[].value - Field content
+         * @param {Number} perPage - Number of elements per page
+         */
         paginate(options, elements, perPage) {
             let embed = new Elisif.interface.Embed(this.lastMessage, options);
             return new Elisif.interface.Paginator(message, embed, elements, perPage);
