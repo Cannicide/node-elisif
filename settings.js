@@ -13,6 +13,8 @@ class LocalSettings {
      */
     constructor(locale) {
 
+        if (isNaN(locale) && locale != "global") throw new Error("Invalid locale passed to LocalSettings constructor.");
+
         this.#id = locale;
         this.#table = evg.table(locale);
 
@@ -23,7 +25,7 @@ class LocalSettings {
     }
 
     exists() {
-        return evg.has(this.getLocale()) && evg.get(this.getLocale()) != null;
+        return evg.has(this.getLocale()) && evg.get(this.getLocale()) != null && Object.keys(evg.get(this.getLocale())).length > 0;
     }
 
     getLocale() {
@@ -37,6 +39,8 @@ class LocalSettings {
     setLocalDefaults() {
         this.set("channelfx", []);
         this.set("nickname", false);
+        this.set("settings_default", true);
+        this.set("local_prefix", false);
     }
 
     isLocal() {
@@ -45,6 +49,10 @@ class LocalSettings {
 
     isGlobal() {
         return false;
+    }
+
+    isDefault() {
+        return this.get("settings_default");
     }
 
 }
@@ -68,12 +76,14 @@ class GlobalSettings extends LocalSettings {
 
     setGlobalDefaults() {
         this.set("presence_cycler", true);
-        this.set("debug_mode", false)
+        this.set("debug_mode", false);
+        this.set("settings_default", true);
+        this.set("global_prefix", "/");
     }
 
     setLocalDefaults() {
         this.setGlobalDefaults();
-        console.warn("Warning: setLocalDefaults() was called on Global Settings object.");
+        console.warn("Warning: setLocalDefaults() was called on GlobalSettings object. Defaulted to setGlobalDefaults().");
     }
 
 }
@@ -81,11 +91,21 @@ class GlobalSettings extends LocalSettings {
 class Settings {
 
     static Global() { 
-        return new GlobalSettings();
+        var settings = new GlobalSettings();
+
+        if (!settings.exists()) settings.setGlobalDefaults();
+
+        return settings;
+
     }
     
     static Local(locale) {
-        return new LocalSettings(locale);
+        var settings = new LocalSettings(locale);
+
+        if (!settings.exists()) settings.setLocalDefaults();
+
+        return settings;
+
     }
 }
 

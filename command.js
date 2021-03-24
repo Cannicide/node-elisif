@@ -57,6 +57,11 @@ class Alias {
   * @param {Boolean} [options.args[].flag] - Whether or not this argument is a flag, for documentation purposes.
  */
 class Command {
+
+  static get channelCommandMap() {return channelCommandMap;}
+
+  static get commands() {return commands;}
+
   constructor(name, { perms = false, roles = false, invisible = false, desc = "", dm_only = false, cooldown = false, aliases = false, channels = false, isalias = false, args = false }, method) {
     var message = false;
     var prefix = false;

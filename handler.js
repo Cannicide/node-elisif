@@ -5,7 +5,7 @@
 const Command = require("./command");
 
 //Global settings
-const Settings = require("./settings").Global();
+const Settings = require("./settings");
 
 //Express app initialized
 const express = require('express');
@@ -79,10 +79,12 @@ function initialize(directory, prefix) {
 
 function setPrefix(prefix) {
   pfix = prefix || pfix || "/";
+  Settings.Global().set("global_prefix", pfix);
   return pfix;
 }
 
 function getPrefix() {
+  pfix = Settings.Global().get("global_prefix");
   return pfix;
 }
 
@@ -90,13 +92,16 @@ function handleCommand(message, cmds) {
 
   cmds = cmds || commands;
 
+  var localPrefix = getPrefix();
+  if (Settings.Local().get("local_prefix")) localPrefix = Settings.Local().get("local_prefix");
+
   //Command determination:
 
   var components = message.content.split(" ");
   var commandWithPrefix = components[0].toLowerCase();
   var args = components.slice(1);
 
-  var escapedPrefix = pfix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); //Potentially might need to add another back slash to second param here
+  var escapedPrefix = localPrefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   var foundPrefix = new RegExp(escapedPrefix);
 
   var command = commandWithPrefix.replace(foundPrefix, "");
@@ -119,7 +124,7 @@ function handleCommand(message, cmds) {
     message.channel.startTyping();
 
     setTimeout(() => {
-        cmd.set(message, pfix);
+        cmd.set(message, localPrefix);
 
         cmd.execute(args).catch(err => {
           message.reply("an error occurred:\n\n" + err);
@@ -217,7 +222,10 @@ class ExtendedClient extends Discord.Client {
     this.commands = {
       initialize: initialize,
       handle: handleCommand,
-      get: () => commands
+      get: (specificCommand) => {
+        if (!specificCommand) return commands;
+        else return commands.find(v => v.name == specificCommand);
+      }
     };
 
     this.prefix = {
@@ -236,8 +244,6 @@ class ExtendedClient extends Discord.Client {
     this.port = listener.address().port;
     presences = presences || [`${this.prefix.get()}help`];
     twitch = twitch || 'https://twitch.tv/cannicide';
-
-    if (!Settings.exists()) Settings.setGlobalDefaults();
 
     this.presenceCycler = (presenceArray) => {
 
@@ -293,107 +299,6 @@ class ExtendedClient extends Discord.Client {
   }
 
 }
-
-// /**
-//  * Extended Discord Client by Cannicide#2753
-//  * @author Cannicide#2753
-//  * @param {Object} p0 - Client options
-//  * @param {Array} [p0.intents] - List of discord intents to use.
-//  * @param {String} [p0.name] - The discord bot's name.
-//  * @param {Array} [p0.presences] - Presences ("playing _" statuses) to cycle through every 10 minutes.
-//  * @param {Object} [p0.logs] - Logging options
-//  * @param {String} p0.logs.guildID - ID of the guild in which logging will occur.
-//  * @param {String} p0.logs.channelName - Name of the channel in which logging will occur.
-//  * @param {String} [p0.prefix] - The prefix to use for the bot's commands
-//  * @param {Number} [p0.port] - The port for Express to listen on when initializing the Client. Defaults to the PORT environment variable.
-//  * @param {String} [p0.twitch] - The twitch channel URL to use for the bot's presence. Defaults to Cannicide's twitch channel.
-//  * @param {Object} [p0.autoInitialize] - Auto-initialization options.
-//  * @param {Boolean} p0.autoInitialize.enabled - Automatically initializes the command handler and all commands.
-//  * @param {String} [p0.autoInitialize.path] - The full path to your commands folder. Must be a path to a directory containing your command files.
-//  */ 
-// function ExtendedClient({intents, name, presences, logs, prefix, port, twitch, autoInitialize}) {
-
-//   if (client) return client;
-//   bot_intents = intents || bot_intents;
-//   name = name || "Discord Bot";
-//   logs = logs || false;
-
-//   app.use(express.static('public'));
-
-//   port = port || process.env.PORT;
-//   if (!port) throw new Error("Please specify a port to listen on when initializing your Elisif Client.");
-
-//   const listener = app.listen(port, function() {
-//     console.log(`${name} listening on port ${listener.address().port}`);
-//   });
-
-//   var local_client = new Discord.Client({intents: bot_intents, ws:{intents: bot_intents}});
-
-//   client = local_client;
-  
-//   client.commands = {
-//     initialize: initialize,
-//     handle: handleCommand,
-//     get: () => commands
-//   };
-
-//   client.prefix = {
-//     get: getPrefix,
-//     set: setPrefix
-//   };
-
-//   if (prefix) client.prefix.set(prefix);
-
-//   client.intents = bot_intents;
-//   client.name = name;
-//   client.port = listener.address().port;
-//   presences = presences || [`${client.prefix.get()}help`];
-//   twitch = twitch || 'https://twitch.tv/cannicide';
-
-//   client.presenceCycler = (presenceArray) => {
-
-//     if (presenceInterval) clearInterval(presenceInterval);
-
-//     function setPresence() {
-//         var presence = new Presence(presenceArray);
-
-//         //Allows the status of the bot to be PURPLE (I don't stream on twitch anyways)
-//         client.user.setActivity(presence.get(), { type: 'STREAMING', url: twitch });
-//     }
-
-//     //Cycles the presence every 10 minutes
-//     presenceInterval = setInterval(setPresence, 10 * 60 * 1000);
-    
-//     setPresence("immediate action");
-
-//   }
-
-//   client.once("ready", () => {
-//     client.presenceCycler(presences);
-
-//     const logGuild = logs ? client.guilds.cache.get(logs.guildID) : false;
-//     const logChannel = logs && logGuild ? logGuild.channels.cache.get(logGuild.channels.cache.find(c => c.name == logs.channelName).id) : false;
-
-//     client.logs = {
-//         guild: logGuild,
-//         channel: logChannel,
-//         send: (message) => {
-//           if (!logChannel) return console.log(message);
-//           logChannel.send(message);
-//         },
-//         edit: (messageID, message) => {
-//           if (!logChannel) return console.log(message);
-//           logChannel.messages.fetch(messageID).then(m => m.edit(message));
-//         }
-//     };
-
-//     if (autoInitialize && autoInitialize.enabled && autoInitialize.path) client.commands.initialize(autoInitialize.path, client.prefix.get());
-
-//   });
-
-//   return client;
-
-// }
 
 module.exports = class Handler {
   Client = ExtendedClient;

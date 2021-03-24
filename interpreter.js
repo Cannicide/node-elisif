@@ -86,7 +86,7 @@ class Interpreter {
      * Registers interpreters of any specified type.
      * @param {Object} options - All options for the interpreter to register.
      * @param {String} options.type - The type of interpreter (message/dm/reaction) to register.
-     * @param {Function} options.filter - A function that accepts (args) for messages/dms or (reactionInterpreter, isAdding) for reactions; and checks whether or not the input should be responded to.
+     * @param {Function} options.filter - A function that accepts (message, args) for messages/dms or (reactionInterpreter, isAdding) for reactions; and checks whether or not the input should be responded to.
      * @param {Function} options.response - A function that accepts (message, args) for messages/dms or (reaction, user) for reactions; and uses these parameters to respond to an interpreted input that passes the filter check.
      */
     this.register = ({ type, filter, response }) => {
@@ -143,11 +143,16 @@ class Interpreter {
     };
 
     /**
-     * Returns a ReactionInterpreter object with utility methods to manipulate Reaction Interpreter data.
-     *
-     * @param {*} type - The type or category of the Reaction Interpreter
+     * Returns a ReactionInterpreter object with simplified methods and utilities for reaction data manipulation.
+     * Used for: Reaction interpreters.
      */
-    this.getReactionInterpreter = (type) => new ReactionInterpreter(type, this);
+    this.ReactionLode = ReactionInterpreter;
+
+    /**
+     * Returns a MessageInterpreter object with simplified methods and utilities for message interpretation.
+     * Used for: Message interpreters, DM interpreters.
+     */
+    this.MessageLode = MessageInterpreter;
 
     /**
      * Initializes all Interpreters. Formerly named 'fetchReactionInterpreters()'.
@@ -169,14 +174,15 @@ class Interpreter {
   }
 }
 
+const __intp = new Interpreter();
+
 class ReactionInterpreter {
   /**
    * A class representing a Reaction Interpreter, containing various utility methods to interact with Reaction Interpreter data.
    * 
    * @param {String} type - The specific type or category of the Reaction Interpreter
-   * @param {Interface} Interpreter - The Interpreter object for this bot
   */
-  constructor(type, Interpreter) {
+  constructor(type) {
 
     var Reactions = evg.resolve("reactions");
 
@@ -215,7 +221,7 @@ class ReactionInterpreter {
 
         });
 
-        Interpreter.addReaction(emotes, item);
+        __intp.addReaction(emotes, item);
 
         return true;
 
@@ -240,6 +246,21 @@ class ReactionInterpreter {
       findSortedIndex: (messageID) => {
           var sorted = utilities.array();
           return sorted.findIndex(item => item.messageID == messageID);
+      },
+      /**
+       * Registers a reaction interpreter.
+       * @param {Object} options - Filtering and response options for reaction interpreters.
+       * @param {Function} options.filter - A function that accepts (reactionInterpreter, isAdding) to check whether or not the input should be responded to.
+       * @param {Function} options.response - A function that accepts (reaction, user) to respond to an interpreted input that passes the filter check.
+       */
+      register: ({filter, response}) => {
+
+        __intp.register({
+          type: "reactions",
+          filter: filter,
+          response: response
+        });
+
       }
     }
 
@@ -252,4 +273,49 @@ class ReactionInterpreter {
   }
 }
 
-module.exports = new Interpreter();
+class MessageInterpreter {
+
+  #filter;
+  #response;
+
+  /**
+     * Creates and registers a new message interpreter.
+     * @param {Object} options - All registration options for the message interpreter.
+     * @param {Function} options.filter - A function that accepts (message, args) for messages/dms to check whether or not the input should be responded to.
+     * @param {Function} options.response - A function that accepts (message, args) for messages/dms to respond to an interpreted input that passes the filter check.
+     * @param {boolean} options.DMs - Whether or not this message interpreter should be a DM interpreter.
+     */
+  constructor({filter, response, DMs}) {
+
+    var type = DMs ? 'dms' : 'message';
+
+    __intp.register({
+      type: type,
+      filter: filter,
+      response: response
+    });
+
+    this.#filter = filter;
+    this.#response = response;
+
+  }
+
+  passesFilter(message, args) {
+    return this.#filter(message, args);
+  }
+
+  simulateResponse(message, args) {
+    return this.#response(message, args);
+  }
+
+  getFilter() {
+    return this.#filter;
+  }
+
+  getResponse() {
+    return this.#response;
+  }
+
+}
+
+module.exports = __intp;
