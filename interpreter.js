@@ -2,6 +2,148 @@
 
 var evg = require("./evg");
 
+class ReactionInterpreter {
+  /**
+   * A class representing a Reaction Interpreter, containing various utility methods to interact with Reaction Interpreter data.
+   * 
+   * @param {String} type - The specific type or category of the Reaction Interpreter
+  */
+  constructor(type) {
+
+    var Reactions = evg.resolve("reactions");
+
+    var utilities = {
+
+      type: type,
+
+      /**
+       * 
+       * @param {Object} message - The Discord message object to create the Reaction Interpreter on
+       * @param {Object} user - The user that created the Reaction Interpreter
+       * @param {String[]} emotes - An array of emotes for the Reaction Interpreter to interpret
+       * @param {Object} [customProperties] - Custom properties for the Reaction Interpreter in the format: {"property": "value"}
+       */
+      add: (message, user, emotes, customProperties) => {
+
+        var item = {
+            name: [],
+            id: [],
+            type: type,
+            messageID: message.id,
+            channelID: message.channel.id,
+            starter: user.id
+        };
+
+        emotes.forEach(emote => {
+
+          if (isNaN(emote)) item.name.push(emote);
+          else item.id.push(emote);
+
+        });
+
+        Object.keys(customProperties).forEach(key => {
+
+          item[key] = customProperties[key];
+
+        });
+
+        __intp.addReaction(emotes, item);
+
+        return true;
+
+      },
+      remove: (sorted_index) => {
+          var index = utilities.findIndex(sorted_index);
+          Reactions.splice(index, 1);
+      },
+      array: () => {
+          var list = Reactions.filter(item => item.type == type);
+          return list;
+      },
+      fetch: (sorted_index) => {
+          var sorted = utilities.array();
+          return sorted[sorted_index];
+      },
+      findIndex: (sorted_index) => {
+          var messageID = utilities.fetch(sorted_index).messageID;
+          var index = Reactions.values().findIndex(item => item.messageID == messageID && item.type == type);
+          return index;
+      },
+      findSortedIndex: (messageID) => {
+          var sorted = utilities.array();
+          return sorted.findIndex(item => item.messageID == messageID);
+      },
+      /**
+       * Registers a reaction interpreter.
+       * @param {Object} options - Filtering and response options for reaction interpreters.
+       * @param {Function} options.filter - A function that accepts (reactionInterpreter, isAdding) to check whether or not the input should be responded to.
+       * @param {Function} options.response - A function that accepts (reaction, user) to respond to an interpreted input that passes the filter check.
+       */
+      register: ({filter, response}) => {
+
+        __intp.register({
+          type: "reactions",
+          filter: filter,
+          response: response
+        });
+
+      }
+    }
+
+    Object.keys(utilities).forEach(utility => {
+
+      this[utility] = utilities[utility];
+
+    });
+
+  }
+}
+
+class MessageInterpreter {
+
+  #filter;
+  #response;
+
+  /**
+     * Creates and registers a new message interpreter.
+     * @param {Object} options - All registration options for the message interpreter.
+     * @param {Function} options.filter - A function that accepts (message, args) for messages/dms to check whether or not the input should be responded to.
+     * @param {Function} options.response - A function that accepts (message, args) for messages/dms to respond to an interpreted input that passes the filter check.
+     * @param {boolean} options.DMs - Whether or not this message interpreter should be a DM interpreter.
+     */
+  constructor({filter, response, DMs}) {
+
+    var type = DMs ? 'dms' : 'message';
+
+    __intp.register({
+      type: type,
+      filter: filter,
+      response: response
+    });
+
+    this.#filter = filter;
+    this.#response = response;
+
+  }
+
+  passesFilter(message, args) {
+    return this.#filter(message, args);
+  }
+
+  simulateResponse(message, args) {
+    return this.#response(message, args);
+  }
+
+  getFilter() {
+    return this.#filter;
+  }
+
+  getResponse() {
+    return this.#response;
+  }
+
+}
+
 class Interpreter {
   constructor() {
 
@@ -175,147 +317,5 @@ class Interpreter {
 }
 
 const __intp = new Interpreter();
-
-class ReactionInterpreter {
-  /**
-   * A class representing a Reaction Interpreter, containing various utility methods to interact with Reaction Interpreter data.
-   * 
-   * @param {String} type - The specific type or category of the Reaction Interpreter
-  */
-  constructor(type) {
-
-    var Reactions = evg.resolve("reactions");
-
-    var utilities = {
-
-      type: type,
-
-      /**
-       * 
-       * @param {Object} message - The Discord message object to create the Reaction Interpreter on
-       * @param {Object} user - The user that created the Reaction Interpreter
-       * @param {String[]} emotes - An array of emotes for the Reaction Interpreter to interpret
-       * @param {Object} [customProperties] - Custom properties for the Reaction Interpreter in the format: {"property": "value"}
-       */
-      add: (message, user, emotes, customProperties) => {
-
-        var item = {
-            name: [],
-            id: [],
-            type: type,
-            messageID: message.id,
-            channelID: message.channel.id,
-            starter: user.id
-        };
-
-        emotes.forEach(emote => {
-
-          if (isNaN(emote)) item.name.push(emote);
-          else item.id.push(emote);
-
-        });
-
-        Object.keys(customProperties).forEach(key => {
-
-          item[key] = customProperties[key];
-
-        });
-
-        __intp.addReaction(emotes, item);
-
-        return true;
-
-      },
-      remove: (sorted_index) => {
-          var index = utilities.findIndex(sorted_index);
-          Reactions.splice(index, 1);
-      },
-      array: () => {
-          var list = Reactions.filter(item => item.type == type);
-          return list;
-      },
-      fetch: (sorted_index) => {
-          var sorted = utilities.array();
-          return sorted[sorted_index];
-      },
-      findIndex: (sorted_index) => {
-          var messageID = utilities.fetch(sorted_index).messageID;
-          var index = Reactions.values().findIndex(item => item.messageID == messageID && item.type == type);
-          return index;
-      },
-      findSortedIndex: (messageID) => {
-          var sorted = utilities.array();
-          return sorted.findIndex(item => item.messageID == messageID);
-      },
-      /**
-       * Registers a reaction interpreter.
-       * @param {Object} options - Filtering and response options for reaction interpreters.
-       * @param {Function} options.filter - A function that accepts (reactionInterpreter, isAdding) to check whether or not the input should be responded to.
-       * @param {Function} options.response - A function that accepts (reaction, user) to respond to an interpreted input that passes the filter check.
-       */
-      register: ({filter, response}) => {
-
-        __intp.register({
-          type: "reactions",
-          filter: filter,
-          response: response
-        });
-
-      }
-    }
-
-    Object.keys(utilities).forEach(utility => {
-
-      this[utility] = utilities[utility];
-
-    });
-
-  }
-}
-
-class MessageInterpreter {
-
-  #filter;
-  #response;
-
-  /**
-     * Creates and registers a new message interpreter.
-     * @param {Object} options - All registration options for the message interpreter.
-     * @param {Function} options.filter - A function that accepts (message, args) for messages/dms to check whether or not the input should be responded to.
-     * @param {Function} options.response - A function that accepts (message, args) for messages/dms to respond to an interpreted input that passes the filter check.
-     * @param {boolean} options.DMs - Whether or not this message interpreter should be a DM interpreter.
-     */
-  constructor({filter, response, DMs}) {
-
-    var type = DMs ? 'dms' : 'message';
-
-    __intp.register({
-      type: type,
-      filter: filter,
-      response: response
-    });
-
-    this.#filter = filter;
-    this.#response = response;
-
-  }
-
-  passesFilter(message, args) {
-    return this.#filter(message, args);
-  }
-
-  simulateResponse(message, args) {
-    return this.#response(message, args);
-  }
-
-  getFilter() {
-    return this.#filter;
-  }
-
-  getResponse() {
-    return this.#response;
-  }
-
-}
 
 module.exports = __intp;
