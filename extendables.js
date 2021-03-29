@@ -10,6 +10,8 @@ function ExtendedMessage(ExtendableMessage) {
         #setFlags;
         #userArgs;
         advanced = true;
+        #cooldownTimeLeft = 0;
+        #cooldownLastUse = 0;
 
         constructor(client, data) {
 
@@ -128,6 +130,37 @@ function ExtendedMessage(ExtendableMessage) {
          */
         findValidFlag(name) {
             return this.getValidFlags().find(flag => flag.name.toLowerCase() == name.toLowerCase());
+        }
+
+        /**
+         * Sets the time, in seconds, remaining on the cooldown
+         * @param {*} cooldown - Cooldown remaining time, in seconds
+         */
+        setCooldownLeft(cooldown) {
+            this.#cooldownTimeLeft = cooldown;
+        }
+
+        /**
+         * Sets the time, in seconds, since this command was last used by the user
+         * @param {*} last_use - Time since last use, in seconds
+         */
+        setSinceLastUse(last_use) {
+            this.#cooldownLastUse = last_use;
+        }
+
+        /**
+         * The remaining cooldown time for this user on the command sent in this message, in seconds.
+         */
+        get cooldownLeft() {
+            return this.#cooldownTimeLeft;
+        }
+
+        /**
+         * The time since this user last sent the same command sent in this message, in seconds.
+         * If this message contains '/help', for example, this property returns how long it has been since the user last sent '/help'.
+         */
+        get sinceLastUse() {
+            return this.#cooldownLastUse;
         }
 
         isExtended() {
@@ -296,6 +329,7 @@ module.exports = class DiscordExtender {
 
         //Extend channel
         Discord.Structures.extend("TextChannel", BasicChannel => ExtendedChannel(BasicChannel));
+        Discord.Structures.extend("NewsChannel", BasicChannel => ExtendedChannel(BasicChannel));
 
         //Extend guild
         Discord.Structures.extend("Guild", BasicGuild => ExtendedGuild(BasicGuild));
@@ -309,7 +343,7 @@ module.exports = class DiscordExtender {
     }
 
     static extendChannel(message) {
-        var AdvChannel = ExtendedChannel(Discord.TextChannel);
+        var AdvChannel = ExtendedChannel(typeof message.channel);
 
         return new AdvChannel(message.guild, message.channel);
     }
@@ -319,5 +353,9 @@ module.exports = class DiscordExtender {
 
         return new AdvGuild(message.client, message.guild);
     }
+
+    static AdvancedMessage = ExtendedMessage(Discord.Message);
+    static AdvancedTextChannel = ExtendedChannel(Discord.TextChannel);
+    static AdvancedGuild = ExtendedGuild(Discord.Guild);
 
 }
