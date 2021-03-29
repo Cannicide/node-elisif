@@ -2,9 +2,7 @@
 //Now includes simplified constructor, command cooldown, alias options, channel restrictions, and DM-only commands.
 
 const aliasCache = require("./aliases");
-const Interface = require("./interface");
-const Interpreter = require("./interpreter");
-const evg = require("./evg");
+const Extendables = require("./extendables");
 var commands = [];
 const channelCommandMap = {};
 
@@ -190,6 +188,8 @@ class Command {
       const cooldownAmount = (cooldown || 0) * 1000;
       const userTimestamp = timestamps[message.author.id] || (now - cooldownAmount);
       const expirationTime = userTimestamp + cooldownAmount;
+      const timeLeft = (expirationTime - now) / 1000;
+      const lastUseTimePassed = (now - userTimestamp) / 1000;
 
       if (!message) {
         error = "No message was detected.";
@@ -209,7 +209,6 @@ class Command {
       }
       else if (now < expirationTime) {
         //Command is in cooldown
-        const timeLeft = (expirationTime - now) / 1000;
         error = `Please wait ${timeLeft.toFixed(1)} more second(s) before reusing the \`${name}\` command.`;
       }
       else if ((mandatoryArgs.length > 0 && !userArgs) || userArgs.length < mandatoryArgs.length) {
@@ -234,56 +233,61 @@ class Command {
 
         //Extended message and channel objects
         var advMessage = message;
-        var advChannel = message.channel;
 
-        advMessage.interface = Interface;
-        advMessage.interpreter = Interpreter;
-        advMessage.prefix = prefix;
+        advMessage.setValidFlags(flags);
+        advMessage.setCooldownLeft(timeLeft);
+        advMessage.setSinceLastUse(lastUseTimePassed);
 
-        //Set flags property
-        advMessage.flags = foundFlags;
+        // var advChannel = message.channel;
 
-        var commandsInAdvChannel = channelCommandMap[message.channel.name] || channelCommandMap[message.channel.id];
-        advChannel.commands = commandsInAdvChannel;
+      //   advMessage.interface = Interface;
+      //   advMessage.interpreter = Interpreter;
+      //   advMessage.prefix = prefix;
 
-        /**
-       * Creates a new Embed, which can be used with or without the interface.
-       * @param {Object} options - The Embed's options.
-       * @param {String} [options.thumbnail] - The URL to the preferred thumbnail of the Embed.
-       * @param {Object[]} [options.fields] - An array of the contents of the Embed, separated by field.
-       * @param {String} options.fields[].name - The title of the field.
-       * @param {String} options.fields[].value - The content of the field.
-       * @param {Boolean} [options.fields[].inline] - Whether or not the field is inline.
-       * @param {String} [options.desc] - The description of the Embed.
-       * @param {String} [options.title] - The title of the Embed.
-       * @param {String[]} [options.footer[]] - An array of footer messages.
-       * @param {String} [options.icon] - The URL of the Embed's icon.
-       * @param {String} [options.image] - The URL of the Embed's image.
-       * @param {String} [options.video] - The URL of the Embed's video.
-       * @param {Boolean} [options.useTimestamp] - Whether or not to include the timestamp in the Embed.
-       */
-        advChannel.embed = (options) => {
-          var embed = new Interface.Embed(advMessage, options);
-          return advChannel.send(embed);
-        };
+      //   //Set flags property
+      //   advMessage.flags = foundFlags;
 
-        advChannel.textInterface = (question, callback) => {
-          new Interface.Interface(advMessage, question, callback);
-        };
+      //   var commandsInAdvChannel = channelCommandMap[message.channel.name] || channelCommandMap[message.channel.id];
+      //   advChannel.commands = commandsInAdvChannel;
 
-        advChannel.reactionInterface = (question, reactions, callback) => {
-          new Interface.ReactionInterface(advMessage, question, reactions, callback);
-        };
+      //   /**
+      //  * Creates a new Embed, which can be used with or without the interface.
+      //  * @param {Object} options - The Embed's options.
+      //  * @param {String} [options.thumbnail] - The URL to the preferred thumbnail of the Embed.
+      //  * @param {Object[]} [options.fields] - An array of the contents of the Embed, separated by field.
+      //  * @param {String} options.fields[].name - The title of the field.
+      //  * @param {String} options.fields[].value - The content of the field.
+      //  * @param {Boolean} [options.fields[].inline] - Whether or not the field is inline.
+      //  * @param {String} [options.desc] - The description of the Embed.
+      //  * @param {String} [options.title] - The title of the Embed.
+      //  * @param {String[]} [options.footer[]] - An array of footer messages.
+      //  * @param {String} [options.icon] - The URL of the Embed's icon.
+      //  * @param {String} [options.image] - The URL of the Embed's image.
+      //  * @param {String} [options.video] - The URL of the Embed's video.
+      //  * @param {Boolean} [options.useTimestamp] - Whether or not to include the timestamp in the Embed.
+      //  */
+      //   advChannel.embed = (options) => {
+      //     var embed = new Interface.Embed(advMessage, options);
+      //     return advChannel.send(embed);
+      //   };
 
-        advChannel.paginate = (options, elements, perPage) => {
-          let embed = new Interface.Embed(advMessage, options);
-          new Interface.Paginator(message, embed, elements, perPage);
-        };
+      //   advChannel.textInterface = (question, callback) => {
+      //     new Interface.Interface(advMessage, question, callback);
+      //   };
 
-        advMessage.args = userArgs;
-        advMessage.database = evg.resolve;
-        advMessage.channel = advChannel;
-        advMessage.advanced = true;
+      //   advChannel.reactionInterface = (question, reactions, callback) => {
+      //     new Interface.ReactionInterface(advMessage, question, reactions, callback);
+      //   };
+
+      //   advChannel.paginate = (options, elements, perPage) => {
+      //     let embed = new Interface.Embed(advMessage, options);
+      //     new Interface.Paginator(message, embed, elements, perPage);
+      //   };
+
+      //   advMessage.args = userArgs;
+      //   advMessage.database = evg.resolve;
+      //   advMessage.channel = advChannel;
+      //   advMessage.advanced = true;
 
         if ((!perms && !roles) || dm_only) {
           //method(advMessage, userArgs); - Deprecated
