@@ -71,9 +71,28 @@ function initialize(directory, prefix) {
 
   commands = requisites[requisites.length - 1].getCommands();
 
-  if (Settings.get("debug_mode")) console.log("Loaded commands:", commands.map(v => v.name));
+  if (Settings.Global().get("debug_mode")) console.log("Loaded commands:", commands.map(v => v.name));
 
   return commands;
+
+}
+
+async function refreshCache() {
+
+  var totalMessagesFetched = 0;
+
+  for (var guild of client.guilds.cache.array()) {
+
+    for (var channel of guild.channels.cache.filter(c => c.type == "text").array()) {
+
+      var messages = await channel.messages.fetch();
+      totalMessagesFetched += messages.size;
+
+    }
+
+  };
+
+  console.log("Successfully fetched and cached " + totalMessagesFetched + " messages.");
 
 }
 
@@ -267,7 +286,8 @@ class ExtendedClient extends Discord.Client {
 
     this.once("ready", () => {
       console.log(`${name} is up and running!`);
-      this.presenceCycler(presences);
+      if (Settings.Global().get("presence_cycler")) this.presenceCycler(presences);
+      else this.user.setActivity(`${this.prefix.get()}help`, {type: 'STREAMING', url: twitch});
 
       const logGuild = logs ? this.guilds.cache.get(logs.guildID) : false;
       const logChannel = logs && logGuild ? logGuild.channels.cache.get(logGuild.channels.cache.find(c => c.name == logs.channelName).id) : false;
@@ -286,6 +306,8 @@ class ExtendedClient extends Discord.Client {
       };
 
       if (autoInitialize && autoInitialize.enabled && autoInitialize.path) this.commands.initialize(autoInitialize.path, this.prefix.get());
+
+      refreshCache();
 
     });
 
