@@ -1,21 +1,22 @@
 //Contains various extensions of discord.js capabilities, including insertion of node-elisif methods and features.
 
-const Elisif = require('./index');
 const Discord = require('discord.js');
 
 function ExtendedMessage(ExtendableMessage) {
     //Advanced Message
-    return class AdvancedMessage extends ExtendableMessage {
+    class AdvancedMessage extends ExtendableMessage {
 
         #setFlags;
         #userArgs;
         advanced = true;
         #cooldownTimeLeft = 0;
         #cooldownLastUse = 0;
+        // #data;
 
-        constructor(client, data) {
+        constructor(client, data, channel) {
 
-            super(client, data);
+            super(client, data, channel);
+            // this.#data = data;
 
             //Get prefix from Handler
 
@@ -45,21 +46,21 @@ function ExtendedMessage(ExtendableMessage) {
 
             //Set accessible Elisif systems
 
-            this.interface = Elisif.interface;
-            this.interpreter = Elisif.interpreter;
-            this.evg = Elisif.evg;
-            this.database = Elisif.evg.resolve;
+            this.interface = require("./interface");
+            this.interpreter = require("./interpreter");
+            this.evg = require("./evg");
+            this.database = require("./evg").resolve;
             this.db = this.database;
-            this.dbAsync = Elisif.evg.from;
-            this.dbJson = Elisif.evg.cache;
-            this.dbDynamic = Elisif.evg.remodel;
-            this.getGlobalSetting = Elisif.settings.Global().get;
+            this.dbAsync = require("./evg").from;
+            this.dbJson = require("./evg").cache;
+            this.dbDynamic = require("./evg").remodel;
+            this.getGlobalSetting = require("./settings").Global().get;
 
         }
 
         get prefix() {
-            var localPrefix = Elisif.settings.Local(this.id).get("local_prefix");
-            if (!localPrefix) localPrefix = Elisif.settings.Global().get("global_prefix");
+            var localPrefix = require("./settings").Local(this.guild.id).get("local_prefix");
+            if (!localPrefix) localPrefix = require("./settings").Global().get("global_prefix");
 
             return localPrefix;
         }
@@ -69,7 +70,7 @@ function ExtendedMessage(ExtendableMessage) {
          * Ex: "My name is -f Bob -rt" would return ["-f", "-rt"].
          * Valid flags must be set by setValidFlags() before searching with this property.
          */
-        get flags() {
+        get cmdFlags() {
             //Find message flags
 
             var foundFlags = false;
@@ -83,7 +84,7 @@ function ExtendedMessage(ExtendableMessage) {
                 if (flag) {
                     foundFlags.push(flag.name);
                     this.#userArgs.splice(index, 1);
-                    if (args.length == 0)
+                    if (this.#userArgs.length == 0)
                     this.#userArgs = false;
                 }
                 });
@@ -91,6 +92,33 @@ function ExtendedMessage(ExtendableMessage) {
             }
 
             return foundFlags;
+
+        }
+
+        /**
+         * Returns whether or not the specified command flag was found in the message.
+         * @param {*} flag - The specified command flag
+         * @returns boolean
+         */
+        hasFlag(flag) {
+            if (!flag.match("-")) flag = "-" + flag;
+
+            var flags = this.cmdFlags;
+            return flags.includes(flag);
+        }
+
+        /**
+         * Returns whether or not ALL specified command flags were found in the message.
+         * @param  {...String} flags - The specified command flags
+         * @returns boolean
+         */
+        hasFlags(...flags) {
+            
+            for (var flag of flags) {
+                if (!this.hasFlag(flag)) return false;
+            }
+
+            return true;
 
         }
 
@@ -168,24 +196,27 @@ function ExtendedMessage(ExtendableMessage) {
         }
 
         get client() {
-            return Elisif.Client.getInstance();
+            return this.elisif.Client ? this.elisif.Client.getInstance() : null;
         }
 
-        get elisif() { return Elisif; }
+        get elisif() { return require("./index").getInstance(); }
 
     }
+
+    return AdvancedMessage;
 }
 
 function ExtendedChannel(ExtendableChannel) {
     //Advanced Channel
-    return class AdvancedChannel extends ExtendableChannel {
+    class AdvancedChannel extends ExtendableChannel {
 
         advanced = true;
 
         constructor(guild, data) {
 
             super(guild, data);
-            this.commands = Elisif.Command.channelCommandMap[data.name] || Elisif.Command.channelCommandMap[data.id];
+
+            this.commands = require("./command").channelCommandMap[data.name] || require("./command").channelCommandMap[data.id];
 
         }
 
@@ -206,7 +237,7 @@ function ExtendedChannel(ExtendableChannel) {
        * @param {Boolean} [options.useTimestamp] - Whether or not to include the timestamp in the Embed.
        */
         embed(options) {
-            var embed = new Elisif.interface.Embed(this.lastMessage, options);
+            var embed = new (require("./interface").Embed)(this.lastMessage, options);
             return this.send(embed);
         }
 
@@ -216,8 +247,10 @@ function ExtendedChannel(ExtendableChannel) {
          * @returns Promise; (message, questionMessage) => {}
          */
         textInterface(question) {
-            return new Promise(function(resolve, reject) {
-                new Elisif.interface.Interface(this.lastMessage, question, resolve);
+            return new Promise((resolve, reject) => {
+                new (require("./interface").Interface)(this.lastMessage, question, (m, q) => {
+                    resolve({m:m,q:q,reply:this.textInterface.bind(this)});
+                });
             });
         }
 
@@ -230,8 +263,10 @@ function ExtendedChannel(ExtendableChannel) {
          * @returns Promise; (message, reaction) => {}
          */
         reactionInterface(question, reactions, time, allUsers) {
-            return new Promise(function(resolve, reject) {
-                new Elisif.interface.ReactionInterface(this.lastMessage, question, reactions, resolve, time, allUsers);
+            return new Promise((resolve, reject) => {
+                new (require("./interface").ReactionInterface)(this.lastMessage, question, reactions, (m, r) => {
+                    resolve({m:m,r:r,reply:this.reactionInterface.bind(this)});
+                }, time, allUsers);
             });
         }
 
@@ -243,7 +278,7 @@ function ExtendedChannel(ExtendableChannel) {
          * @param {boolean} options.DMs - Whether or not this message interpreter should be a DM interpreter.
          */
         messageInterpreter({filter, response, DMs}) {
-            return new Elisif.interpreter.MessageLode({filter, response, DMs});
+            return new (require("./interpreter").MessageLode)({filter, response, DMs});
         }
 
         /**
@@ -252,7 +287,7 @@ function ExtendedChannel(ExtendableChannel) {
          * @param {String} type - The specific type or category of the Reaction Interpreter
          */
         reactionInterpreter(type) {
-            return new Elisif.interpreter.ReactionLode(type);
+            return new (require("./interpreter").ReactionLode)(type);
         }
 
         /**
@@ -265,8 +300,8 @@ function ExtendedChannel(ExtendableChannel) {
          * @param {Number} perPage - Number of elements per page
          */
         paginate(options, elements, perPage) {
-            let embed = new Elisif.interface.Embed(this.lastMessage, options);
-            return new Elisif.interface.Paginator(message, embed, elements, perPage);
+            let embed = new (require("./interface").Embed)(this.lastMessage, options);
+            return new (require("./interface").Paginator)(this.lastMessage, embed, elements, perPage);
         }
 
         isExtended() {
@@ -274,36 +309,40 @@ function ExtendedChannel(ExtendableChannel) {
         }
 
         get client() {
-            return Elisif.Client.getInstance();
+            return this.elisif.Client ? this.elisif.Client.getInstance() : null;
         }
 
-        get elisif() { return Elisif; }
+        get elisif() { return require("./index").getInstance(); }
 
     }
+
+    return AdvancedChannel;
 }
 
 function ExtendedGuild(ExtendableGuild) {
-    return class AdvancedGuild extends ExtendableGuild {
+    class AdvancedGuild extends ExtendableGuild {
 
         advanced = true;
+        // #data;
 
         constructor(client, data) {
             super(client, data);
+            // this.#data = data;
         }
 
         get settings() {
-            return Elisif.settings.Local(this.id);
+            return require("./settings").Local(this.id);
         }
 
         get prefix() {
-            var localPrefix = Elisif.settings.Local(this.id).get("local_prefix");
-            if (!localPrefix) localPrefix = Elisif.settings.Global().get("global_prefix");
+            var localPrefix = require("./settings").Local(this.id).get("local_prefix");
+            if (!localPrefix) localPrefix = require("./settings").Global().get("global_prefix");
 
             return localPrefix;
         }
 
         setPrefix(pfix) {
-            Elisif.settings.Local(this.id).set("local_prefix", pfix);
+            require("./settings").Local(this.id).set("local_prefix", pfix);
         }
 
         isExtended() {
@@ -311,11 +350,13 @@ function ExtendedGuild(ExtendableGuild) {
         }
 
         get client() {
-            return Elisif.Client.getInstance();
+            return this.elisif.Client ? this.elisif.Client.getInstance() : null;
         }
 
-        get elisif() { return Elisif; }
+        get elisif() { return require("./index").getInstance(); }
     }
+
+    return AdvancedGuild;
 }
 
 
@@ -339,7 +380,7 @@ module.exports = class DiscordExtender {
     static extendMessage(message) {
         var AdvMessage = ExtendedMessage(Discord.Message);
 
-        return new AdvMessage(message.client, message);
+        return new AdvMessage(message.client, message, message.channel);
     }
 
     static extendChannel(message) {

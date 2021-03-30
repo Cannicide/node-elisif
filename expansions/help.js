@@ -65,7 +65,7 @@ module.exports = new Command("help", {
       var fields = false;
 
       //Add more information for this single command, if flag unspecified
-      if (!(message.flags && message.flags.includes("-nf"))) {
+      if (!message.hasFlag("-nf")) {
         fields = [
           {
             name: "DM-Only Command",

@@ -39,7 +39,7 @@ module.exports = new Command("eval", {
         var result = eval(message.args.join(" "));
         if (typeof result === "boolean") result = "" + result; //Account for boolean responses
 
-        if (result != "" && !(result instanceof Promise) && !(message.flags && message.flags.includes("-n"))) await message.channel.send("```js\n" + result + "```");
+        if (result != "" && !(result instanceof Promise) && !message.hasFlag("-n")) await message.channel.send("```js\n" + result + "```");
     }
     catch (err) {
         message.channel.send("```js\n" + err.stack + "```");

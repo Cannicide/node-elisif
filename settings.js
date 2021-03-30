@@ -79,6 +79,7 @@ class GlobalSettings extends LocalSettings {
         this.set("debug_mode", false);
         this.set("settings_default", true);
         this.set("global_prefix", "/");
+        this.set("refresh_cache_on_boot", false);
     }
 
     setLocalDefaults() {

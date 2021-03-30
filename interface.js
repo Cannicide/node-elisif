@@ -100,7 +100,7 @@ class Interface {
     /**
      * Creates a new Interface, an interactive means of receiving input from the user.
      * Works fine with FancyMessage.
-     * @param {Object} message - Message containing the command that led to calling on the interface
+     * @param {Object | Function} message - Message containing the command that led to calling on the interface
      * @param {String} question - Question to ask user for a response
      */
     constructor(message, question, callback, type, options) {

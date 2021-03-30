@@ -18,6 +18,9 @@ const allIntents = Object.assign([], bot_intents);
 allIntents.push("GUILD_MEMBERS");
 allIntents.push("GUILD_PRESENCES");
 
+//Discord.js extension
+const DiscordExtender = require("./extendables");
+
 //File system initialized
 const fs = require("fs");
 
@@ -79,6 +82,8 @@ function initialize(directory, prefix) {
 
 async function refreshCache() {
 
+  if (!Settings.Global().get("refresh_cache_on_boot")) return;
+
   var totalMessagesFetched = 0;
 
   for (var guild of client.guilds.cache.array()) {
@@ -112,7 +117,7 @@ function handleCommand(message, cmds) {
   cmds = cmds || commands;
 
   var localPrefix = getPrefix();
-  if (Settings.Local().get("local_prefix")) localPrefix = Settings.Local().get("local_prefix");
+  if (Settings.Local(message.guild.id).get("local_prefix")) localPrefix = Settings.Local(message.guild.id).get("local_prefix");
 
   //Command determination:
 
@@ -190,6 +195,12 @@ class Presence {
   get() { return this.#selected;}
 }
 
+//Method to initialize Discord.js extension before client construction
+function preInitialize(p0) {
+  new DiscordExtender();
+  return p0;
+}
+
 class ExtendedClient extends Discord.Client {
 
   isextended = true;
@@ -220,7 +231,7 @@ class ExtendedClient extends Discord.Client {
    */ 
   constructor({intents, privilegedIntents, name, presences, logs, prefix, port, twitch, autoInitialize, presenceDuration, authors, description, expansions}) {
 
-    super({intents: privilegedIntents ? allIntents : intents || bot_intents, ws:{intents: privilegedIntents ? allIntents : intents || bot_intents}});
+    super(preInitialize({intents: privilegedIntents ? allIntents : intents || bot_intents, ws:{intents: privilegedIntents ? allIntents : intents || bot_intents}}));
 
     if (client) {
       return client;
