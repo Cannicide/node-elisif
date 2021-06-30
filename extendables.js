@@ -1,6 +1,117 @@
 //Contains various extensions of discord.js capabilities, including insertion of node-elisif methods and features.
 
 const Discord = require('discord.js');
+const { APIMessage } = require("discord.js");
+const { Message } = require('discord.js');
+
+class BtnMessageComponent {
+  
+    constructor(client, data) {
+
+        this.client = client;
+
+        this.id = data.data.custom_id;
+
+        this._data = data;
+        this._data.token = data.token;
+        this._data.discordID = data.id;
+        this._data.applicationID = data.application_id;
+
+        this.guild = data.guild_id ? client.guilds.cache.get(data.guild_id) : undefined;
+        this.channel = client.channels.cache.get(data.channel_id);
+        this.message = new Message(client, data.message, this.channel);
+      
+        this.clickEnded = false;
+    }
+  
+    get index() {
+      
+      var index = -1;
+      var comp;
+        
+      this._data.message.components.forEach(row => {
+
+        var newcomp = row.components.findIndex(c => c.custom_id && c.custom_id == this.id);
+        
+        if (!comp && newcomp < 0) {
+          index+= row.components.length;
+        }
+        else if (!comp && newcomp >= 0) {
+          index += newcomp;
+          comp = true;
+        }
+
+      });
+      
+      return index;
+      
+    }
+  
+    get row() {
+  
+      var rowindex = this._data.message.components.findIndex(row => {
+
+        return row.components.find(c => c.custom_id && c.custom_id == this.id);
+
+      });
+      
+      return rowindex <= -1 ? false : rowindex + 1;
+      
+    }
+  
+    //Index within row, relative to the start of the row
+    get rowIndex() {
+      
+      var row = this.row;
+      
+      if (!row) return false;
+      
+      var rowindex = this._data.message.components[row - 1].components.findIndex(c => c.custom_id && c.custom_id == this.id);
+      
+      return rowindex <= -1 ? false : rowindex;
+      
+    }
+  
+    get label() {
+      
+      var row = this.row;
+      var rowIndex = this.rowIndex;
+      
+      if (!row || rowIndex === false) return false;
+      
+      return this._data.message.components[row - 1].components[rowIndex].label;
+      
+    }
+  
+    get user() {
+      
+      var user = this.client.users.resolve(this._data.user.id);
+      user.fetch = async () => await this.client.users.fetch(this._data.user.id);
+      
+    }
+  
+    get member() {
+      
+      var member = this.guild ? this.guild.members.resolve(this._data.member.user.id) : undefined;
+      if (member) member.fetch = async () => await this.guild.members.fetch(this._data.member.user.id);
+      
+    }
+
+    async endClick(ephemeral = false) {
+        if (this.clickEnded) throw new Error('This button click was already ended.');
+        await this.client.api.interactions(this._data.discordID, this._data.token).callback.post({
+            data: {
+                type: 6,
+                data: {
+                    flags: ephemeral ? 1 << 6 : null,
+                },
+            },
+        });
+        this.clickEnded = true;
+    }
+  
+}
+
 
 function ExtendedMessage(ExtendableMessage) {
     //Advanced Message
@@ -398,5 +509,18 @@ module.exports = class DiscordExtender {
     static AdvancedMessage = ExtendedMessage(Discord.Message);
     static AdvancedTextChannel = ExtendedChannel(Discord.TextChannel);
     static AdvancedGuild = ExtendedGuild(Discord.Guild);
+
+    static extendEvents(client) {
+
+        //buttonClick event
+        client.ws.on('INTERACTION_CREATE', (data) => {
+            if (!data.message) return;
+            if (data.data.component_type) {
+                const buttonMsg = new BtnMessageComponent(client, data);
+                client.emit('buttonClick', buttonMsg);
+            }
+        });
+        
+    }
 
 }

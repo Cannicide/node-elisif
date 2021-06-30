@@ -201,6 +201,11 @@ function preInitialize(p0) {
   return p0;
 }
 
+//Initialize custom events
+function customEventHandlers(client) {
+  DiscordExtender.extendEvents(client);
+}
+
 class ExtendedClient extends Discord.Client {
 
   isextended = true;
@@ -321,6 +326,8 @@ class ExtendedClient extends Discord.Client {
       refreshCache();
 
     });
+
+    customEventHandlers(client);
 
   }
 
