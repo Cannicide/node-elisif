@@ -37,7 +37,7 @@ class EmbedMessage {
     /**
      * Creates a new Embed, which can be used with or without the interface.
      * @constructor
-     * @param {Object} options - The Embed's options.
+     * @param {Object} options - Represents either the Embed's options or String content for a plain message.
      * @param {Object} message - The message containing the call to the currently processing command.
      * @param {String} [options.thumbnail] - The URL to the preferred thumbnail of the Embed.
      * @param {Object[]} [options.fields] - An array of the contents of the Embed, separated by field.
@@ -53,43 +53,56 @@ class EmbedMessage {
      * @param {Boolean} [options.noTimestamp] - Whether or not to remove the timestamp from the Embed.
      * @param {String} [options.content] - The plain text content of the message itself.
      */
-    constructor(message, {thumbnail, fields, desc, title, footer, icon, image, video, noTimestamp, content}) {
+    constructor(message, options) {
         let userID = message.author.id;
         var tuser = message.client.users.cache.find(m => m.id == userID);
 
-        footer = footer || [tuser.username];
-        if (!Array.isArray(footer)) footer = [footer];
+        if (typeof options === "object" && typeof options !== "string") {
 
-        var embed = {embed: {
-            "color": message.guild ? message.member.displayHexColor : tuser.toString().substring(2, 8),
-            "timestamp": !noTimestamp ? new Date() : false,
-            "footer": {
-            "icon_url": icon || tuser.avatarURL(),
-            "text": footer.join(" • ")
-            },
-            "thumbnail": {
-            "url": thumbnail
-            },
-            "author": {},
-            "fields": fields || [],
-            "image": {url:image} || {},
-            "video": {url:video} || {},
-            "description": desc || "",
-            "title": title || ""
+            var {thumbnail, fields, desc, title, footer, icon, image, video, noTimestamp, content} = options;
+
+            footer = footer || [tuser.username];
+            if (!Array.isArray(footer)) footer = [footer];
+
+            var embed = {embed: {
+                "color": message.guild ? message.member.displayHexColor : tuser.toString().substring(2, 8),
+                "timestamp": !noTimestamp ? new Date() : false,
+                "footer": {
+                "icon_url": icon || tuser.avatarURL(),
+                "text": footer.join(" • ")
+                },
+                "thumbnail": {
+                "url": thumbnail
+                },
+                "author": {},
+                "fields": fields || [],
+                "image": {url:image} || {},
+                "video": {url:video} || {},
+                "description": desc || "",
+                "title": title || ""
+            }
+            };
+
+            if (!thumbnail) embed.embed.thumbnail = {};
+            if (content) embed.content = content;
+
+            embed.remove = (property) => {
+                delete embed.embed[property];
+                return embed;
+            }
+
+            embed.set = (property, value) => {
+                embed.embed[property] = value;
+                return embed;
+            }
+
         }
-        };
+        else {
 
-        if (!thumbnail) embed.embed.thumbnail = {};
-        if (content) embed.content = content;
+            var embed = {
+                content: options
+            };
 
-        embed.remove = (property) => {
-        delete embed.embed[property];
-        return embed;
-        }
-
-        embed.set = (property, value) => {
-        embed.embed[property] = value;
-        return embed;
         }
 
         return embed;
