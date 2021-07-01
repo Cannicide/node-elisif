@@ -1,7 +1,22 @@
 //Contains various extensions of discord.js capabilities, including insertion of node-elisif methods and features.
 
 const Discord = require('discord.js');
-const { APIMessage, Message } = require("discord.js");
+const { APIMessage, Message, WebhookClient } = require("discord.js");
+
+class InteractionWebhookClient extends WebhookClient {
+
+    async editMessage(content, options) {
+        var api = APIMessage.create(this, content, options).resolveData();
+
+        const { data, files } = await api.resolveFiles();
+
+        return this.client.api
+            .webhooks(this.id, this.token)
+            .messages("@original")
+            .patch({ data, files });
+    }
+
+}
 
 class BtnMessageComponent {
   
@@ -22,6 +37,7 @@ class BtnMessageComponent {
             this._data.token = data.token;
             this._data.discordID = data.id;
             this._data.applicationID = data.application_id;
+            this._webhook = new InteractionWebhookClient(data.application_id, data.token, client.options);
 
             /**
              * Respond to the button click with no interaction response; useful if you want to customize your response to the click instead of using interaction replies.
@@ -76,23 +92,11 @@ class BtnMessageComponent {
 
             }
 
-            this._editReply = async (content, ephemeral = false, options) => {
+            this._editReply = async (content, options) => {
 
                 if (!this.clickEnded) throw new Error('This button click was not yet ended; cannot edit reply yet.');
 
-                var api = APIMessage.create(this, content, options).resolveData();
-
-                // if (ephemeral) api.data.flags = 64;
-                // api.data.allowed_mentions = {
-                //     parse: ["users", "roles", "everyone"]
-                // };
-
-                const { data, files } = await api.resolveFiles();
-        
-                var output = await this.client.api
-                    .webhooks(this._data.discordID, this._data.token)
-                    .messages("@original")
-                    .patch({ data, files });
+                var output = await this._webhook.editMessage(content, options);
 
                 return this.channel.messages.add(output);
 
@@ -110,7 +114,7 @@ class BtnMessageComponent {
                 this.reply(content, ephemeral, options);
 
                 setTimeout(() => {
-                    this._editReply(content, ephemeral, options);
+                    this._editReply(content, options);
                 }, timeout)
 
             }
@@ -121,7 +125,7 @@ class BtnMessageComponent {
   
     get index() {
       
-      var index = -1;
+      var index = 0;
       var comp;
         
       this._data.message.components.forEach(row => {
@@ -921,12 +925,12 @@ function ExtendedChannel(ExtendableChannel) {
                  */
                 output.startButtonCollector = (func) => {
                     if (output.collecting) return;
-                    m.client.on("buttonClick", buttonCollector.bind({collect: func}));
+                    this.client.on("buttonClick", buttonCollector.bind({collect: func}));
                     output.collecting = true;
                 }
                 
                 output.endButtonCollector = () => {
-                    m.client.removeListener("buttonClick", buttonCollector.bind({collect: function(){}}));
+                    this.client.removeListener("buttonClick", buttonCollector.bind({collect: function(){}}));
                     output.collecting = false;
                 }
                 
