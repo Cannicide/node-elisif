@@ -52,6 +52,7 @@ class EmbedMessage {
      * @param {String} [options.video] - The URL of the Embed's video.
      * @param {Boolean} [options.noTimestamp] - Whether or not to remove the timestamp from the Embed.
      * @param {String} [options.content] - The plain text content of the message itself.
+     * @param {String} [options.color] - The color of the Embed border.
      */
     constructor(message, options) {
         let userID = message.author.id;
@@ -59,13 +60,13 @@ class EmbedMessage {
 
         if (typeof options === "object" && typeof options !== "string") {
 
-            var {thumbnail, fields, desc, title, footer, icon, image, video, noTimestamp, content} = options;
+            var {thumbnail, fields, desc, title, footer, icon, image, video, noTimestamp, content, color} = options;
 
             footer = footer || [tuser.username];
             if (!Array.isArray(footer)) footer = [footer];
 
             var embed = {embed: {
-                "color": message.guild ? message.member.displayHexColor : tuser.toString().substring(2, 8),
+                "color": color ? color : message.guild ? message.member.displayHexColor : tuser.toString().substring(2, 8),
                 "timestamp": !noTimestamp ? new Date() : false,
                 "footer": {
                 "icon_url": icon || tuser.avatarURL(),
