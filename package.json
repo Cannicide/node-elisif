@@ -1,6 +1,6 @@
 {
   "name": "elisif",
-  "version": "1.5.3",
+  "version": "1.7.8",
   "description": "A powerful Discord Bot container, command handler, and partial extension of discord.js.",
   "main": "index.js",
   "dependencies": {

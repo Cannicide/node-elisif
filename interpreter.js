@@ -99,6 +99,103 @@ class ReactionInterpreter {
   }
 }
 
+class ButtonInterpreter {
+
+  /**
+   * A class representing a Button Interpreter, containing various utility methods to interact with Button Interpreter data.
+   * 
+   * @param {String} type - The specific type or category of the Button Interpreter
+  */
+   constructor(type) {
+
+    var Buttons = evg.resolve("buttons");
+
+    var utilities = {
+
+      type: type,
+
+      /**
+       * 
+       * @param {Object} message - The Discord message object to create the Button Interpreter on
+       * @param {Object} user - The user that created the Button Interpreter
+       * @param {Object} [customProperties] - Custom properties for the Button Interpreter in the format: {"property": "value"}
+       */
+      add: (message, user, customProperties) => {
+
+        var item = {
+            id: message.buttons.get().map(v => v.id),
+            type: type,
+            messageID: message.id,
+            channelID: message.channel.id,
+            starter: user.id
+        };
+
+        // emotes.forEach(emote => {
+
+        //   if (isNaN(emote)) item.name.push(emote);
+        //   else item.id.push(emote);
+
+        // });
+
+        Object.keys(customProperties).forEach(key => {
+
+          item[key] = customProperties[key];
+
+        });
+
+        __intp.addButton(message.buttons.get(), item);
+
+        return true;
+
+      },
+      remove: (sorted_index) => {
+          var index = utilities.findIndex(sorted_index);
+          Buttons.splice(index, 1);
+      },
+      array: () => {
+          var list = Buttons.filter(item => item.type == type);
+          return list;
+      },
+      fetch: (sorted_index) => {
+          var sorted = utilities.array();
+          return sorted[sorted_index];
+      },
+      findIndex: (sorted_index) => {
+          var messageID = utilities.fetch(sorted_index).messageID;
+          var index = Buttons.values().findIndex(item => item.messageID == messageID && item.type == type);
+          return index;
+      },
+      findSortedIndex: (messageID) => {
+          var sorted = utilities.array();
+          return sorted.findIndex(item => item.messageID == messageID);
+      },
+      /**
+       * Registers a button interpreter.
+       * @param {Object} options - Filtering and response options for reaction interpreters.
+       * @param {Function} options.filter - A function that accepts (cachedButton) to check whether or not the input should be responded to.
+       * @param {Function} options.response - A function that accepts (button = BtnMessageComponent) to respond to an interpreted input that passes the filter check.
+       */
+      register: ({filter, response}) => {
+
+        __intp.register({
+          type: "buttons",
+          filter: filter,
+          response: response
+        });
+
+      }
+    }
+
+    Object.keys(utilities).forEach(utility => {
+
+      this[utility] = utilities[utility];
+
+    });
+
+  }
+
+}
+
 class MessageInterpreter {
 
   #filter;
@@ -148,10 +245,13 @@ class Interpreter {
   constructor() {
 
     var Reactions = evg.remodel("reactions");
+    var Buttons = evg.remodel("buttons");
+
     const interpreters = {
       message: [],
       dm: [],
-      reaction: []
+      reaction: [],
+      button: []
     };
 
     /**
@@ -225,11 +325,39 @@ class Interpreter {
     };
 
     /**
+     * Inteprets button clicks.
+     */
+     this.handleButton = (button) => {
+
+      var message = button.message;
+      var id = button.id;
+
+      var inCache = Buttons.find(entry => (entry.id == id || (Array.isArray(entry.id) && entry.id.includes(id))) && entry.messageID == message.id);
+
+      //The given message is not to be interpreted by the interpreter if not stored as such
+      if (!inCache)
+        return;
+
+      //Reaction interpreter format:
+      /*
+        {
+          filter: function(reactionInterpreter, isAddingReaction),
+          response: function(reaction, user)
+        }
+      */
+      var intp = interpreters.button.find(elem => elem.filter(inCache));
+
+      if (intp)
+        intp.response(button);
+
+    };
+
+    /**
      * Registers interpreters of any specified type.
      * @param {Object} options - All options for the interpreter to register.
      * @param {String} options.type - The type of interpreter (message/dm/reaction) to register.
-     * @param {Function} options.filter - A function that accepts (message, args) for messages/dms or (reactionInterpreter, isAdding) for reactions; and checks whether or not the input should be responded to.
-     * @param {Function} options.response - A function that accepts (message, args) for messages/dms or (reaction, user) for reactions; and uses these parameters to respond to an interpreted input that passes the filter check.
+     * @param {Function} options.filter - A function that accepts (message, args) for messages/dms or (reactionInterpreter, isAdding) for reactions or (cachedButton) for buttons; and checks whether or not the input should be responded to.
+     * @param {Function} options.response - A function that accepts (message, args) for messages/dms or (reaction, user) for reactions or (button = BtnMessageComponent) for buttons; and uses these parameters to respond to an interpreted input that passes the filter check.
      */
     this.register = ({ type, filter, response }) => {
 
@@ -249,7 +377,48 @@ class Interpreter {
     };
 
     /**
-     * Adds an interpretable reaction to the database.
+     * Adds an interpretable button(s) to the database. It is recommended to use ButtonLode instead.
+     * @param {BtnMessageComponent|BtnMessageComponent[]} button - A BtnMessageComponent representing the interpretable button(s) to add to the database.
+     * @param {Object} obj - Data affiliated with this specific ButtonInterpreter to save in the database.
+     * @param {String} obj.type - The unique class or type of ButtonInterpreter this is (e.g. "pollbuttons")
+     * @param {String} obj.messageID - The ID of the message to interpret reactions on.
+     * @param {String} obj.channelID - The ID of the channel containing the message to interpret reactions on.
+     */
+    this.addButton = (button, obj) => {
+
+      if (!button) {
+        //Catch case in which no buttons provided
+      }
+      else if (Array.isArray(button)) {
+        //Multiple buttons
+        obj.id = [];
+
+        button.forEach(btn => {
+          obj.id.push(btn.id);
+        });
+
+      }
+      else {
+        //One button
+          obj.id = button.id;
+
+      }
+
+      Buttons.push(obj);
+
+      return this;
+
+    }
+
+    /**
+     * Adds an interpretable reaction(s) to the database. It is recommended to use ReactionLode instead.
+     * @param {String|String[]} emojis - The emoji or array of interpretable emojis to add to the database.
+     * @param {Object} obj - Data affiliated with this ReactionInterpreter to save in the database.
+     * @param {String} obj.type - The unique class or type of ReactionInterpreter this is (e.g. "reactionroles")
+     * @param {String} obj.messageID - The ID of the message to interpret reactions on.
+     * @param {String} obj.channelID - The ID of the channel containing the message to interpret reactions on.
+     * @param {String|String[]} [obj.name] - The names of the emojis to interpret, for default Discord or text emotes.
+     * @param {String|String[]} [obj.id] - The IDs of the emojis to interpret, for custom and animated emotes.
      */
     this.addReaction = (emojis, obj) => {
 
@@ -297,19 +466,29 @@ class Interpreter {
     this.MessageLode = MessageInterpreter;
 
     /**
+     * Returns a ButtonInterpreter object with simplified methods and utilities for button click interpretation.
+     * Used for: Button click interpreters.
+     */
+    this.ButtonLode = ButtonInterpreter;
+
+    /**
      * Initializes all Interpreters. Formerly named 'fetchReactionInterpreters()'.
      */
     this.initialize = (client) => {
       //Initialize Reaction Interpreters
 
       var cache = Reactions.values();
+      var buttonCache = Buttons.values();
 
-      cache.forEach(entry => {
-        //Fetch and cache all messages that need their reactions interpreted
+      var refetch = entry => {
+        //Fetch and cache all messages that need their reactions/buttons interpreted
         client.channels.fetch(entry.channelID).then(channel => {
           channel.messages.fetch(entry.messageID, true);
         });
-      });
+      };
+
+      cache.forEach(refetch);
+      buttonCache.forEach(refetch);
 
     };
 

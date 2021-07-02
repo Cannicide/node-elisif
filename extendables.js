@@ -30,7 +30,8 @@ class BtnMessageComponent {
 
         this.guild = data.guild_id ? client.guilds.cache.get(data.guild_id) : undefined;
         this.channel = client.channels.cache.get(data.channel_id);
-        this.message = new Message(client, data.message, this.channel);
+        this.message = data.true_message ? data.true_message : new Message(client, data.message, this.channel);
+        if (data.true_message) this._data.message = data.true_message;
       
         if (data.token) {
 
@@ -181,6 +182,34 @@ class BtnMessageComponent {
       return this._data.message.components[row - 1].components[rowIndex].label;
       
     }
+
+    get disabled() {
+      
+        var row = this.row;
+        var rowIndex = this.rowIndex;
+        
+        if (!row || rowIndex === false) return undefined;
+        
+        var comp = this._data.message.components[row - 1].components[rowIndex];
+
+        return !("disabled" in comp) || !comp.disabled ? false : true;
+    
+    }
+
+    get style() {
+      
+        var row = this.row;
+        var rowIndex = this.rowIndex;
+        
+        if (!row || rowIndex === false) return undefined;
+        
+        return buttonUtilities.deconvertColor(this._data.message.components[row - 1].components[rowIndex].style);
+    
+    }
+
+    get color() {
+        return this.style;
+    }
   
     get user() {
       
@@ -198,7 +227,7 @@ class BtnMessageComponent {
   
 }
 
-class MessageButtons {
+class ButtonManager {
 
     constructor(message) {
         this.message = message;
@@ -225,7 +254,7 @@ class MessageButtons {
         var mode = 0;
 
         if (row && rowIndex) mode = 1;
-        else if (row && typeof row === "number") mode = 2;
+        else if (row != undefined && typeof row === "number") mode = 2;
         else if (row && typeof row === "object" && "id" in row && row.id) mode = 3;
         else mode = 4;
 
@@ -242,7 +271,7 @@ class MessageButtons {
                     custom_id: buttondata.custom_id
                 },
                 components: this.message.components,
-                message: this.message,
+                true_message: this.message,
                 channel_id: this.message.channel.id
             };
 
@@ -264,7 +293,7 @@ class MessageButtons {
 
                     index++;
 
-                    if (index == row) button = btn;
+                    if (index == row) buttondata = btn;
 
                 });
 
@@ -275,7 +304,7 @@ class MessageButtons {
                     custom_id: buttondata.custom_id
                 },
                 components: this.message.components,
-                message: this.message,
+                true_message: this.message,
                 channel_id: this.message.channel.id
             };
 
@@ -303,7 +332,7 @@ class MessageButtons {
                     custom_id: buttondata.custom_id
                 },
                 components: this.message.components,
-                message: this.message,
+                true_message: this.message,
                 channel_id: this.message.channel.id
             };
 
@@ -327,7 +356,7 @@ class MessageButtons {
                             custom_id: buttondata.custom_id
                         },
                         components: this.message.components,
-                        message: this.message,
+                        true_message: this.message,
                         channel_id: this.message.channel.id
                     };
         
@@ -355,7 +384,7 @@ class MessageButtons {
     }
 
     add(btnArr) {
-        var components = Object.assign({}, this.message.components);
+        var components = this.message.components;
 
         var compArr = Array.isArray(btnArr) ? btnArr.map(v => buttonUtilities.genComponent(v)) : [buttonUtilities.genComponent(btnArr)];
         
@@ -389,9 +418,11 @@ class MessageButtons {
 
         if (!button) return false;
 
-        var components = Object.assign({}, this.message.components);
+        var components = this.message.components;
 
-        components[button.row].components.splice(button.rowIndex, 1);
+        components[button.row - 1].components.splice(button.rowIndex, 1);
+
+        if (components[button.row - 1].components.length <= 0) components.splice(button.row - 1, 1);
 
         return this.message._editRaw(this.message.content, {components});
 
@@ -402,9 +433,9 @@ class MessageButtons {
 
         if (!button) return false;
 
-        var components = Object.assign({}, this.message.components);
+        var components = this.message.components;
 
-        components[button.row].components[button.rowIndex] = Object.assign(components[button.row].components[button.rowIndex], newProperties);
+        Object.assign(components[button.row - 1].components[button.rowIndex], newProperties);
 
         return this.message._editRaw(this.message.content, {components});
     }
@@ -415,6 +446,58 @@ class MessageButtons {
 
     disable(row, rowIndex) {
         return this.edit(row, rowIndex, {disabled: true});
+    }
+
+    permDisable(row, rowIndex) {
+        return this.edit(row, rowIndex, {disabled: true, style: buttonUtilities.convertColor("gray")});
+    }
+
+    toggleDisabled(row, rowIndex, timeout = false) {
+        var button = this.get(row, rowIndex)
+        
+        if (!button) return false;
+
+        var disabled = button.disabled;
+
+        if (disabled == undefined) return false;
+
+        var output = this.edit(row, rowIndex, {disabled: !disabled});
+
+        if (timeout) setTimeout(() => {this.toggleDisabled(row, rowIndex, false)}, timeout);
+        else return output;
+    }
+
+    setColor(row, rowIndex, color) {
+
+        var button = this.get(row, rowIndex)
+        
+        if (!button) return false;
+
+        var style = button.style;
+
+        if (!style || !color || style == color) return false;
+        if (style == "url") throw new Error("message.buttons#setColor() - Cannot set color of a URL button.");
+        if (color.toLowerCase() == "url" || color.toLowerCase() == "link") throw new Error("message.buttons#setColor() - Cannot set style of regular button to 'URL'.");
+
+        return this.edit(row, rowIndex, {style: buttonUtilities.convertColor(color)});
+
+    }
+
+    setStyle = this.setColor;
+
+    setLabel(row, rowIndex, label) {
+
+        var button = this.get(row, rowIndex)
+        
+        if (!button) return false;
+
+        var currLabel = button.label;
+
+        if (currLabel == label) return false;
+        if (label == "" || !(typeof label === "string") || label.length > 80) throw new Error("message.buttons#setLabel() - Invalid label specified; is empty, too long, or not a String.");
+
+        return this.edit(row, rowIndex, {label});
+
     }
 
 }
@@ -429,6 +512,8 @@ function ExtendedMessage(ExtendableMessage) {
         advanced = true;
         #cooldownTimeLeft = 0;
         #cooldownLastUse = 0;
+        #buttonCollector;
+        #collecting = false;
         // #data;
 
         constructor(client, data, channel) {
@@ -611,7 +696,42 @@ function ExtendedMessage(ExtendableMessage) {
             return this.#cooldownLastUse;
         }
 
-        buttons = new MessageButtons(this);
+        get buttons() {
+            return new ButtonManager(this);
+        }
+
+        /**
+         * Starts a Button Collector that runs the given method when a button in this message is clicked. Only one Button Collector can run on a specific message at a time.
+         * @param {(button:BtnMessageComponent) => Boolean} func - The method to run when a button is clicked. The button is passed as the first argument.
+         * @returns 
+         */
+        startButtonCollector(func) {
+            if (this.components.find(row => row.components.find(c => c.custom_id)) && !this.#collecting) {
+
+                this.#buttonCollector = (button) => {                 
+                    if (this.#collecting) func(button);
+                };
+
+                this.#collecting = true;
+                return this.client.on("buttonClick", this.#buttonCollector);
+            }
+            else return false;
+        }
+
+        /**
+         * Ends the currently active Button Collector on this message, if there is one.
+         * @returns Boolean (whether or not button collection ended)
+         */
+        endButtonCollector() {
+            if (!this.#collecting) return false;
+
+            this.client.removeListener("buttonClick", this.#buttonCollector);
+            this.#collecting = false;
+
+            return true;
+        }
+
+        stopButtonCollector = this.endButtonCollector;
 
         /**
          * Directly replies to the current message with a new message. Supports inline replies!
@@ -645,11 +765,16 @@ function ExtendedMessage(ExtendableMessage) {
 
         }
 
-        _editRaw(content, options = {}) {
+        async _editRaw(content, options = {}) {
             options = Object.assign(this._data, options);
 
-            const { data } = APIMessage.create(this, content, options).resolveData();
-            return this.client.api.channels[this.channel.id].messages[this.id].patch({ data }).then(d => {
+            const template = APIMessage.create(this, content, options).resolveData();
+
+            Object.assign(template.data, options);
+
+            const {data, files} = await template.resolveFiles();
+
+            return this.client.api.channels[this.channel.id].messages[this.id].patch({ data, files }).then(d => {
                 const clone = this._clone();
                 clone._patch(d);
                 return clone;
@@ -695,8 +820,7 @@ const buttonUtilities = {
         return emote;
     },
 
-    convertColor(color) {
-        var values = {
+    colorValues: {
         "blue": 1,
         "blurple": 1,
         "primary": 1,
@@ -709,9 +833,25 @@ const buttonUtilities = {
         "danger": 4,
         "link": 5,
         "url": 5
-        }
+    },
+
+    numToColor: {
+        1: "blue",
+        2: "gray",
+        3: "green",
+        4: "red",
+        5: "url"
+    },
+
+    convertColor(color) {
         
-        return values[color.toLowerCase()];
+        return buttonUtilities.colorValues[color.toLowerCase()];
+    },
+
+    deconvertColor(num) {
+
+        return buttonUtilities.numToColor[num];
+
     },
 
     genComponent(options) {
@@ -910,32 +1050,6 @@ function ExtendedChannel(ExtendableChannel) {
                 .post({ data, files });
             var output = this.client.actions.MessageCreate.handle(rawData).message;
             
-            if (compArr.find(c => c.custom_id)) {
-                
-                var buttonCollector = function(button) {
-                    if (!compArr.find(c => c.custom_id == button.id)) return;
-                    
-                    if (output.collecting) this.collect(button);
-                }
-                
-                output.collecting = false;
-                
-                /**
-                 * @param {Function} func
-                 */
-                output.startButtonCollector = (func) => {
-                    if (output.collecting) return;
-                    this.client.on("buttonClick", buttonCollector.bind({collect: func}));
-                    output.collecting = true;
-                }
-                
-                output.endButtonCollector = () => {
-                    this.client.removeListener("buttonClick", buttonCollector.bind({collect: function(){}}));
-                    output.collecting = false;
-                }
-                
-            }
-            
             return output;
 
         }
@@ -1037,10 +1151,16 @@ module.exports = class DiscordExtender {
 
     static extendEvents(client) {
 
+        const { Events } = require('discord.js').Constants;
+
+        Events.BUTTON_CLICK = 'buttonClick';
+
         //buttonClick event
         client.ws.on('INTERACTION_CREATE', (data) => {
             if (!data.message) return;
-            if (data.data.component_type) {
+
+            //Type 2 = button
+            if (data.data.component_type && data.data.component_type == 2) {
                 const buttonMsg = new BtnMessageComponent(client, data);
                 client.emit('buttonClick', buttonMsg);
             }
