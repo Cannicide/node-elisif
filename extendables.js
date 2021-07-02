@@ -2,6 +2,7 @@
 
 const Discord = require('discord.js');
 const { APIMessage, Message, WebhookClient } = require("discord.js");
+const evg = require("./evg")
 
 class InteractionWebhookClient extends WebhookClient {
 
@@ -18,13 +19,14 @@ class InteractionWebhookClient extends WebhookClient {
 
 }
 
-class BtnMessageComponent {
-  
+class MessageComponent {
+
     constructor(client, data) {
 
         this.client = client;
 
         this.id = data.data.custom_id;
+        this.type = data.data.component_type;
 
         this._data = data;
 
@@ -32,6 +34,89 @@ class BtnMessageComponent {
         this.channel = client.channels.cache.get(data.channel_id);
         this.message = data.true_message ? data.true_message : new Message(client, data.message, this.channel);
         if (data.true_message) this._data.message = data.true_message;
+
+    }
+
+    get index() {
+      
+        var index = 0;
+        var comp;
+          
+        this._data.message.components.forEach(row => {
+  
+          var newcomp = row.components.findIndex(c => c.custom_id && c.custom_id == this.id);
+          
+          if (!comp && newcomp < 0) {
+            index+= row.components.length;
+          }
+          else if (!comp && newcomp >= 0) {
+            index += newcomp;
+            comp = true;
+          }
+  
+        });
+        
+        return index;
+        
+    }
+
+    get row() {
+  
+        var rowindex = this._data.message.components.findIndex(row => {
+  
+          return row.components.find(c => c.custom_id && c.custom_id == this.id);
+  
+        });
+        
+        return rowindex <= -1 ? false : rowindex + 1;
+        
+    }
+    
+    //Index within row, relative to the start of the row
+    get rowIndex() {
+    
+        var row = this.row;
+        
+        if (!row) return false;
+        
+        var rowindex = this._data.message.components[row - 1].components.findIndex(c => c.custom_id && c.custom_id == this.id);
+        
+        return rowindex <= -1 ? false : rowindex;
+    
+    }
+
+    asComponent() {
+      
+        var row = this.row;
+        var rowIndex = this.rowIndex;
+        
+        if (!row || rowIndex === false) return undefined;
+        
+        return this._data.message.components[row - 1].components[rowIndex];
+        
+    }
+
+    get user() {
+      
+        var user = this.client.users.resolve(this._data.user.id);
+        user.fetch = async () => await this.client.users.fetch(this._data.user.id);
+        
+      }
+    
+      get member() {
+        
+        var member = this.guild ? this.guild.members.resolve(this._data.member.user.id) : undefined;
+        if (member) member.fetch = async () => await this.guild.members.fetch(this._data.member.user.id);
+        
+      }
+
+}
+
+class BtnMessageComponent extends MessageComponent {
+  
+    constructor(client, data) {
+
+        super(client, data);
       
         if (data.token) {
 
@@ -124,73 +209,17 @@ class BtnMessageComponent {
         }
     }
   
-    get index() {
-      
-      var index = 0;
-      var comp;
-        
-      this._data.message.components.forEach(row => {
-
-        var newcomp = row.components.findIndex(c => c.custom_id && c.custom_id == this.id);
-        
-        if (!comp && newcomp < 0) {
-          index+= row.components.length;
-        }
-        else if (!comp && newcomp >= 0) {
-          index += newcomp;
-          comp = true;
-        }
-
-      });
-      
-      return index;
-      
-    }
-  
-    get row() {
-  
-      var rowindex = this._data.message.components.findIndex(row => {
-
-        return row.components.find(c => c.custom_id && c.custom_id == this.id);
-
-      });
-      
-      return rowindex <= -1 ? false : rowindex + 1;
-      
-    }
-  
-    //Index within row, relative to the start of the row
-    get rowIndex() {
-      
-      var row = this.row;
-      
-      if (!row) return false;
-      
-      var rowindex = this._data.message.components[row - 1].components.findIndex(c => c.custom_id && c.custom_id == this.id);
-      
-      return rowindex <= -1 ? false : rowindex;
-      
-    }
-  
     get label() {
       
-      var row = this.row;
-      var rowIndex = this.rowIndex;
-      
-      if (!row || rowIndex === false) return false;
-      
-      return this._data.message.components[row - 1].components[rowIndex].label;
+      return this.asComponent().label;
       
     }
 
     get disabled() {
-      
-        var row = this.row;
-        var rowIndex = this.rowIndex;
         
-        if (!row || rowIndex === false) return undefined;
-        
-        var comp = this._data.message.components[row - 1].components[rowIndex];
+        var comp = this.asComponent();
+
+        if (!comp) return undefined;
 
         return !("disabled" in comp) || !comp.disabled ? false : true;
     
@@ -198,12 +227,11 @@ class BtnMessageComponent {
 
     get style() {
       
-        var row = this.row;
-        var rowIndex = this.rowIndex;
+        var comp = this.asComponent();
         
-        if (!row || rowIndex === false) return undefined;
+        if (!comp) return undefined;
         
-        return buttonUtilities.deconvertColor(this._data.message.components[row - 1].components[rowIndex].style);
+        return buttonUtilities.deconvertColor(comp.style);
     
     }
 
@@ -211,18 +239,129 @@ class BtnMessageComponent {
         return this.style;
     }
   
-    get user() {
+}
+
+class SelectMenuComponent extends MessageComponent {
+  
+    constructor(client, data) {
+
+        super(client, data);
+
+        this.selected = data.data.values;
+        this.message.selected = this.selected
       
-      var user = this.client.users.resolve(this._data.user.id);
-      user.fetch = async () => await this.client.users.fetch(this._data.user.id);
-      
+        if (data.token) {
+
+            this._data.token = data.token;
+            this._data.discordID = data.id;
+            this._data.applicationID = data.application_id;
+            this._webhook = new InteractionWebhookClient(data.application_id, data.token, client.options);
+
+            /**
+             * Respond to the selection with no interaction response; useful if you want to customize your response instead of using interaction replies.
+             */
+            this.noReply = async () => {
+                if (this.clickEnded) throw new Error('This menu select was already ended; cannot reply again.');
+                await this.client.api.interactions(this._data.discordID, this._data.token).callback.post({
+                    data: {
+                        type: 6,
+                        data: {
+                            flags: 1 << 6,
+                        },
+                    },
+                });
+                this.clickEnded = true;
+            }
+
+            /**
+             * Sends an interaction reply message to the user who used the select menu. Supports ephemeral messages!
+             * @param {*} content 
+             * @param {*} ephemeral 
+             * @param {*} options 
+             */
+            this.reply = async (content, ephemeral = false, options = {}) => {
+
+                if (this.clickEnded) throw new Error('This menu select was already ended; cannot reply again.');
+
+                var type = 4;
+
+                if (options.reply_type) {
+                    type = options.reply_type;
+                    delete options.reply_type;
+                }
+
+                let apiMessage = APIMessage.create(this.channel, content, options).resolveData();
+
+                if (ephemeral) apiMessage.data.flags = 64;
+                apiMessage.data.allowed_mentions = {
+                    parse: ["users", "roles", "everyone"]
+                };
+
+                const { data, files } = await apiMessage.resolveFiles();
+                await this.client.api.interactions(this._data.discordID, this._data.token).callback
+                    .post({
+                        data: {
+                            data: data,
+                            type: type
+                        },
+                        files
+                    });
+                this.clickEnded = true;
+
+            }
+
+            this._editReply = async (content, options) => {
+
+                if (!this.clickEnded) throw new Error('This menu select was not yet ended; cannot edit reply yet.');
+
+                var output = await this._webhook.editMessage(content, options);
+
+                return this.channel.messages.add(output);
+
+            }
+
+            /**
+             * Sends a delayed interaction reply. The bot will be [thinking...] until the reply delivers. Supports ephemeral messages!
+             * @param {*} content 
+             * @param {*} ephemeral 
+             * @param {*} timeout 
+             * @param {*} options 
+             */
+            this.delayedReply = async (content, ephemeral = false, timeout = 5000, options = {}) => {
+                options.reply_type = 5;
+                this.reply(content, ephemeral, options);
+
+                setTimeout(() => {
+                    this._editReply(content, options);
+                }, timeout)
+
+            }
+
+            this.clickEnded = false;
+        }
     }
   
-    get member() {
-      
-      var member = this.guild ? this.guild.members.resolve(this._data.member.user.id) : undefined;
-      if (member) member.fetch = async () => await this.guild.members.fetch(this._data.member.user.id);
-      
+    //Index within row, relative to the start of the row; always 0 for select menus
+    rowIndex = 0;
+
+    get max() {
+        return this.asComponent().max_values;
+    }
+
+    get min() {
+        return this.asComponent().min_values;
+    }
+
+    get options() {
+        return this.asComponent().options;
+    }
+
+    getOptionByValue(value) {
+        return this.options.find(option => option.value == value);
+    }
+
+    get placeholder() {
+        return this.asComponent().placeholder;
     }
   
 }
@@ -231,6 +370,10 @@ class ButtonManager {
 
     constructor(message) {
         this.message = message;
+    }
+
+    has() {
+        return this.message.hasComponents() && this.message.components.find(v => v.components.find(c => c.type == 2));
     }
 
     /**
@@ -242,7 +385,7 @@ class ButtonManager {
     get(row, rowIndex) {
 
         //Check if message has buttons:
-        if (this.message.components.length < 1 || this.message.components[0].components.length < 1) return false;
+        if (!this.has()) return false;
 
         /*
             4 modes of getting button(s):
@@ -268,7 +411,8 @@ class ButtonManager {
 
             var simdata = {
                 data: {
-                    custom_id: buttondata.custom_id
+                    custom_id: buttondata.custom_id,
+                    component_type: buttondata.type
                 },
                 components: this.message.components,
                 true_message: this.message,
@@ -301,7 +445,8 @@ class ButtonManager {
 
             var simdata = {
                 data: {
-                    custom_id: buttondata.custom_id
+                    custom_id: buttondata.custom_id,
+                    component_type: buttondata.type
                 },
                 components: this.message.components,
                 true_message: this.message,
@@ -329,7 +474,8 @@ class ButtonManager {
 
             var simdata = {
                 data: {
-                    custom_id: buttondata.custom_id
+                    custom_id: buttondata.custom_id,
+                    component_type: buttondata.type
                 },
                 components: this.message.components,
                 true_message: this.message,
@@ -353,7 +499,8 @@ class ButtonManager {
 
                     let simdata = {
                         data: {
-                            custom_id: buttondata.custom_id
+                            custom_id: buttondata.custom_id,
+                            component_type: buttondata.type
                         },
                         components: this.message.components,
                         true_message: this.message,
@@ -385,6 +532,11 @@ class ButtonManager {
 
     add(btnArr) {
         var components = this.message.components;
+
+        var openRow = components.findIndex(v => v.components.length < 5);
+        buttonUtilities.prevRow = openRow < 0 ? (components.length < 5 ? components.length + 1 : 5) : (openRow + 1) + ((components[openRow].components.length - 1) * 0.2);
+
+        if (buttonUtilities.prevRow >= 5.8) throw new Error("message.buttons#add() - A single message cannot have more than 5 rows of buttons.");
 
         var compArr = Array.isArray(btnArr) ? btnArr.map(v => buttonUtilities.genComponent(v)) : [buttonUtilities.genComponent(btnArr)];
         
@@ -502,6 +654,261 @@ class ButtonManager {
 
 }
 
+class SelectMenuManager {
+
+    constructor(message) {
+        this.message = message;
+    }
+
+    has() {
+        return this.message.hasComponents() && this.message.components.find(v => v.components.find(c => c.type == 3));
+    }
+
+    /**
+     * 
+     * @param {Number|{id:String}} [row] - Represents one of: sel index, or object with sel id specified. If unspecified, gets all sels in the message.
+     * @returns SelectMenuComponent | SelectMenuComponent[] | false
+     */
+    get(row) {
+
+        //Check if message has select menus:
+        if (!this.has()) return false;
+
+        /*
+            4 modes of getting sel(s):
+                1) (index) - using index to get a single, specific sel menu
+                2) ({id:"custom id here"}) - using a sel menu's custom id to get that specific sel menu
+                3) () - getting all sel menus on the message in an array of SelectMenuComponents
+        */
+        var mode = 0;
+
+        if (row != undefined && typeof row === "number") mode = 1;
+        else if (row && typeof row === "object" && "id" in row && row.id) mode = 2;
+        else mode = 3;
+
+        
+        if (mode == 1) {
+
+            var index = -1;
+            var seldata = false;
+
+            this.message.components.forEach(rowset => {
+
+                rowset.components.forEach(sel => {
+
+                    index++;
+
+                    if (index == row) seldata = sel;
+
+                });
+
+            });
+
+            var simdata = {
+                data: {
+                    custom_id: seldata.custom_id,
+                    values: this.message.selected ? this.message.selected : [],
+                    component_type: seldata.type
+                },
+                components: this.message.components,
+                true_message: this.message,
+                channel_id: this.message.channel.id
+            };
+
+            if (this.message.guild) simdata.guild_id = this.message.guild.id;
+
+            var menu = new SelectMenuComponent(this.message.client, simdata);
+
+            return menu;
+
+        }
+        else if (mode == 2) {
+
+            var seldata = false;
+
+            this.message.components.forEach(rowset => {
+
+                var sel = rowset.components.find(c => c.custom_id == row.id);
+
+                if (sel) seldata = sel;
+
+            });
+
+            var simdata = {
+                data: {
+                    custom_id: seldata.custom_id,
+                    values: this.message.selected ? this.message.selected : [],
+                    component_type: seldata.type
+                },
+                components: this.message.components,
+                true_message: this.message,
+                channel_id: this.message.channel.id
+            };
+
+            if (this.message.guild) simdata.guild_id = this.message.guild.id;
+
+            var menu = new SelectMenuComponent(this.message.client, simdata);
+
+            return menu;
+
+        }
+        else {
+
+            var menus = [];
+
+            this.message.components.forEach(rowset => {
+
+                rowset.components.forEach(seldata => {
+
+                    let simdata = {
+                        data: {
+                            custom_id: seldata.custom_id,
+                            values: this.message.selected ? this.message.selected : [],
+                            component_type: seldata.type
+                        },
+                        components: this.message.components,
+                        true_message: this.message,
+                        channel_id: this.message.channel.id
+                    };
+        
+                    if (this.message.guild) simdata.guild_id = this.message.guild.id;
+
+                    var menu = new SelectMenuComponent(this.message.client, simdata);
+                    menus.push(menu);
+
+                });
+
+            });
+
+            return menus;
+
+        }
+
+    }
+
+    add(selArr) {
+        var components = this.message.components;
+
+        selUtilities.prevRow = components.length + 1;
+
+        if (selUtilities.prevRow >= 6) throw new Error("message.menus#add() - A single message cannot have more than 5 rows of select menus.");
+
+        var compArr = Array.isArray(selArr) ? selArr.map(v => selUtilities.genComponent(v)) : [selUtilities.genComponent(selArr)];
+        
+        compArr.forEach(component => {
+            
+            var row = component.row;
+            
+            if (row > 4) throw new Error("Messages can only have up to 5 rows of select menus.");
+            
+            if (row >= components.length && !components[row]) {
+            //Create new row
+                components[row] = {
+                    type: 1,
+                    components: []
+                };
+            }
+            
+            delete component.row;
+            components[row].components.push(component);
+            
+        });
+        
+        components = components.filter(co => co);
+
+        return this.message._editRaw(this.message.content, {components});
+
+    }
+
+    remove(index) {
+        var menu = this.get(index);
+
+        if (!menu) return false;
+
+        var components = this.message.components;
+
+        if (components[menu.row - 1].components.length <= 1) components.splice(menu.row - 1, 1);
+        else components[menu.row - 1].components.splice(menu.rowIndex, 1);
+
+        return this.message._editRaw(this.message.content, {components});
+
+    }
+
+    edit(index, newProperties) {
+        var menu = this.get(index);
+
+        if (!menu) return false;
+
+        var components = this.message.components;
+
+        Object.assign(components[menu.row - 1].components[menu.rowIndex], newProperties);
+
+        return this.message._editRaw(this.message.content, {components});
+    }
+
+    setPlaceholder(index, placeholder) {
+        return this.edit(index, {placeholder});
+    }
+
+    setMin(index, min) {
+        return this.edit(index, {min_values: min});
+    }
+
+    setMax(index, max) {
+        return this.edit(index, {max_values: max});
+    }
+
+    options = {
+        menu: this,
+        /**
+         * Adds an option to the specified select menu.
+         * @param {Number|SelectMenuComponent} index - Represents either the index of the select menu, or a Select Menu object.
+         * @param {Object} option - A single option to add to the select menu.
+         * @param {String} option.label - Label for this selectable option.
+         * @param {String} [option.value] - Optional hidden value for this selectable option, for your dev purposes. Defaults to the label.
+         * @param {String} [option.description] - Optional description for this selectable option. No description by default.
+         * @param {String} [option.emoji] - Optional emoji for this selectable option. No emoji by default.
+         * @param {String} [option.default] - Whether or not this selectable option is selected by default.
+         */
+        add(index, option) {
+            var menu = this.menu.get(index);
+
+            var options = menu.options;
+            options.push(option);
+
+            return this.menu.edit(index, {options});
+        },
+
+        /**
+         * Removes an option from the specified select menu.
+         * @param {Number|SelectMenuComponent} index - Represents either the index of the select menu, or a Select Menu object.
+         * @param {String} value - The value property, of the option to be removed.
+         */
+        remove(index, value) {
+            var menu = this.menu.get(index);
+
+            var options = menu.options;
+
+            if (options.length == 1) throw new Error("message.menus.options#remove() - Cannot remove the only option of a select menu.");
+
+            var findex = options.findIndex(option => option.value == value);
+
+            if (findex < 0) return false;
+
+            options.splice(findex, 1);
+
+            return this.menu.edit(index, {options});
+
+        },
+
+        get(index, value) {
+            var menu = this.menu.get(index);
+
+            return menu.getOptionByValue(value);
+        }
+    }
+
+}
 
 function ExtendedMessage(ExtendableMessage) {
     //Advanced Message
@@ -513,7 +920,9 @@ function ExtendedMessage(ExtendableMessage) {
         #cooldownTimeLeft = 0;
         #cooldownLastUse = 0;
         #buttonCollector;
+        #menuCollector;
         #collecting = false;
+        #menu_collecting = false;
         // #data;
 
         constructor(client, data, channel) {
@@ -559,7 +968,7 @@ function ExtendedMessage(ExtendableMessage) {
             this.dbAsync = require("./evg").from;
             this.dbJson = require("./evg").cache;
             this.dbDynamic = require("./evg").remodel;
-            this.getGlobalSetting = require("./settings").Global().get;
+            this.getGlobalSetting = (sett) => require("./settings").Global().get(sett);
 
         }
 
@@ -696,8 +1105,16 @@ function ExtendedMessage(ExtendableMessage) {
             return this.#cooldownLastUse;
         }
 
+        hasComponents() {
+            return this.components.length >= 1 && this.components[0].components.length >= 1;
+        }
+
         get buttons() {
             return new ButtonManager(this);
+        }
+
+        get menus() {
+            return new SelectMenuManager(this);
         }
 
         /**
@@ -732,6 +1149,39 @@ function ExtendedMessage(ExtendableMessage) {
         }
 
         stopButtonCollector = this.endButtonCollector;
+
+        /**
+         * Starts a Menu Collector that runs the given method when a select menu is used. Only one Menu Collector can run on a specific message at a time.
+         * @param {(menu:SelectMenuComponent) => Boolean} func - The method to run when a select menu is used. The menu is passed as the first argument.
+         * @returns 
+         */
+         startMenuCollector(func) {
+            if (this.components.find(row => row.components.find(c => c.custom_id)) && !this.#menu_collecting) {
+
+                this.#menuCollector = (menu) => {                 
+                    if (this.#menu_collecting) func(menu);
+                };
+
+                this.#menu_collecting = true;
+                return this.client.on("menuSelect", this.#menuCollector);
+            }
+            else return false;
+        }
+
+        /**
+         * Ends the currently active Menu Collector on this message, if there is one.
+         * @returns Boolean (whether or not menu collection ended)
+         */
+        endMenuCollector() {
+            if (!this.#menu_collecting) return false;
+
+            this.client.removeListener("menuSelect", this.#menuCollector);
+            this.#menu_collecting = false;
+
+            return true;
+        }
+
+        stopMenuCollector = this.endMenuCollector;
 
         /**
          * Directly replies to the current message with a new message. Supports inline replies!
@@ -797,10 +1247,20 @@ function ExtendedMessage(ExtendableMessage) {
 }
 
 const buttonUtilities = {
-    prevID: 1000000,
+    db: evg.resolve("utility"),
+
+    get id() {
+        var tab = this.db.table("extendables");
+        if (!tab.has("component_id")) tab.set("component_id", 1000000);
+
+        var current = tab.get("component_id");
+        tab.add("component_id", 1);
+
+        return current;
+    },
 
     genID() {
-        var id = "ELISIFBTN" + (buttonUtilities.prevID++);
+        var id = "ELISIFBTN" + (buttonUtilities.id);
         return id;
     },
 
@@ -854,6 +1314,8 @@ const buttonUtilities = {
 
     },
 
+    prevRow: 1,
+
     genComponent(options) {
         
         options = options || {
@@ -866,7 +1328,7 @@ const buttonUtilities = {
             row: 1
         };
         
-        if (!("color" in options)) {
+        if (!("color" in options) || !options.color) {
             options.color = "blue";
         }
         
@@ -882,10 +1344,10 @@ const buttonUtilities = {
             options.url = undefined;
         }
         
-        if (!("label" in options)) options.label = "[No label set]";
+        if (!("label" in options) || !options.label) options.label = "[No label set]";
         else if (options.label.length > 80) options.label = "[Label too large]";
         
-        if (!("row" in options)) options.row = 1;
+        if (!("row" in options) || !options.row) options.row = Math.floor(buttonUtilities.prevRow += 0.2);
         
         var component = {
             type: 2,
@@ -896,6 +1358,90 @@ const buttonUtilities = {
             url: options.url,
             disabled: options.disabled,
             row: options.row - 1
+        };
+        
+        return component;
+    
+    }
+
+}
+
+const selUtilities = {
+    
+    genID() {
+        var id = "ELISIFSEL" + (buttonUtilities.id);
+        return id;
+    },
+
+    resolveEmoji(emoji) {
+        return buttonUtilities.resolveEmoji(emoji);
+    },
+
+    prevRow: 1,
+
+    genComponent(settings) {
+        
+        settings = settings || {
+            placeholder: "",
+            min: 1,
+            max: 1,
+            options: [
+                {
+                    label: "[No label set]",
+                    value: "none",
+                    description: "No options were specified for this Select Menu.",
+                    emoji: "",
+                    default: true
+                }
+            ],
+            id: false,
+            row: 1
+        };
+        
+        if (!("placeholder" in settings) || !settings.placeholder) {
+            settings.placeholder = "Select an option...";
+        }
+
+        if (!("min" in settings) || !settings.min) settings.min = 1;
+        if (!("max" in settings) || !settings.max) settings.max = 1;
+        
+        if (!("options" in settings) || !settings.options) {
+            settings.options = [];
+            settings.options.push({
+                label: "[No label set]",
+                value: "none",
+                description: "No options were specified for this Select Menu.",
+                emoji: "",
+                default: true
+            });
+        }
+
+        if (!("id" in settings) || !settings.id) {
+            settings.id = selUtilities.genID();
+        }
+
+        settings.options.forEach(options => {
+        
+            if (!("label" in options) || !options.label) options.label = "[No label set]";
+            else if (options.label.length > 25) options.label = "[Label too large]";
+
+            if (!("value" in options) || !options.value) options.value = options.label;
+            else if (options.value.length > 100) throw new Error("Select Menu Option value too large for: " + `${options.label}`);
+
+            if ("emoji" in options && options.emoji) options.emoji = selUtilities.resolveEmoji(options.emoji);
+
+        });
+        
+        if (!("row" in settings) || !settings.row) settings.row = selUtilities.prevRow++;
+        
+        var component = {
+            type: 3,
+            custom_id: settings.id,
+            row: settings.row - 1,
+            options: settings.options,
+            placeholder: settings.placeholder,
+            min_values: settings.min,
+            max_values: settings.max
         };
         
         return component;
@@ -1011,11 +1557,13 @@ function ExtendedChannel(ExtendableChannel) {
          * @param {String} [btnArr[].disabled] - Whether or not the button is disabled. Defaults to false.
          * @param {String} [btnArr[].url] - The optional URL this button leads to. Using this property overrides color and ID.
          * @param {String} [btnArr[].id] - The optional custom ID of this button. If unspecified, Elisif generates an unique ID for you.
-         * @param {String} [btnArr[].row] - The optional row of buttons, or "action row", to add this button to. Defaults to 1.
+         * @param {Number} [btnArr[].row] - The optional row of buttons & menus, or "action row", to add this button to. If unspecified, Elisif will select the next available row.
          */
         async button(embedOptions, btnArr) {
 
             var embed = new (require("./interface").Embed)(this.lastMessage, embedOptions);
+
+            buttonUtilities.prevRow = 1;
 
             var compArr = Array.isArray(btnArr) ? btnArr.map(v => buttonUtilities.genComponent(v)) : [buttonUtilities.genComponent(btnArr)];
             var components = [];
@@ -1049,6 +1597,67 @@ function ExtendedChannel(ExtendableChannel) {
             var rawData = await this.client.api.channels[this.id].messages
                 .post({ data, files });
             var output = this.client.actions.MessageCreate.handle(rawData).message;
+            
+            return output;
+
+        }
+
+        /**
+         * Sends a message with one or more select menus attached.
+         * @param {Object} embedOptions - Options for the message itself. Uses the same options as TextChannel#embed().
+         * @param {Object[]} selArr - An array of options for multiple select menus, or options for a single select menu.
+         * @param {String} [selArr[].placeholder] - Optional placeholder text of the select menu.
+         * @param {Number} [selArr[].min] - Optional minimum number of options to be selected. Defaults to 1.
+         * @param {Number} [selArr[].max] - Optional maximum number of options to be selected. Defaults to 1.
+         * @param {Object[]} selArr[].options - The selectable options for this select menu.
+         * @param {String} selArr[].options[].label - Label for this selectable option.
+         * @param {String} [selArr[].options[].value] - Optional hidden value for this selectable option, for your dev purposes. Defaults to the label.
+         * @param {String} [selArr[].options[].description] - Optional description for this selectable option. No description by default.
+         * @param {String} [selArr[].options[].emoji] - Optional emoji for this selectable option. No emoji by default.
+         * @param {String} [selArr[].options[].default] - Whether or not this selectable option is selected by default.
+         * @param {String} [selArr[].id] - The optional custom ID of this select menu. If unspecified, Elisif generates an unique ID for you.
+         * @param {Number} [selArr[].row] - The optional row of buttons & menus, or "action row", to add this select menu to. If unspecified, Elisif will select the next available row.
+         */
+         async selectMenu(embedOptions, selArr) {
+
+            var embed = new (require("./interface").Embed)(this.lastMessage, embedOptions);
+
+            selUtilities.prevRow = 1;
+
+            var compArr = Array.isArray(selArr) ? selArr.map(v => selUtilities.genComponent(v)) : [selUtilities.genComponent(selArr)];
+            var components = [];
+            
+            compArr.forEach(component => {
+                
+                var row = component.row;
+                
+                if (row > 4) throw new Error("Messages can only have up to 5 rows of select menus.");
+                
+                if (row >= components.length && !components[row]) {
+                    //Create new row
+                    components[row] = {
+                        type: 1,
+                        components: []
+                    };
+                }
+                
+                delete component.row;
+                components[row].components.push(component);
+                
+            });
+            
+            components = components.filter(co => co);
+            
+            var template = APIMessage.create(this, embed.content, embed).resolveData();
+            
+            template.data.components = components;
+            
+            const { data, files } = await template.resolveFiles();
+            var rawData = await this.client.api.channels[this.id].messages
+                .post({ data, files });
+            var output = this.client.actions.MessageCreate.handle(rawData).message;
+
+            output.selected = false;
             
             return output;
 
@@ -1163,6 +1772,12 @@ module.exports = class DiscordExtender {
             if (data.data.component_type && data.data.component_type == 2) {
                 const buttonMsg = new BtnMessageComponent(client, data);
                 client.emit('buttonClick', buttonMsg);
+            }
+
+            //Type 2 = button
+            else if (data.data.component_type && data.data.component_type == 3) {
+                const buttonMsg = new SelectMenuComponent(client, data);
+                client.emit('menuSelect', buttonMsg);
             }
         });
 
