@@ -21,6 +21,9 @@ allIntents.push("GUILD_PRESENCES");
 //Discord.js extension
 const DiscordExtender = require("./extendables");
 
+//Interpreter
+const Interpreter = require("./interpreter");
+
 //File system initialized
 const fs = require("fs");
 
@@ -321,7 +324,53 @@ class ExtendedClient extends Discord.Client {
           }
       };
 
-      if (autoInitialize && autoInitialize.enabled && autoInitialize.path) this.commands.initialize(autoInitialize.path, this.prefix.get());
+      if (autoInitialize && autoInitialize.enabled && autoInitialize.path) {
+        this.commands.initialize(autoInitialize.path, this.prefix.get());
+
+        //Auto initialize message event
+        this.on("message", (message) => {
+
+          try {
+
+            // Avoid bot messages, DM and otherwise:
+            if (message.author.bot) return false;
+    
+            // DM determination:
+            if (message.guild === null) {
+                
+                //Interpret for DiscordSRZ code or other DM interpretation
+                Interpreter.handleDm(message, message.content.split(" "));
+    
+                return false;
+            }
+          
+    
+            //Handle command:
+            var cmd = this.commands.handle(message);
+    
+            //Handle messages to be interpreted:
+            if (!cmd) {
+                Interpreter.handleMessage(message, message.content.split(" "));
+            }
+      
+          }
+          catch (err) {
+              message.channel.send(`Errors found:\n\`\`\`${err}\nAt ${err.stack}\`\`\``);
+          }
+
+        });
+
+        //Auto initialize interpreting reaction add
+        this.on("messageReactionAdd", (r, user) => {
+          Interpreter.handleReaction(r, user, true);
+        });
+        
+        //Auto initialize interpreting reaction remove
+        this.on("messageReactionRemove", (r, user) => {
+          Interpreter.handleReaction(r, user, false);
+        });
+
+      }
 
       refreshCache();
 
