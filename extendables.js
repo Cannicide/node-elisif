@@ -100,6 +100,8 @@ class MessageComponent {
       
         var user = this.client.users.resolve(this._data.user.id);
         user.fetch = async () => await this.client.users.fetch(this._data.user.id);
+
+        return user;
         
     }
     
@@ -107,6 +109,8 @@ class MessageComponent {
     
         var member = this.guild ? this.guild.members.resolve(this._data.member.user.id) : undefined;
         if (member) member.fetch = async () => await this.guild.members.fetch(this._data.member.user.id);
+
+        return member;
     
     }
 

@@ -251,6 +251,8 @@ class Trivia extends Game {
                     other_options.shift();
                 });
 
+                return response;
+
             });
         }
 
@@ -279,12 +281,12 @@ class Trivia extends Game {
         };
 
         //Delay sending message for a few seconds:
-        setTimeout(() => {
+        setTimeout(async () => {
 
             //Double check that the game is still running
             if (!this.isRunning) return;
 
-            var m = this.channel.selectMenu(embed, {
+            var m = await this.channel.selectMenu(embed, {
                 placeholder: "Select an answer...",
                 options: current_data.options
             });
