@@ -49,6 +49,7 @@ class Game {
         var gameName = this.constructor.name;
 
         if (!this.isRunning) Game.running.push({name: gameName, player: this.player.id})
+        else this.alreadyRunning = true;
     }
 
     /**
@@ -398,8 +399,8 @@ module.exports = {
 
             let game = new Trivia(message);
 
-            if (game.isRunning) {
-                var m = message.channel.button("You are already running a Dynamic Trivia game(s). To avoid bugs or confusion caused by duplicate games, you must end your earlier game to start a new one.", {
+            if (game.alreadyRunning) {
+                var m = await message.channel.button("You are already running a Dynamic Trivia game(s). To avoid bugs or confusion caused by duplicate games, you must end your earlier game to start a new one.", {
                     color: "red",
                     label: "End Previous Game"
                 });
