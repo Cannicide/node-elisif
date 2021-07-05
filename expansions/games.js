@@ -198,7 +198,7 @@ class Trivia extends Game {
         //Generate question, answers, and message embed:
 
         if (this.questions.length < 1) {
-            var request = await fetch(this.uri);
+            var request = await (await fetch(this.uri)).json();
             var emotes = ["🇦", "🇧", "🇨", "🇩"];
 
             this.questions = request.results.map(item => {
