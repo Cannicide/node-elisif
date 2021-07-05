@@ -1,4 +1,6 @@
-var Command = require("../command");
+// A command to start or join Voice Channel Activities.
+
+const Command = require("../command");
 const VCActivity = require("../vc_activities");
 
 module.exports = new Command("vcactivity", {

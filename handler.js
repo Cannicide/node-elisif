@@ -277,6 +277,8 @@ class ExtendedClient extends Discord.Client {
     this.description = description;
     this.expansions = expansions;
 
+    this.hasExpansion = (expansion) => this.expansions.includes(expansion); 
+
     this.intents = intents || bot_intents;
     this.name = name;
     this.port = listener.address().port;

@@ -43,7 +43,7 @@ class Alias {
  * @param {Boolean} [options.invisible] - Whether or not the command will not be shown in the help command menu. Intended for moderator commands or easter eggs.
  * @param {String} [options.desc] - Optional description of the command.
  * @param {Boolean} [options.dm_only] - Set command as DM-only.
- * @param {Number} [options.cooldown] - Set a cooldown on the command.
+ * @param {Number} [options.cooldown] - Set a cooldown on the command, in seconds.
  * @param {String[]} [options.aliases] - Specify command aliases.
  * @param {String[]} [options.channels] - Specify channel names/IDs to restrict this command to.
  * @param {Boolean} [options.isalias] - Whether or not this command is an alias

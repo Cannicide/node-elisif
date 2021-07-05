@@ -1,4 +1,6 @@
-var Command = require("../command");
+// A built-in help command to view information and usage of all existent, visible bot commands.
+
+const Command = require("../command");
 const client = require("../index").Client.getInstance();
 
 module.exports = new Command("help", {

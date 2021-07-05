@@ -7,6 +7,7 @@ const Interface = require("./interface");
 const EvG = require("./evg");
 const Interpreter = require("./interpreter");
 const Settings = require("./settings");
+const fetch = require("node-fetch");
 
 class NodeElisif extends Handler {
 
@@ -15,6 +16,7 @@ class NodeElisif extends Handler {
     evg = EvG;
     interpreter = Interpreter;
     settings = Settings;
+    fetch = fetch;
 
     #instance;
 

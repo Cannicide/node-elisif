@@ -1,0 +1,1 @@
+// An expansion implementing a configurable Points System to allow guild members to gain rewards for doing certain actions.

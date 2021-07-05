@@ -101,14 +101,14 @@ class MessageComponent {
         var user = this.client.users.resolve(this._data.user.id);
         user.fetch = async () => await this.client.users.fetch(this._data.user.id);
         
-      }
+    }
     
-      get member() {
-        
+    get member() {
+    
         var member = this.guild ? this.guild.members.resolve(this._data.member.user.id) : undefined;
         if (member) member.fetch = async () => await this.guild.members.fetch(this._data.member.user.id);
-        
-      }
+    
+    }
 
 }
 
@@ -178,7 +178,7 @@ class BtnMessageComponent extends MessageComponent {
 
             }
 
-            this._editReply = async (content, options) => {
+            this.editReply = async (content, options) => {
 
                 if (!this.clickEnded) throw new Error('This button click was not yet ended; cannot edit reply yet.');
 
@@ -200,7 +200,7 @@ class BtnMessageComponent extends MessageComponent {
                 this.reply(content, ephemeral, options);
 
                 setTimeout(() => {
-                    this._editReply(content, options);
+                    this.editReply(content, options);
                 }, timeout)
 
             }
@@ -310,7 +310,7 @@ class SelectMenuComponent extends MessageComponent {
 
             }
 
-            this._editReply = async (content, options) => {
+            this.editReply = async (content, options) => {
 
                 if (!this.clickEnded) throw new Error('This menu select was not yet ended; cannot edit reply yet.');
 
@@ -332,7 +332,7 @@ class SelectMenuComponent extends MessageComponent {
                 this.reply(content, ephemeral, options);
 
                 setTimeout(() => {
-                    this._editReply(content, options);
+                    this.editReply(content, options);
                 }, timeout)
 
             }
@@ -1126,7 +1126,7 @@ function ExtendedMessage(ExtendableMessage) {
             if (this.components.find(row => row.components.find(c => c.custom_id)) && !this.#collecting) {
 
                 this.#buttonCollector = (button) => {                 
-                    if (this.#collecting) func(button);
+                    if (this.#collecting && button.message.id == this.id) func(button);
                 };
 
                 this.#collecting = true;
@@ -1159,7 +1159,7 @@ function ExtendedMessage(ExtendableMessage) {
             if (this.components.find(row => row.components.find(c => c.custom_id)) && !this.#menu_collecting) {
 
                 this.#menuCollector = (menu) => {                 
-                    if (this.#menu_collecting) func(menu);
+                    if (this.#menu_collecting && menu.message.id == this.id) func(menu);
                 };
 
                 this.#menu_collecting = true;

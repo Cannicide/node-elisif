@@ -1,4 +1,7 @@
 # node-elisif
+[![Node Package](https://github.com/Cannicide/node-elisif/actions/workflows/npm-publish.yml/badge.svg)](https://github.com/Cannicide/node-elisif/actions/workflows/npm-publish.yml)
+
+## Information
 A powerful Discord Bot container, command handler, and partial extension of discord.js designed to be both simplistic and feature-rich. Based on the command handler and various systems I developed for my three discord bots: Elisif, Panacea, and Scavenger.
 
 **Note: node-elisif has not been fully completed and tested yet.** Certain parts of the code, especially new features such as buttons and select menus, *may* cause errors.
