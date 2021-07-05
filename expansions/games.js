@@ -28,8 +28,10 @@ class Game {
     //Score of player in current game
     #score = 0;
 
-    //Target score of the game
-    #target_score;
+    /**
+     * Returns the player's score target/goal (e.g. the score needed to win).
+     */
+    target;
 
     //The number of times super.render() has been called.
     #render_calls = 0;
@@ -75,13 +77,6 @@ class Game {
      */
     addScore(score) {
         this.#score += score;
-    }
-
-    /**
-     * Returns the player's score target/goal (e.g. the score needed to win).
-     */
-    get target() {
-        return this.#target_score;
     }
 
     /**
@@ -156,7 +151,7 @@ class Game {
 class Trivia extends Game {
 
     #uri = "https://opentdb.com/api.php?amount=5&encode=base64&difficulty=";
-    #target_score = 15;
+    target = 15;
 
     questions = [];
 
@@ -260,7 +255,7 @@ class Trivia extends Game {
         var catImage = await this.placeholderImage();
 
         var embed = {
-            title: `Dynamic Trivia: Question ${this.score}/${this.target}`,
+            title: `Dynamic Trivia: Question ${this.score + 1}/${this.target}`,
             fields: [
                 {
                     name: "Category",
@@ -277,7 +272,7 @@ class Trivia extends Game {
                     value: current_data.question
                 }
             ],
-            image: catImage
+            thumbnail: catImage
         };
 
         //Delay sending message for a few seconds:
@@ -316,7 +311,7 @@ class Trivia extends Game {
                     if (this.score == this.target) {
 
                         var reward = this.reward(this.target);
-                        menu.delayedReply("", false, 2000,  new message.interface.Embed(message, {
+                        menu.delayedReply("** **", false, 2000, new this.message.interface.Embed(this.message, {
                             desc: `✅ You answered correctly!\n\n**🎉 You won the game!**${reward}`,
                             fields: [
                                 {
@@ -336,7 +331,7 @@ class Trivia extends Game {
                     //Next question
                     else {
 
-                        menu.delayedReply("", false, 2000, new message.interface.Embed(message, {
+                        menu.delayedReply("** **", false, 2000, new this.message.interface.Embed(this.message, {
                             desc: `✅ You answered correctly!\n*Loading next question...*`,
                             fields: [
                                 {
@@ -358,7 +353,7 @@ class Trivia extends Game {
                 //Incorrect answer
                 else {
 
-                    menu.delayedReply("", false, 2000, new message.interface.Embed(message, {
+                    menu.delayedReply("** **", false, 2000, new this.message.interface.Embed(this.message, {
                         desc: `<:no:669928674119778304> You answered incorrectly...\n\n**Game over :(**\n\nYou correctly answered ${this.score} questions in a row!`,
                         fields: [
                             {

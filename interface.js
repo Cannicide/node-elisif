@@ -97,6 +97,8 @@ class EmbedMessage {
                 return embed;
             }
 
+            embed.embeds = [embed.embed];
+
         }
         else {
 

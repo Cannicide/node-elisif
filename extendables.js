@@ -7,6 +7,7 @@ const evg = require("./evg")
 class InteractionWebhookClient extends WebhookClient {
 
     async editMessage(content, options) {
+
         var api = APIMessage.create(this, content, options).resolveData();
 
         const { data, files } = await api.resolveFiles();
@@ -98,8 +99,8 @@ class MessageComponent {
 
     get user() {
       
-        var user = this.client.users.resolve(this._data.user.id);
-        user.fetch = async () => await this.client.users.fetch(this._data.user.id);
+        var user = this.client.users.resolve(this._data.member.user.id);
+        user.fetch = async () => await this.client.users.fetch(this._data.member.user.id);
 
         return user;
         
