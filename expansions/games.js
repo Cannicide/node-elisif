@@ -3,6 +3,7 @@
 
 const fetch = require("node-fetch");
 const Command = require("../command");
+const rainbowLine = "https://cdn.discordapp.com/attachments/728320173009797190/861743129241976852/rainbow_line.gif";
 
 function givePoints(client, userID, points) {
 
@@ -172,7 +173,7 @@ class Trivia extends Game {
     }
 
     reward(points) {
-        if (super.reward(points)) return `\n\n**+${this.target} points**`;
+        if (super.reward(points)) return `\n**+${this.target} points**`;
         else return "";
     }
 
@@ -186,8 +187,9 @@ class Trivia extends Game {
 
         //Message sent only when game starts:
         super.render({
-            title: "Dynamic Trivia",
-            desc: "In Dynamic Trivia, you will be posed 15 questions that get progressively harder: 5 easy, 5 medium, and 5 hard. Some will be multiple choice, some will be true/false. Answer all questions correctly, in a row, to win the game! If you answer any incorrectly, you lose and must restart the game." + points_message
+            title: "Dynamic Trivia - Info",
+            desc: `In Dynamic Trivia, you will be posed ${this.target} questions that get progressively harder: ${this.target / 3} easy, ${this.target / 3} medium, and ${this.target / 3} hard. Some will be multiple choice, some will be true/false. Answer all questions correctly, in a row, to win the game! If you answer any incorrectly, you lose and must restart the game.` + points_message,
+            image: rainbowLine
         });
 
         //Generate question, answers, and message embed:
@@ -255,7 +257,7 @@ class Trivia extends Game {
         var catImage = await this.placeholderImage();
 
         var embed = {
-            title: `Dynamic Trivia: Question ${this.score + 1}/${this.target}`,
+            title: `Question ${this.score + 1}/${this.target}`,
             fields: [
                 {
                     name: "Category",
@@ -264,7 +266,7 @@ class Trivia extends Game {
                 },
                 {
                     name: "Type",
-                    value: (this.difficulty[0].toUpperCase() + this.difficulty.slice(1)) + " " + (current_data.type == "multiple" ? "Multiple Choice" : "True / False"),
+                    value: (this.difficulty[0].toUpperCase() + this.difficulty.slice(1)) + " (" + (current_data.type == "multiple" ? "Multiple Choice" : "True / False") + ")",
                     inline: true
                 },
                 {
@@ -272,7 +274,8 @@ class Trivia extends Game {
                     value: current_data.question
                 }
             ],
-            thumbnail: catImage
+            thumbnail: catImage,
+            footer: [this.player.username, `Dynamic Trivia`]
         };
 
         //Delay sending message for a few seconds:
@@ -311,8 +314,9 @@ class Trivia extends Game {
                     if (this.score == this.target) {
 
                         var reward = this.reward(this.target);
-                        menu.delayedReply("** **", false, 2000, new this.message.interface.Embed(this.message, {
-                            desc: `✅ You answered correctly!\n\n**🎉 You won the game!**${reward}`,
+                        menu.delayedReply("** **", false, 4000, new this.message.interface.Embed(this.message, {
+                            title: "Dynamic Trivia - Victory!",
+                            desc: `✅ You answered correctly!\n\n**🎉 You won the game!**${reward}\n** **`,
                             fields: [
                                 {
                                     name: "Your Choice",
@@ -331,8 +335,9 @@ class Trivia extends Game {
                     //Next question
                     else {
 
-                        menu.delayedReply("** **", false, 2000, new this.message.interface.Embed(this.message, {
-                            desc: `✅ You answered correctly!\n*Loading next question...*`,
+                        menu.delayedReply("** **", false, 4000, new this.message.interface.Embed(this.message, {
+                            title: "Dynamic Trivia - Correct!",
+                            desc: `✅ You answered correctly!\n*Loading next question...*\n** **`,
                             fields: [
                                 {
                                     name: "Your Choice",
@@ -353,8 +358,9 @@ class Trivia extends Game {
                 //Incorrect answer
                 else {
 
-                    menu.delayedReply("** **", false, 2000, new this.message.interface.Embed(this.message, {
-                        desc: `<:no:669928674119778304> You answered incorrectly...\n\n**Game over :(**\n\nYou correctly answered ${this.score} questions in a row!`,
+                    menu.delayedReply("** **", false, 4000, new this.message.interface.Embed(this.message, {
+                        title: "Dynamic Trivia - Game Over...",
+                        desc: `<:no:669928674119778304> You answered incorrectly...\n\n**😿 Game over!**\nYou correctly answered ${this.score} questions in a row.\n** **`,
                         fields: [
                             {
                                 name: "Your Choice",
@@ -374,7 +380,7 @@ class Trivia extends Game {
 
             });
 
-        }, 2500);
+        }, 5000);
 
     }
 
