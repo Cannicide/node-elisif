@@ -283,6 +283,7 @@ class Trivia extends Game {
 
         var embed = {
             title: `Question ${this.score + 1}/${this.target}`,
+            color: "9b59b6",
             fields: [
                 {
                     name: "Category",
