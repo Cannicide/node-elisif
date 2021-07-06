@@ -163,13 +163,35 @@ class Trivia extends Game {
     }
 
     get difficulty() {
-        if (this.score < this.target / 3 * 1) return "easy"
-        else if (this.score < this.target / 3 * 2) return "medium";
-        else return "hard";
+
+        var setting = this.message.getGlobalSetting("games.trivia.difficulty");
+
+        var difficulties = {
+            easy: "easy",
+            medium: "medium",
+            hard: "hard"
+        };
+
+        if (setting && setting.toLowerCase() == "easier") {
+            difficulties.medium = "easy";
+            difficulties.hard = "medium";
+        }
+        else if (setting && setting.toLowerCase() == "easiest") {
+            difficulties.medium = "easy";
+            difficulties.hard = "easy";
+        }
+        
+        if (this.score < this.target / 3 * 1) return difficulties.easy;
+        else if (this.score < this.target / 3 * 2) return difficulties.medium;
+        else return difficulties.hard;
     }
 
     get uri() {
-        return this.#uri + this.difficulty;
+        var uri = this.#uri + this.difficulty;
+        var alwaysTrueFalse = this.message.getGlobalSetting("games.trivia.only_tf");
+
+        if (alwaysTrueFalse) uri += "&type=boolean";
+        return uri;
     }
 
     reward(points) {
@@ -188,7 +210,7 @@ class Trivia extends Game {
         //Message sent only when game starts:
         super.render({
             title: "Dynamic Trivia - Info",
-            desc: `In Dynamic Trivia, you will be posed ${this.target} questions that get progressively harder: ${this.target / 3} easy, ${this.target / 3} medium, and ${this.target / 3} hard. Some will be multiple choice, some will be true/false. Answer all questions correctly, in a row, to win the game! If you answer any incorrectly, you lose and must restart the game.` + points_message,
+            desc: `In Dynamic Trivia, you will be posed ${this.target} questions that get progressively harder: ${this.target / 3} easy, ${this.target / 3} medium, and ${this.target / 3} hard by default. Some will be multiple choice, some will be true/false. Answer all questions correctly, in a row, to win the game! If you answer any incorrectly, you lose and must restart the game.` + points_message,
             image: rainbowLine
         });
 
@@ -235,14 +257,14 @@ class Trivia extends Game {
                 }
 
                 response.options[answer_index] = {
-                    label: answer,
+                    label: answer.length > 25 ? answer.substring(0, 23) + "..." : answer,
                     emoji: emotes[answer_index]
                 };
 
                 response.options.forEach((option, index) => {
                     if (option) return;
                     response.options[index] = {
-                        label: other_options[0],
+                        label: other_options[0].length > 25 ? other_options.substring(0, 23) + "..." : other_options[0],
                         emoji: emotes[index]
                     };
                     other_options.shift();
@@ -255,6 +277,8 @@ class Trivia extends Game {
 
         var current_data = this.questions.shift();
         var catImage = await this.placeholderImage();
+
+        if (this.message.getGlobalSetting("debug_mode") || this.message.getGlobalSetting("games.cheat_mode")) console.log(`Answer to Trivia #${this.score + 1}: ${current_data.answer}`);
 
         var embed = {
             title: `Question ${this.score + 1}/${this.target}`,
