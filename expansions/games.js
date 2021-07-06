@@ -228,7 +228,7 @@ class Trivia extends Game {
                 var type = Buffer.from(item.type, 'base64').toString();
 
                 var answer_index;
-                answer = answer.length > 25 ? answer.substring(0, 23) + "..." : answer;
+                answer = answer.length > 25 ? answer.substring(0, 22) + "..." : answer;
 
                 /* 
                     Response structure:
@@ -265,7 +265,7 @@ class Trivia extends Game {
                 response.options.forEach((option, index) => {
                     if (option) return;
                     response.options[index] = {
-                        label: other_options[0].length > 25 ? other_options[0].substring(0, 23) + "..." : other_options[0],
+                        label: other_options[0].length > 25 ? other_options[0].substring(0, 22) + "..." : other_options[0],
                         emoji: emotes[index]
                     };
                     other_options.shift();
