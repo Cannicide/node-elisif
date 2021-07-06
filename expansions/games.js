@@ -228,6 +228,7 @@ class Trivia extends Game {
                 var type = Buffer.from(item.type, 'base64').toString();
 
                 var answer_index;
+                answer = answer.length > 25 ? answer.substring(0, 23) + "..." : answer;
 
                 /* 
                     Response structure:
@@ -257,7 +258,7 @@ class Trivia extends Game {
                 }
 
                 response.options[answer_index] = {
-                    label: answer.length > 25 ? answer.substring(0, 23) + "..." : answer,
+                    label: answer,
                     emoji: emotes[answer_index]
                 };
 
@@ -340,6 +341,7 @@ class Trivia extends Game {
                         var reward = this.reward(this.target);
                         menu.delayedReply("** **", false, 4000, new this.message.interface.Embed(this.message, {
                             title: "Dynamic Trivia - Victory!",
+                            color: "50E3C2", //Cyan
                             desc: `✅ You answered correctly!\n\n**🎉 You won the game!**${reward}\n** **`,
                             fields: [
                                 {
@@ -361,6 +363,7 @@ class Trivia extends Game {
 
                         menu.delayedReply("** **", false, 4000, new this.message.interface.Embed(this.message, {
                             title: "Dynamic Trivia - Correct!",
+                            color: "769332", //Green
                             desc: `✅ You answered correctly!\n*Loading next question...*\n** **`,
                             fields: [
                                 {
@@ -384,6 +387,7 @@ class Trivia extends Game {
 
                     menu.delayedReply("** **", false, 4000, new this.message.interface.Embed(this.message, {
                         title: "Dynamic Trivia - Game Over...",
+                        color: "D0021B", //Red
                         desc: `<:no:669928674119778304> You answered incorrectly...\n\n**😿 Game over!**\nYou correctly answered ${this.score} questions in a row.\n** **`,
                         fields: [
                             {
