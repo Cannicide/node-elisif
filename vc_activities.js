@@ -1,11 +1,11 @@
 const fetch = require('node-fetch');
 
 const applications = {
-    'youtube':   '755600276941176913',
-    'poker':     '755827207812677713',
-    'betrayal':  '773336526917861400',
-    'fishing':   '814288819477020702',
-    'chess':     '832012586023256104'
+    'youtube': '755600276941176913',
+    'poker': '755827207812677713',
+    'betrayal': '773336526917861400',
+    'fishing': '814288819477020702',
+    'chess': '832012586023256104'
 };
 
 class VCActivity {
@@ -24,11 +24,11 @@ class VCActivity {
         if (!this.message.member.voice.channel) return false;
       
         var voiceChannelId = this.message.member.voice.channelID;
-        let code = "none";
+        var code = "none";
       
         if (option && option.toLowerCase() in this.applications) {
           
-            let applicationID = this.applications[option.toLowerCase()];
+            var applicationID = this.applications[option.toLowerCase()];
               
             var res = await fetch(`https://discord.com/api/v8/channels/${voiceChannelId}/invites`, {
                 method: 'POST',

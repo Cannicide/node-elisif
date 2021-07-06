@@ -264,7 +264,7 @@ class Trivia extends Game {
                 response.options.forEach((option, index) => {
                     if (option) return;
                     response.options[index] = {
-                        label: other_options[0].length > 25 ? other_options.substring(0, 23) + "..." : other_options[0],
+                        label: other_options[0].length > 25 ? other_options[0].substring(0, 23) + "..." : other_options[0],
                         emoji: emotes[index]
                     };
                     other_options.shift();

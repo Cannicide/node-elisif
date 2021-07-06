@@ -1,6 +1,6 @@
 {
   "name": "elisif",
-  "version": "1.9.10",
+  "version": "1.9.11",
   "description": "A powerful Discord Bot container, command handler, and partial extension of discord.js.",
   "main": "index.js",
   "dependencies": {
@@ -27,6 +27,10 @@
     "discord bot",
     "command handler",
     "elisif",
-    "cannicide"
+    "cannicide",
+    "discord-buttons",
+    "discord buttons",
+    "discord select menu",
+    "discord-select-menu"
   ]
 }
