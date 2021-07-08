@@ -4,8 +4,6 @@
 name: Testing
 
 on:
-  release:
-    types: [created]
   push:
     branches:
       - main
