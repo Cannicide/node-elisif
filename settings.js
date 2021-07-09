@@ -1,4 +1,11 @@
-//Manipulate both global (bot-wide, coded configuration) and local (guild-dependent configuration) settings
+// Elisif Settings v2.0
+// Simple bot/guild Settings manager powered by EvG 4.0 storage
+
+// By Cannicide
+
+// Manipulate both global (bot-wide, coded configuration) and local (guild-dependent configuration) Settings.
+// Pre-defined default Settings applicable to the bot or to all guilds.
+// Easily set and get Setting values, including default settings.
 
 const evg = require("./evg").resolve("settings");
 
@@ -22,6 +29,14 @@ class LocalSettings {
 
     get(setting) {
         return this.#table.get(setting);
+    }
+
+    table(key) {
+        var table = () => this.#table.table(key);
+
+        if (!table()) this.#table.set(key, {});
+
+        return table();
     }
 
     exists() {
