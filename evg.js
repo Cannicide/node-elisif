@@ -12,9 +12,10 @@
 
 const fs = require("fs");
 var dbUsable = true;
+var db = false;
 
 try {
-  const db = require("quick.db");
+  db = require("quick.db");
 }
 catch (e) {
   dbUsable = false;
@@ -622,7 +623,6 @@ function EvgDBCWrapper(filename, method) {
     db;
   }
   catch (e) {
-    console.log("ERR: " + e);
     dbUsable = false;
   }
 
