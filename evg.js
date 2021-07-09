@@ -622,6 +622,7 @@ function EvgDBCWrapper(filename, method) {
     db;
   }
   catch (e) {
+    console.log("ERR: " + e);
     dbUsable = false;
   }
 
