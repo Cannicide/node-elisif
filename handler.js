@@ -55,7 +55,7 @@ function initialize(directory, prefix) {
   //Get enabled expansions:
   var expansions = fs.readdirSync(__dirname + "/expansions");
   expansions.forEach(expansion => {
-    if (client.expansions.includes(expansion.substring(0, expansion.length - 3))) cmdfiles.push(require(`${__dirname + "/expansions"}/${expansion.substring(0, expansion.length - 3)}`));
+    if (client.expansions.all().includes(expansion.substring(0, expansion.length - 3))) cmdfiles.push(require(`${__dirname + "/expansions"}/${expansion.substring(0, expansion.length - 3)}`));
   });
 
   //Import commands:
@@ -70,7 +70,7 @@ function initialize(directory, prefix) {
           })
 
           if (typeof file.initialize === 'function') {
-            file.initialize();
+            file.initialize(client);
           }
       }
   });
@@ -235,7 +235,7 @@ class ExtendedClient extends Discord.Client {
    * @param {String} p0.authors[].username - The username of this developer. Does not need to match the actual discord username of this developer.
    * @param {String} p0.authors[].id - The Discord ID of this developer. Required for some features and expansions, such as the eval expansion.
    * @param {String} [p0.description] - The description of this discord bot. Used in some features and expansions, such as the help expansion.
-   * @param {["eval", "help"]} [p0.expansions] - Expansions, also known as prewritten command packs, to add to this discord bot.
+   * @param {["eval", "help", "vca", "games", "points"]} [p0.expansions] - Expansions, also known as prewritten command packs, to add to this discord bot.
    */ 
   constructor({intents, privilegedIntents, name, presences, logs, prefix, port, twitch, autoInitialize, presenceDuration, authors, description, expansions}) {
 
@@ -275,9 +275,16 @@ class ExtendedClient extends Discord.Client {
 
     this.authors = authors;
     this.description = description;
-    this.expansions = expansions;
 
-    this.hasExpansion = (expansion) => this.expansions.includes(expansion); 
+    this.expansions = {
+      all: () => expansions,
+      has: (expansion) => this.expansions.all().includes(expansion),
+      get: (expansion) => {
+        if (!expansion) return this.expansions.all();
+        else if (this.expansions.has(expansion)) return require(`./expansions/${expansion}`);
+        else return false;
+      }
+    }
 
     this.intents = intents || bot_intents;
     this.name = name;
