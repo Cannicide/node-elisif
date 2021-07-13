@@ -690,13 +690,13 @@ class NativePointsCommands {
         // SHOP DISABLE FUNCTIONALITY:
         // If the user passes a disable argument, disable the shop for this guild until re-enabled.
 
-        if (message.args && message.args[0] && message.args[0].toLowerCase() == "disable") {
+        if (message.hasArg(0, "disable")) {
             //Disable shop for this guild
             message.guild.settings.set("points.shop_disabled", true);
             message.channel.send("Disabled the Points Shop for this guild.");
             return;
         }
-        else if (message.args && message.args[0] && message.args[0].toLowerCase() == "enable") {
+        else if (message.hasArg(0, "enable")) {
             //Enable shop for this guild
             message.guild.settings.set("points.shop_disabled", false);
             message.channel.send("Enabled the Points Shop for this guild.");
@@ -863,7 +863,7 @@ class NativePointsCommands {
         var categories = ["message", "action", "voice", "bonus", "total"];
 
         // If a category is specified, only display that category
-        if (message.args && message.args.length > 0 && message.args[0]) {
+        if (message.hasArg(0)) {
 
             var category = message.args[0].toLowerCase();
             if (categories.indexOf(category) == -1) return message.reply(`Invalid Points Leaderboard category. Must be one of: ${categories.join(", ")}.`, {inline: true});
@@ -911,7 +911,7 @@ class NativeLevelingHandlers {
             system.autoAward(message.author.id, "daily_boost");
 
             //No points for commands
-            if (message.label && message.client.commands.get(message.label)) return false;
+            if (message.isCommand()) return false;
 
             //Ensure message points given only in configured category channels, if any
             var categories = message.guild.settings.get("points.message_categories");
