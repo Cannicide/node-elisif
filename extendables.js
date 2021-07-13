@@ -963,6 +963,52 @@ function ExtendedMessage(ExtendableMessage) {
             this.defaultFlags = data.flags;
             this.#userArgs = args; //(Read-only args)
 
+            this.isCommand = () => this.label && this.client.commands.get(this.label);
+            this.getCommand = () => this.isCommand() ? this.client.commands.get(this.label) : false;
+
+            //Command-only methods
+            if (this.isCommand()) {
+                /**
+                 * Gets the specified command argument from the message.
+                 * @param {Number|String} key - The argument to retrieve. Can be a Number index (message.args[index]) or a String key (Command({args:[{name:key}]}).
+                 * @returns {String|Boolean} The retrieved argument
+                 */
+                this.getArg = (key) => {
+                    if (!this.#userArgs || this.#userArgs.length < 1 || key === undefined) return false;
+
+                    if (isNaN(key)) var argIndex = this.getCommand().args.findIndex(arg => arg.name.toLowerCase() == key.toLowerCase());
+                    else var argIndex = key;
+
+                    if (argIndex < 0) return false;
+
+                    return this.#userArgs[argIndex];
+                }
+
+                /**
+                 * Like message#getArg(), but gets multiple command arguments from the message.
+                 * If keys/indexes are not provided, all args are returned.
+                 * @param {(Number|String)[]} [keys] - The arguments to retrieve. Can be an array made up of Number indexes and/or String keys.
+                 * @returns {String[]} The retrieved arguments
+                 */
+                this.getArgs = (...keys) => keys ? keys.map(key => this.getArg(key)) : this.args;
+
+                /**
+                 * Checks whether the specified command argument has been sent in the message.
+                 * If a key is not provided, checks whether any command arguments have been sent in the message.
+                 * @param {Number|String} key - The argument to check. Can be a Number index (message.args[index]) or a String key (Command({args:[{name:key}]}).
+                 * @returns {Boolean} Whether the specified argument was found
+                 */
+                this.hasArg = (key) => this.getArg(key === undefined ? 0 : key) ? true : false;
+
+                /**
+                 * Like message#hasArg(), but checks whether multiple command arguments have been sent in the message.
+                 * If keys/indexes are not provided, returns whether all arguments (including optional) of the command have been sent in the message.
+                 * @param {(Number|String)[]} keys - The arguments to check. Can be an array made up of Number indexes and/or String keys.
+                 * @returns {Boolean} Whether all specified arguments were found
+                 */
+                this.hasArgs = (...keys) => keys ? keys.every(key => this.hasArg(key)) : this.getCommand().args.every(arg => this.hasArg(arg.name));
+            }
+
             //Set accessible Elisif systems
 
             this.interface = require("./interface");

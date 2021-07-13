@@ -132,7 +132,7 @@ class Command {
 
     this.getOptions = () => {
 
-      return { method: method, perms: perms, roles: roles, invisible: invisible, desc: desc, dm_only: dm_only, cooldown: cooldown, channels: channels, aliases: aliases, args: args };
+      return { method: method, perms: perms, roles: roles, invisible: invisible, desc: desc, dm_only: dm_only, cooldown: cooldown, channels: channels, aliases: aliases, args: args, name: name, flags: flags };
     };
 
     /**
@@ -338,7 +338,7 @@ class Command {
     };
 
     if (name && method)
-      commands.push({ name: name, cmd: this, special: invisible, desc: desc, dm_only: dm_only, cooldown: cooldown, channels: channels, aliases: aliases, isalias: isalias, perms: perms, roles: roles, flags: flags });
+      commands.push({ name: name, cmd: this, special: invisible, desc: desc, dm_only: dm_only, cooldown: cooldown, channels: channels, aliases: aliases, isalias: isalias, perms: perms, roles: roles, flags: flags, args: args });
 
     if (name && method && !isalias)
       aliases.forEach(alias => {
