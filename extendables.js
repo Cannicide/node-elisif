@@ -996,9 +996,10 @@ function ExtendedMessage(ExtendableMessage) {
                  * Checks whether the specified command argument has been sent in the message.
                  * If a key is not provided, checks whether any command arguments have been sent in the message.
                  * @param {Number|String} key - The argument to check. Can be a Number index (message.args[index]) or a String key (Command({args:[{name:key}]}).
+                 * @param {String} [value] - Optional value to check if the command argument is equal to.
                  * @returns {Boolean} Whether the specified argument was found
                  */
-                this.hasArg = (key) => this.getArg(key === undefined ? 0 : key) ? true : false;
+                this.hasArg = (key, value) => this.getArg(key === undefined ? 0 : key) ? (key === undefined || value === undefined ? true : this.getArg(key).toLowerCase() == value.toLowerCase()) : false;
 
                 /**
                  * Like message#hasArg(), but checks whether multiple command arguments have been sent in the message.
