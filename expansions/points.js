@@ -739,7 +739,7 @@ class NativePointsCommands {
                 var item = `\t${name} - ${price} points`;
 
                 return item;
-            }).join("\n");
+            }).join("\n\n");
             
             output += items;
             return output;
@@ -752,6 +752,129 @@ class NativePointsCommands {
             desc: final_render
         });
 
+    });
+
+    static Leaderboard = new Command("pointslb", {
+        desc: "View the top players on the Points Leaderboard.",
+        aliases: ["ranks", "pointlb", "levels", "pointslbs", "pointlbs"],
+        args: [{
+            name: "category", //The board type (message, action, voice, bonus, penalty, total)
+            optional: true   
+        }]
+    }, async message => {
+        
+        // TEST LEADERBOARD COMMAND
+        // NOT EVEN CLOSE TO FINAL PRODUCT
+
+        const lb = new PointsLeaderboard(message.guild.id);
+
+        var output = {
+            title: "Points Leaderboard",
+            desc: "*Compete for the most points!*\n",
+            fields: []
+        };
+
+        /*
+            BASE EMBED FORMAT FOR LB:
+
+            {title: "Points Leaderboard", desc: "*Compete for the most points!*\n", fields: [
+                {
+                    name: "** **",
+                    value: "> **Total Points**"
+                },
+                {
+                    name: "Players",
+                    value: "`1)` Player #1\n`2)` Player #2\n**`3)`** __**Player #3**__\n`4)` Player #4\n`5)` Player #5",
+                    inline: true
+                },
+                {
+                    name: "Points",
+                    value: "`10000`\n`8000`\n__**`4500`**__\n`250`\n`10`",
+                    inline: true
+                },
+                {
+                    name: "** **",
+                    value: "> **Message Points**"
+                },
+                {
+                    name: "Players",
+                    value: "`1)` Player #2\n`2)` Player #1\n`3)` Player #4\n**`4)`** __**Player #3**__\n`5)` Player #5",
+                    inline: true
+                },
+                {
+                    name: "Points",
+                    value: "`600`\n`500`\n`20`\n__**`10`**__\n`3`",
+                    inline: true
+                }
+            ]}
+
+        */
+        
+        //Create the embed fields for the specified category of leaderboard, for the text leaderboard
+        function render_field(type) {
+
+            type = type.toLowerCase();
+            if (type == "total") type = "points";
+
+            //Add header field
+            var header = type == "points" ? "Total" : type.slice(0, 1).toUpperCase() + type.slice(1);
+            output.fields.push({
+                name: "** **",
+                value: `> **${header} Points**`
+            });
+
+            var board = lb.boards[type];
+            var players = [];
+            var points = [];
+
+            //Ensure board is always at least 5 point user objects long
+            if (board.length < 5) board.push(...new Array(5 - board.length).fill({tag: "-", points: "-"}));
+
+            //Only use the top 5 for this board
+            board = board.slice(0, 5);
+
+            board.forEach((user, index) => {
+
+                // Embed approach
+                var suffix = user.tag == message.author.tag ? "__**" : "";
+                players.push(`**\`${index + 1})\`** ${suffix}${user.tag}${suffix.split("").reverse().join("")}`);
+                points.push(`${suffix}\`${user.points}\`${suffix.split("").reverse().join("")}`);
+
+            });
+
+            output.fields.push({
+                name: "Players",
+                value: players.join("\n"),
+                inline: true
+            });
+
+            output.fields.push({
+                name: "Points",
+                value: points.join("\n"),
+                inline: true
+            });
+
+            return header;
+
+        }
+
+        // All categories of points leaderboards
+        // Intentionally excludes penalty points; don't want to encourage bad behavior
+        var categories = ["message", "action", "voice", "bonus", "total"];
+
+        // If a category is specified, only display that category
+        if (message.args && message.args.length > 0 && message.args[0]) {
+
+            var category = message.args[0].toLowerCase();
+            if (categories.indexOf(category) == -1) return message.reply(`Invalid Points Leaderboard category. Must be one of: ${categories.join(", ")}.`, {inline: true});
+
+            categories = [category];
+
+        }
+
+        categories.forEach(category => render_field(category));
+        return message.channel.embed(output);
+        
     });
 
 }
