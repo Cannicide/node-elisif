@@ -945,7 +945,7 @@ function ExtendedMessage(ExtendableMessage) {
             var commandWithPrefix = components[0].toLowerCase();
             var args = components.slice(1);
 
-            var escapedPrefix = pfix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); //Potentially might need to add another back slash to second param here
+            var escapedPrefix = pfix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             var foundPrefix = new RegExp(escapedPrefix);
 
             var command = commandWithPrefix.replace(foundPrefix, "");

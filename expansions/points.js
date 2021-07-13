@@ -357,38 +357,38 @@ class PointsSystem {
 
 
 
-const EventEmitter = require("events");
+// const EventEmitter = require("events");
 
-class PointsListener extends EventEmitter {
+// class PointsListener extends EventEmitter {
 
-  listeners = [];
+//   listeners = [];
 
-  listen(locale) {
+//   listen(locale) {
 
-    var system = new PointsSystem(locale);
-    var events = system.getEvents();
+//     var system = new PointsSystem(locale);
+//     var events = system.getEvents();
 
-    events.forEach(ev => {
-      if (!this.listeners.includes(locale + ":" + ev)) {
+//     events.forEach(ev => {
+//       if (!this.listeners.includes(locale + ":" + ev)) {
 
-        this.on(locale + ":" + ev, (user, cause) => {
-          system.autoAward(user, cause);
-        });
+//         this.on(locale + ":" + ev, (user, cause) => {
+//           system.autoAward(user, cause);
+//         });
 
-        this.listeners.push(locale + ":" + ev);
+//         this.listeners.push(locale + ":" + ev);
 
-      }
-    });
+//       }
+//     });
     
-  }
+//   }
 
-  trigger({guild, user, levelCause}) {
-    this.emit(guild + ":" + levelCause, user, levelCause);
-  }
+//   trigger({guild, user, levelCause}) {
+//     this.emit(guild + ":" + levelCause, user, levelCause);
+//   }
 
-}
+// }
 
-const globalPointsListener = new PointsListener();
+// const globalPointsListener = new PointsListener();
 
 
 
@@ -796,6 +796,52 @@ class NativePointsCommands {
 
 class NativeLevelingHandlers {
 
+    static initialize() {
+        NativeLevelingHandlers.Message();
+    }
+
+    static message_timestamps = [];
+
+    //Setup giving points for messages
+    //and giving points for Daily Boost
+    static Message() {
+
+        client.on("message", message => {
+
+            //No points for bots or DMs
+            if (message.author.bot) return false;
+            if (message.guild == null) return false;
+
+            //Daily boost points, if applicable
+            var system = new PointsSystem(locale);
+            system.autoAward(message.author.id, "daily_boost");
+
+            //No points for commands
+            if (message.label && message.client.commands.get(message.label)) return false;
+
+            //Ensure message points given only in configured category channels, if any
+            var categories = message.guild.settings.get("points.message_categories");
+            if (categories && categories.length > 0 && message.channel.parent && !categories.find(c => c.name.toLowerCase() == message.channel.parent.name.toLowerCase())) return false;
+
+            //Ensure user meets cooldown threshold
+            //Establish cooldown times
+            const now = Date.now();
+            const cooldownAmount = (message.guild.settings.get("points.message_cooldown") || 5 * 60) * 1000;
+            const userTimestamp = NativeLevelingHandlers.message_timestamps[message.author.id] || (now - cooldownAmount);
+            const expirationTime = userTimestamp + cooldownAmount;
+
+            if (now < expirationTime) return false;
+
+            NativeLevelingHandlers.message_timestamps[message.author.id] = now;
+            setTimeout(() => delete NativeLevelingHandlers.message_timestamps[message.author.id], cooldownAmount);
+
+            //After passing all of these requirements, give user message points
+            system.autoAward(message.author.id, "message");
+
+        });
+
+    }
+
 }
 
 
@@ -806,12 +852,14 @@ module.exports = {
 
   Config: PointsConfig,
   System: PointsSystem,
-  Listener: globalPointsListener,
+  //Listener: globalPointsListener,
   Shop: PointsShop,
   Leaderboard: PointsLeaderboard,
 
-  commands: [
+  commands: NativePointsCommands.get(),
 
-  ]
+  initialize() {
+    NativeLevelingHandlers.initialize();
+  }
 
 }
