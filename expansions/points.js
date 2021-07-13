@@ -168,10 +168,7 @@ class PointsConfig {
 
   constructor(locale) {
     this.config = () => {
-      var conf = () => Settings.Local(locale).table("points.config");
-      if (!conf()) Settings.Local(locale).set("points.config", PointsConfig.getDefaultConfig());
-
-      return conf();
+      return Settings.Local(locale).table("points.config", PointsConfig.getDefaultConfig());
     }
   }
 
