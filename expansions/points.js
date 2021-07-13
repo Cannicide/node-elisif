@@ -242,6 +242,14 @@ class PointsSystem {
     return player.get(type);
   }
 
+  // Reset points system and points config in this guild
+  reset() {
+    this.points.clear();
+    this.conf().clear();
+
+    return true;
+  }
+
   autoAward(user, cause) {
     var leveling = this.conf().table("leveling");
 
@@ -688,11 +696,13 @@ class NativePointsCommands {
         if (message.args && message.args[0] && message.args[0].toLowerCase() == "disable") {
             //Disable shop for this guild
             message.guild.settings.set("points.shop_disabled", true);
+            message.channel.send("Disabled the Points Shop for this guild.");
             return;
         }
         else if (message.args && message.args[0] && message.args[0].toLowerCase() == "enable") {
             //Enable shop for this guild
             message.guild.settings.set("points.shop_disabled", false);
+            message.channel.send("Enabled the Points Shop for this guild.");
             return;
         }
 
@@ -769,12 +779,15 @@ class NativeLevelingHandlers {
 
         client.on("message", message => {
 
+            //Check if points system enabled in this guild
+            if (!message.guild.settings.get("points.enabled")) return false;
+
             //No points for bots or DMs
             if (message.author.bot) return false;
             if (message.guild == null) return false;
 
             //Daily boost points, if applicable
-            var system = new PointsSystem(locale);
+            var system = new PointsSystem(message.guild.id);
             system.autoAward(message.author.id, "daily_boost");
 
             //No points for commands
@@ -798,6 +811,7 @@ class NativeLevelingHandlers {
 
             //After passing all of these requirements, give user message points
             system.autoAward(message.author.id, "message");
+            return true;
 
         });
 
