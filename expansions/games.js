@@ -7,7 +7,7 @@ const rainbowLine = "https://cdn.discordapp.com/attachments/728320173009797190/8
 
 function givePoints(client, userID, points) {
 
-    if (!client.hasExpansion("points")) return;
+    if (!client.expansions.has("points")) return;
 
     //Else awards points:
     //(Functionality not yet existent; points system is not yet implemented)
@@ -91,7 +91,7 @@ class Game {
 
         this.endGame();
 
-        if (!this.client.hasExpansion("points")) return false;
+        if (!this.client.expansions.has("points")) return false;
 
         givePoints(this.client, this.player.id, points);
         return true;
@@ -152,7 +152,10 @@ class Game {
 class Trivia extends Game {
 
     #uri = "https://opentdb.com/api.php?amount=5&encode=base64&difficulty=";
-    target = 15;
+
+    static SCORE_TARGET = 15;
+
+    target = Trivia.SCORE_TARGET;
 
     questions = [];
 
@@ -205,7 +208,7 @@ class Trivia extends Game {
 
         var points_message = "";
 
-        if (this.client.hasExpansion("points")) points_message = ` Earn a maximum of ${this.target} points per day by winning a trivia game! *To avoid abuse, points will only be given for a __single__ game per day.*`;
+        if (this.client.expansions.has("points")) points_message = ` Earn a maximum of ${this.target} points per day by winning a trivia game! *To avoid abuse, points will only be given for a __single__ game per day.*`;
 
         //Message sent only when game starts:
         super.render({
@@ -456,5 +459,18 @@ module.exports = {
             game.render();
 
         })
-    ]
+    ],
+
+    initialize(client) {
+
+        if (!client.expansions.has("points")) return;
+
+        //Point reward on winning trivia
+        client.expansions.get("points").Config.leveling.addDefault("game_trivia", {
+            points: Trivia.SCORE_TARGET,
+            dailyCap: 1,
+            type: "message"
+        });
+
+    }
 }
