@@ -353,45 +353,6 @@ class PointsSystem {
 
 
 
-// ------ POINTS LISTENER / EVENT EMITTER ------ \\
-
-
-
-// const EventEmitter = require("events");
-
-// class PointsListener extends EventEmitter {
-
-//   listeners = [];
-
-//   listen(locale) {
-
-//     var system = new PointsSystem(locale);
-//     var events = system.getEvents();
-
-//     events.forEach(ev => {
-//       if (!this.listeners.includes(locale + ":" + ev)) {
-
-//         this.on(locale + ":" + ev, (user, cause) => {
-//           system.autoAward(user, cause);
-//         });
-
-//         this.listeners.push(locale + ":" + ev);
-
-//       }
-//     });
-    
-//   }
-
-//   trigger({guild, user, levelCause}) {
-//     this.emit(guild + ":" + levelCause, user, levelCause);
-//   }
-
-// }
-
-// const globalPointsListener = new PointsListener();
-
-
-
 // ------ POINTS SHOP ------ \\
 
 
@@ -852,7 +813,6 @@ module.exports = {
 
   Config: PointsConfig,
   System: PointsSystem,
-  //Listener: globalPointsListener,
   Shop: PointsShop,
   Leaderboard: PointsLeaderboard,
 
