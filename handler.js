@@ -348,7 +348,7 @@ class ExtendedClient extends Discord.Client {
             if (message.guild === null) {
                 
                 //Interpret for DiscordSRZ code or other DM interpretation
-                Interpreter.handleDm(message, message.content.split(" "));
+                Interpreter.dms.handle(message, message.content.split(" "));
     
                 return false;
             }
@@ -359,7 +359,7 @@ class ExtendedClient extends Discord.Client {
     
             //Handle messages to be interpreted:
             if (!cmd) {
-                Interpreter.handleMessage(message, message.content.split(" "));
+                Interpreter.messages.handle(message, message.content.split(" "));
             }
       
           }
@@ -371,12 +371,12 @@ class ExtendedClient extends Discord.Client {
 
         //Auto initialize interpreting reaction add
         this.on("messageReactionAdd", (r, user) => {
-          Interpreter.handleReaction(r, user, true);
+          Interpreter.reactions.handle(r, user, true);
         });
         
         //Auto initialize interpreting reaction remove
         this.on("messageReactionRemove", (r, user) => {
-          Interpreter.handleReaction(r, user, false);
+          Interpreter.reactions.handle(r, user, false);
         });
 
       }
