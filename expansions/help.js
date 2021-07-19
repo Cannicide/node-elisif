@@ -1,7 +1,7 @@
 // A built-in help command to view information and usage of all existent, visible bot commands.
 
 const Command = require("../command");
-const client = require("../index").Client.getInstance();
+const client = require("../index").getClient();
 
 module.exports = new Command("help", {
   desc: "Gets a list of all commands, parameters, and their descriptions.\nFormat: [optional] parameters, <required> parameters, optional (flag) parameters.",

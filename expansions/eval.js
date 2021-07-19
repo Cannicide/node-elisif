@@ -3,7 +3,7 @@
 const Command = require("../command");
 const evg = require("../evg");
 const Interface = require("../interface");
-const client = require("../index").Client.getInstance();
+const client = require("../index").getClient();
 
 module.exports = new Command("eval", {
     desc: "Command to allow the bot developers to evaluate code from within Discord.",

@@ -37,6 +37,10 @@ class NodeElisif extends Handler {
         return NodeElisif;
     }
 
+    getClient() {
+        return this.Client.getInstance();
+    }
+
 }
 
 module.exports = new NodeElisif();

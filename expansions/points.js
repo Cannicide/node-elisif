@@ -4,7 +4,7 @@ const db = require("../evg").remodel("points");
 const Settings = require("../settings");
 const fs = require("fs");
 
-const client = require("../index").Client.getInstance();
+const client = require("../index").getClient();
 const Command = require("../command");
 
 
