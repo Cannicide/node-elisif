@@ -1078,6 +1078,10 @@ function ExtendedMessage(ExtendableMessage) {
 
         }
 
+        set embeds(embeds) {
+            super.embeds = embeds;
+        }
+
         /**
          * Returns all valid flags found in this message.
          * Ex: "My name is -f Bob -rt" would return ["-f", "-rt"].
