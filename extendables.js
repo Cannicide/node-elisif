@@ -1021,7 +1021,7 @@ function ExtendedMessage(ExtendableMessage) {
 
                 emb.getField = (f_index) => {
 
-                    var field = emb.fields[f_index];
+                    let field = emb.fields[f_index];
 
                     field.setName = (name) => {
                         field.name = name;
