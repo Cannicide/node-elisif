@@ -1010,6 +1010,42 @@ function ExtendedMessage(ExtendableMessage) {
                 this.hasArgs = (...keys) => keys ? keys.every(key => this.hasArg(key)) : this.getCommand().args.every(arg => this.hasArg(arg.name));
             }
 
+            //Embed extensions
+
+            /**
+             * Fetches an embed from the message, with additional embed and field utility methods.
+             */
+            this.getEmbed = (index) => {
+                let emb = this.embeds[index];
+                emb.toString = () => JSON.stringify(emb);
+
+                emb.getField = (f_index) => {
+
+                    var field = emb.fields[f_index];
+
+                    field.setName = (name) => {
+                        field.name = name;
+                        emb.fields[f_index] = field;
+                        embeds[index] = emb;
+                        super.embeds[index] = emb;
+                        this.edit({embed: embeds[index]});
+                    };
+
+                    field.setValue = (value) => {
+                        field.value = value;
+                        emb.fields[f_index] = field;
+                        embeds[index] = emb;
+                        super.embeds[index] = emb;
+                        this.edit({embed: embeds[index]});
+                    };
+
+                    return field;
+
+                };
+
+                return emb;
+            };
+
             //Set accessible Elisif systems
 
             this.interface = require("./interface");
@@ -1029,57 +1065,6 @@ function ExtendedMessage(ExtendableMessage) {
             if (!localPrefix) localPrefix = require("./settings").Global().get("global_prefix");
 
             return localPrefix;
-        }
-
-        /**
-         * The same as the default embeds property, but with additional field utility methods.
-         */
-        get embeds() {
-
-            let embeds = super.embeds;
-
-            embeds.forEach((emb, index) => {
-                emb.toString = () => JSON.stringify(emb);
-
-                emb.fields.forEach((field, f_index) => {
-
-                    field.setName = (name) => {
-                        field.name = name;
-                        emb.fields[f_index] = field;
-                        embeds[index] = emb;
-                        super.embeds[index] = emb;
-                        this.edit({embed: embeds[index]});
-                    };
-
-                    field.setValue = (value) => {
-                        field.value = value;
-                        emb.fields[f_index] = field;
-                        embeds[index] = emb;
-                        super.embeds[index] = emb;
-                        this.edit({embed: embeds[index]});
-                    };
-
-                });
-                
-                emb.fields.get = (f_index) => {
-                  
-                  let field = emb.fields[f_index];
-                  return field;
-              
-                };
-            });
-
-            embeds.get = (index) => {
-                let emb = embeds[index];
-                return emb;
-            }
-
-            return embeds;
-
-        }
-
-        set embeds(embeds) {
-            super.embeds = embeds;
         }
 
         /**
