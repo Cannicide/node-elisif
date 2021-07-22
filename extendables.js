@@ -1032,6 +1032,53 @@ function ExtendedMessage(ExtendableMessage) {
         }
 
         /**
+         * The same as the default embeds property, but with additional field utility methods.
+         */
+        get embeds() {
+
+            let embeds = super.embeds;
+
+            embeds.forEach((emb, index) => {
+                emb.toString = () => JSON.stringify(emb);
+
+                emb.fields.forEach((field, f_index) => {
+
+                    field.setName = (name) => {
+                        field.name = name;
+                        emb.fields[f_index] = field;
+                        embeds[index] = emb;
+                        super.embeds[index] = emb;
+                        this.edit({embed: embeds[index]});
+                    };
+
+                    field.setValue = (value) => {
+                        field.value = value;
+                        emb.fields[f_index] = field;
+                        embeds[index] = emb;
+                        super.embeds[index] = emb;
+                        this.edit({embed: embeds[index]});
+                    };
+
+                });
+                
+                emb.fields.get = (f_index) => {
+                  
+                  let field = emb.fields[f_index];
+                  return field;
+              
+                };
+            });
+
+            embeds.get = (index) => {
+                let emb = embeds[index];
+                return emb;
+            }
+
+            return embeds;
+
+        }
+
+        /**
          * Returns all valid flags found in this message.
          * Ex: "My name is -f Bob -rt" would return ["-f", "-rt"].
          * Valid flags must be set by setValidFlags() before searching with this property.
