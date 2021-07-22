@@ -1026,17 +1026,15 @@ function ExtendedMessage(ExtendableMessage) {
                     field.setName = (name) => {
                         field.name = name;
                         emb.fields[f_index] = field;
-                        embeds[index] = emb;
-                        super.embeds[index] = emb;
-                        this.edit({embed: embeds[index]});
+                        this.embeds[index] = emb;
+                        this.edit({embed: this.embeds[index]});
                     };
 
                     field.setValue = (value) => {
                         field.value = value;
                         emb.fields[f_index] = field;
-                        embeds[index] = emb;
-                        super.embeds[index] = emb;
-                        this.edit({embed: embeds[index]});
+                        this.embeds[index] = emb;
+                        this.edit({embed: this.embeds[index]});
                     };
 
                     return field;
