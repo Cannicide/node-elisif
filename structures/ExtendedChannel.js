@@ -6,6 +6,9 @@ const { APIMessage } = require("discord.js");
 // const SelectUtility
 const { ButtonUtility, SelectUtility } = require("../util/ComponentUtility");
 
+// class ThreadManager
+const ThreadManager = require("../managers/ThreadManager");
+
 
 function ExtendedChannel(ExtendableChannel) {
     //Advanced Channel
@@ -221,6 +224,10 @@ function ExtendedChannel(ExtendableChannel) {
             
             return output;
 
+        }
+
+        get threads() {
+            return new ThreadManager(this);
         }
 
         isExtended() {

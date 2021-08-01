@@ -8,6 +8,7 @@ const ExtendedGuild = require("../structures/ExtendedGuild");
 
 const ButtonComponent = require("../structures/ButtonComponent");
 const SelectMenuComponent = require("../structures/SelectMenuComponent");
+const ThreadChannel = require("../structures/ThreadChannel");
 
 
 //Experimental direct extension of Discord.js structures
@@ -55,7 +56,7 @@ module.exports = class DiscordExtender {
 
         Events.BUTTON_CLICK = 'buttonClick';
 
-        //buttonClick event
+        //Emit interaction events
         client.ws.on('INTERACTION_CREATE', (data) => {
             if (!data.message) return;
 
@@ -70,6 +71,13 @@ module.exports = class DiscordExtender {
                 const buttonMsg = new SelectMenuComponent(client, data);
                 client.emit('menuSelect', buttonMsg);
             }
+        });
+
+        //Emit LIMITED threadCreate event
+        //(Only emits when a thread is created using node-elisif; current API version cannot receive proper THREAD_CREATE events)
+        client.ws.on('THREAD_CREATE', (data) => {
+            const threadChannel = new ThreadChannel(data.guild, data, client);
+            client.emit("threadCreate", threadChannel);
         });
 
     }

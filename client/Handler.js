@@ -253,10 +253,12 @@ class ExtendedClient extends Discord.Client {
     port = port || process.env.PORT;
     if (!port) throw new Error("Please specify a port to listen on when initializing your Elisif Client.");
 
+    //Setup express server
     const listener = app.listen(port, function() {
       console.log(`${name} listening on port ${listener.address().port}`);
     });
     
+    //Setup command handling methods
     this.commands = {
       initialize: initialize,
       handle: handleCommand,
@@ -266,6 +268,7 @@ class ExtendedClient extends Discord.Client {
       }
     };
 
+    //Setup prefix methods
     this.prefix = {
       get: getPrefix,
       set: setPrefix
@@ -273,9 +276,14 @@ class ExtendedClient extends Discord.Client {
 
     if (prefix) this.prefix.set(prefix);
 
+    //Setup bot information
     this.authors = authors;
     this.description = description;
+    this.intents = intents || bot_intents;
+    this.name = name;
+    this.port = listener.address().port;
 
+    //Setup expansion methods
     this.expansions = {
       all: () => expansions,
       has: (expansion) => this.expansions.all().includes(expansion),
@@ -286,12 +294,10 @@ class ExtendedClient extends Discord.Client {
       }
     }
 
-    this.intents = intents || bot_intents;
-    this.name = name;
-    this.port = listener.address().port;
+    //Setup presence cycler method
     presences = presences || [`${this.prefix.get()}help`];
     twitch = twitch || 'https://twitch.tv/cannicide';
-
+    
     this.presenceCycler = (presenceArray) => {
 
       if (presenceInterval) clearInterval(presenceInterval);
@@ -310,8 +316,41 @@ class ExtendedClient extends Discord.Client {
 
     }
 
+    //Utility method to create a discord.js enum
+    function createEnum(keys) {
+      const obj = {};
+      for (const [index, key] of keys.entries()) {
+        if (key === null) continue;
+        obj[key] = index;
+        obj[index] = key;
+      }
+      return obj;
+    }
+    
+    //Setup channel types enum including new thread channel types
+    Handler.Discord.Constants.ChannelTypes = createEnum([
+      'GUILD_TEXT',
+      'DM',
+      'GUILD_VOICE',
+      'GROUP_DM',
+      'GUILD_CATEGORY',
+      'GUILD_NEWS',
+      'GUILD_STORE',
+      ...Array(3).fill(null),
+      // 10
+      'GUILD_NEWS_THREAD',
+      'GUILD_PUBLIC_THREAD',
+      'GUILD_PRIVATE_THREAD',
+      'GUILD_STAGE_VOICE',
+    ]);
+    
+    //Setup thread channel types enum
+    Handler.Discord.Constants.ThreadChannelTypes = ['GUILD_NEWS_THREAD', 'GUILD_PUBLIC_THREAD', 'GUILD_PRIVATE_THREAD'];
+
+    //Assign this object to the client variable
     client = this;
 
+    //Setup ready event handler
     this.once("ready", () => {
       console.log(`${name} is up and running!`);
       if (Settings.Global().get("presence_cycler")) this.presenceCycler(presences);
@@ -385,6 +424,7 @@ class ExtendedClient extends Discord.Client {
 
     });
 
+    //Setup custom event handlers
     customEventHandlers(client);
 
   }
