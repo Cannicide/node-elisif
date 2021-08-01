@@ -2,7 +2,7 @@
 
 
 const fetch = require("node-fetch");
-const Command = require("../command");
+const Command = require("../index").Command;
 const rainbowLine = "https://cdn.discordapp.com/attachments/728320173009797190/861743129241976852/rainbow_line.gif";
 
 function givePoints(client, userID, points) {

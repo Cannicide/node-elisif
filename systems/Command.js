@@ -69,7 +69,7 @@ class Command {
     aliases = aliases || [];
     channels = channels || [];
 
-    const client = require("./index").Client.getInstance();
+    const client = require("../index").Client.getInstance();
 
     //Add default, bot-specific alias
     if (name && method && !isalias)

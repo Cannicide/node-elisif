@@ -2,10 +2,10 @@
 //A better, simpler way of handling a bot
 
 //Command class
-const Command = require("./command");
+const Command = require("../systems/Command");
 
 //Global settings
-const Settings = require("./settings");
+const Settings = require("../systems/settings");
 
 //Express app initialized
 const express = require('express');
@@ -19,10 +19,10 @@ allIntents.push("GUILD_MEMBERS");
 allIntents.push("GUILD_PRESENCES");
 
 //Discord.js extension
-const DiscordExtender = require("./extendables");
+const DiscordExtender = require("../systems/extendables");
 
 //Interpreter
-const Interpreter = require("./interpreter");
+const Interpreter = require("../systems/interpreter");
 
 //File system initialized
 const fs = require("fs");
@@ -40,7 +40,7 @@ function initialize(directory, prefix) {
   * @type Command[]
   */
   var requisites = [];
-  var aliases = require("./aliases");
+  var aliases = require("../systems/aliases");
 
   pfix = prefix || pfix || "/";
 
@@ -53,9 +53,9 @@ function initialize(directory, prefix) {
   cmdfiles.push(aliases);
 
   //Get enabled expansions:
-  var expansions = fs.readdirSync(__dirname + "/expansions");
+  var expansions = fs.readdirSync(__dirname + "../expansions");
   expansions.forEach(expansion => {
-    if (client.expansions.all().includes(expansion.substring(0, expansion.length - 3))) cmdfiles.push(require(`${__dirname + "/expansions"}/${expansion.substring(0, expansion.length - 3)}`));
+    if (client.expansions.all().includes(expansion.substring(0, expansion.length - 3))) cmdfiles.push(require(`${__dirname + "../expansions"}/${expansion.substring(0, expansion.length - 3)}`));
   });
 
   //Import commands:
@@ -281,7 +281,7 @@ class ExtendedClient extends Discord.Client {
       has: (expansion) => this.expansions.all().includes(expansion),
       get: (expansion) => {
         if (!expansion) return this.expansions.all();
-        else if (this.expansions.has(expansion)) return require(`./expansions/${expansion}`);
+        else if (this.expansions.has(expansion)) return require(`../expansions/${expansion}`);
         else return false;
       }
     }

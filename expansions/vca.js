@@ -1,6 +1,6 @@
 // A command to start or join Voice Channel Activities.
 
-const Command = require("../command");
+const Command = require("../index").Command;
 const fetch = require('node-fetch');
 
 const applications = {

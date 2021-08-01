@@ -1,12 +1,11 @@
-//Module has not been fully developed yet. This is only a template at the moment.
-//Requires testing before full use is authorized.
+//NodeElisif by Cannicide
 
-const Handler = require('./handler');
-const Command = require("./command");
-const Interface = require("./interface");
-const EvG = require("./evg");
-const Interpreter = require("./interpreter");
-const Settings = require("./settings");
+const Handler = require('./client/Handler');
+const Command = require("./systems/Command");
+const Interface = require("./systems/interface");
+const EvG = require("./systems/evg");
+const Interpreter = require("./systems/interpreter");
+const Settings = require("./systems/settings");
 const fetch = require("node-fetch");
 
 class NodeElisif extends Handler {
