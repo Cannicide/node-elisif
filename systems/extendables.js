@@ -9,6 +9,7 @@ const ExtendedGuild = require("../structures/ExtendedGuild");
 const ButtonComponent = require("../structures/ButtonComponent");
 const SelectMenuComponent = require("../structures/SelectMenuComponent");
 const ThreadChannel = require("../structures/ThreadChannel");
+const SlashInteraction = require("../structures/SlashInteraction");
 
 
 //Experimental direct extension of Discord.js structures
@@ -55,21 +56,35 @@ module.exports = class DiscordExtender {
         const { Events } = require('discord.js').Constants;
 
         Events.BUTTON_CLICK = 'buttonClick';
+        Events.MENU_SELECT = 'menuSelect';
+        Events.THREAD_CREATE = 'threadCreate';
+        Events.SLASH_COMMAND = 'slashCommand';
 
         //Emit interaction events
         client.ws.on('INTERACTION_CREATE', (data) => {
+
+            //Interaction Type 2 = Slash Command
+            if (!data.data.component_type && data.type == 2) {
+                let slash = new SlashInteraction(client, data);
+                client.emit('slashCommand', slash);
+                return;
+            }
+            
+            //Message Components:
             if (!data.message) return;
 
-            //Type 2 = button
+            //Component Type 2 = button
             if (data.data.component_type && data.data.component_type == 2) {
                 const buttonMsg = new ButtonComponent(client, data);
                 client.emit('buttonClick', buttonMsg);
+                return;
             }
 
-            //Type 3 = select menu
+            //Component Type 3 = select menu
             else if (data.data.component_type && data.data.component_type == 3) {
                 const buttonMsg = new SelectMenuComponent(client, data);
                 client.emit('menuSelect', buttonMsg);
+                return;
             }
         });
 

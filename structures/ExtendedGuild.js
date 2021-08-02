@@ -1,5 +1,7 @@
 // An extension of the Discord.js Guild classes
 
+const SlashManager = require("../managers/SlashManager");
+
 function ExtendedGuild(ExtendableGuild) {
     class AdvancedGuild extends ExtendableGuild {
 
@@ -22,6 +24,10 @@ function ExtendedGuild(ExtendableGuild) {
 
         setPrefix(pfix) {
             this.elisif.settings.Local(this.id).set("local_prefix", pfix);
+        }
+
+        get commands() {
+            return new SlashManager(message.guild.id, message.client);
         }
 
         isExtended() {
