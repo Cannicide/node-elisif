@@ -55,7 +55,6 @@ class SlashCommand {
     constructor(name, options, method) {
         this.name = name;
         this.method = method;
-        this.options = options;
         this.perms = options.perms;
         this.roles = options.roles;
         this.desc = options.desc;
