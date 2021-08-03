@@ -18,6 +18,7 @@ class Interaction {
             this._data.discordID = data.id;
             this._data.applicationID = data.application_id;
             this._webhook = new InteractionWebhookClient(data.application_id, data.token, client.options);
+            this._delayedReplyContent = false;
 
             /**
              * Sends a default reply message to the user who used the interaction.
@@ -89,10 +90,20 @@ class Interaction {
                 options.reply_type = 5;
                 this.reply(content, ephemeral, options);
 
-                setTimeout(() => {
-                    this.editReply(content, options);
-                }, timeout)
+                this._delayedReplyContent = content;
 
+                if (!options.noTimeout) return setTimeout(() => {
+                    this.editReply(this._delayedReplyContent, options);
+                }, timeout);
+                else return {fulfill: (val) => this.editReply(val ?? this._delayedReplyContent, options)};
+            }
+
+            /**
+             * Sets the content of the current delayed interaction reply, if applicable.
+             * @param {*} content
+             */
+            this.setDelayedReply = async (content) => {
+                this._delayedReplyContent = content;
             }
 
             this.clickEnded = false;
