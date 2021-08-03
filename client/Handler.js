@@ -332,7 +332,7 @@ class ExtendedClient extends Discord.Client {
     }
     
     //Setup channel types enum including new thread channel types
-    Handler.Discord.Constants.ChannelTypes = createEnum([
+    Discord.Constants.ChannelTypes = createEnum([
       'GUILD_TEXT',
       'DM',
       'GUILD_VOICE',
@@ -349,7 +349,7 @@ class ExtendedClient extends Discord.Client {
     ]);
     
     //Setup thread channel types enum
-    Handler.Discord.Constants.ThreadChannelTypes = ['GUILD_NEWS_THREAD', 'GUILD_PUBLIC_THREAD', 'GUILD_PRIVATE_THREAD'];
+    Discord.Constants.ThreadChannelTypes = ['GUILD_NEWS_THREAD', 'GUILD_PUBLIC_THREAD', 'GUILD_PRIVATE_THREAD'];
 
     //Assign this object to the client variable
     client = this;
