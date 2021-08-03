@@ -4,6 +4,9 @@
 //Command class
 const Command = require("../systems/Command");
 
+//SlashCommand class
+const SlashCommand = require("../systems/SlashCommand");
+
 //Global settings
 const Settings = require("../systems/settings");
 
@@ -76,6 +79,7 @@ function initialize(directory, prefix) {
   });
 
   commands = requisites[requisites.length - 1].getCommands();
+  SlashCommand.setupAll(client);
 
   if (Settings.Global().get("debug_mode")) console.log("Loaded commands:", commands.map(v => v.name));
 
@@ -297,7 +301,7 @@ class ExtendedClient extends Discord.Client {
     //Setup presence cycler method
     presences = presences || [`${this.prefix.get()}help`];
     twitch = twitch || 'https://twitch.tv/cannicide';
-    
+
     this.presenceCycler = (presenceArray) => {
 
       if (presenceInterval) clearInterval(presenceInterval);

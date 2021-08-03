@@ -2,7 +2,6 @@
 //Now includes simplified constructor, command cooldown, alias options, channel restrictions, and DM-only commands.
 
 const aliasCache = require("./aliases");
-const Extendables = require("./extendables");
 var commands = [];
 const channelCommandMap = {};
 
@@ -33,36 +32,35 @@ class Alias {
   }
 }
 
-/**
- * Creates a new executable Command that can be called by users and run by the bot.
- * @param {String} name - The name of the command, used to call the command and identify it in the help command.
- * @param {function(Object, String[]):void} method - The method that is executed when the command is called. Has parameters (message, args).
- * @param {Object} options - Command options.
- * @param {String[]} [options.perms] - Any Discord permissions required to run the command.
- * @param {String[]} [options.roles] - Any Discord roles required to run the command.
- * @param {Boolean} [options.invisible] - Whether or not the command will not be shown in the help command menu. Intended for moderator commands or easter eggs.
- * @param {String} [options.desc] - Optional description of the command.
- * @param {Boolean} [options.dm_only] - Set command as DM-only.
- * @param {Number} [options.cooldown] - Set a cooldown on the command, in seconds.
- * @param {String[]} [options.aliases] - Specify command aliases.
- * @param {String[]} [options.channels] - Specify channel names/IDs to restrict this command to.
- * @param {Boolean} [options.isalias] - Whether or not this command is an alias
- * @param {Object[]} [options.args] - A list of the possible command arguments of a command.
-  * @param {String} options.args[].name - The name of the argument.
-  * @param {Boolean} [options.args[].optional] - Whether or not the argument is optional. Default is false.
-  * @param {String} [options.args[].feedback] - Feedback to send if the argument is mandatory and not provided by the user. If unspecified or false, a default feedback is sent. If set as "none", no feedback except the help message is sent. If set as an embed, the first embed feedback in the arg list will be sent as the only feedback.
-  * @param {Boolean} [options.args[].static] - Whether or not the argument is a static and constant word, for documentation purposes.
-  * @param {Boolean} [options.args[].flag] - Whether or not this argument is a flag, for documentation purposes.
- */
 class Command {
 
   static get channelCommandMap() {return channelCommandMap;}
 
   static get commands() {return commands;}
 
+ /**
+  * Creates a new executable Command that can be called by users and run by the bot.
+  * @param {String} name - The name of the command, used to call the command and identify it in the help command.
+  * @param {function(Object, String[]):void} method - The method that is executed when the command is called. Has parameters (message, args).
+  * @param {Object} options - Command options.
+  * @param {String[]} [options.perms] - Any Discord permissions required to run the command.
+  * @param {String[]} [options.roles] - Any Discord roles required to run the command.
+  * @param {Boolean} [options.invisible] - Whether or not the command will not be shown in the help command menu. Intended for moderator commands or easter eggs.
+  * @param {String} [options.desc] - Optional description of the command.
+  * @param {Boolean} [options.dm_only] - Set command as DM-only.
+  * @param {Number} [options.cooldown] - Set a cooldown on the command, in seconds.
+  * @param {String[]} [options.aliases] - Specify command aliases.
+  * @param {String[]} [options.channels] - Specify channel names/IDs to restrict this command to.
+  * @param {Boolean} [options.isalias] - Whether or not this command is an alias
+  * @param {Object[]} [options.args] - A list of the possible command arguments of a command.
+  * @param {String} options.args[].name - The name of the argument.
+  * @param {Boolean} [options.args[].optional] - Whether or not the argument is optional. Default is false.
+  * @param {String} [options.args[].feedback] - Feedback to send if the argument is mandatory and not provided by the user. If unspecified or false, a default feedback is sent. If set as "none", no feedback except the help message is sent. If set as an embed, the first embed feedback in the arg list will be sent as the only feedback.
+  * @param {Boolean} [options.args[].static] - Whether or not the argument is a static and constant word, for documentation purposes.
+  * @param {Boolean} [options.args[].flag] - Whether or not this argument is a flag, for documentation purposes.
+  */
   constructor(name, { perms = false, roles = false, invisible = false, desc = "", dm_only = false, cooldown = false, aliases = false, channels = false, isalias = false, args = false }, method) {
     var message = false;
-    var prefix = false;
     var timestamps = [];
     var flags = false;
 
@@ -102,7 +100,6 @@ class Command {
 
     this.set = function (msg, pfix) {
       message = msg;
-      prefix = pfix;
     };
 
     this.getCommands = () => {
@@ -237,57 +234,6 @@ class Command {
         advMessage.setValidFlags(flags);
         advMessage.setCooldownLeft(timeLeft);
         advMessage.setSinceLastUse(lastUseTimePassed);
-
-        // var advChannel = message.channel;
-
-      //   advMessage.interface = Interface;
-      //   advMessage.interpreter = Interpreter;
-      //   advMessage.prefix = prefix;
-
-      //   //Set flags property
-      //   advMessage.flags = foundFlags;
-
-      //   var commandsInAdvChannel = channelCommandMap[message.channel.name] || channelCommandMap[message.channel.id];
-      //   advChannel.commands = commandsInAdvChannel;
-
-      //   /**
-      //  * Creates a new Embed, which can be used with or without the interface.
-      //  * @param {Object} options - The Embed's options.
-      //  * @param {String} [options.thumbnail] - The URL to the preferred thumbnail of the Embed.
-      //  * @param {Object[]} [options.fields] - An array of the contents of the Embed, separated by field.
-      //  * @param {String} options.fields[].name - The title of the field.
-      //  * @param {String} options.fields[].value - The content of the field.
-      //  * @param {Boolean} [options.fields[].inline] - Whether or not the field is inline.
-      //  * @param {String} [options.desc] - The description of the Embed.
-      //  * @param {String} [options.title] - The title of the Embed.
-      //  * @param {String[]} [options.footer[]] - An array of footer messages.
-      //  * @param {String} [options.icon] - The URL of the Embed's icon.
-      //  * @param {String} [options.image] - The URL of the Embed's image.
-      //  * @param {String} [options.video] - The URL of the Embed's video.
-      //  * @param {Boolean} [options.useTimestamp] - Whether or not to include the timestamp in the Embed.
-      //  */
-      //   advChannel.embed = (options) => {
-      //     var embed = new Interface.Embed(advMessage, options);
-      //     return advChannel.send(embed);
-      //   };
-
-      //   advChannel.textInterface = (question, callback) => {
-      //     new Interface.Interface(advMessage, question, callback);
-      //   };
-
-      //   advChannel.reactionInterface = (question, reactions, callback) => {
-      //     new Interface.ReactionInterface(advMessage, question, reactions, callback);
-      //   };
-
-      //   advChannel.paginate = (options, elements, perPage) => {
-      //     let embed = new Interface.Embed(advMessage, options);
-      //     new Interface.Paginator(message, embed, elements, perPage);
-      //   };
-
-      //   advMessage.args = userArgs;
-      //   advMessage.database = evg.resolve;
-      //   advMessage.channel = advChannel;
-      //   advMessage.advanced = true;
 
         if ((!perms && !roles) || dm_only) {
           //method(advMessage, userArgs); - Deprecated

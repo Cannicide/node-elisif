@@ -1,12 +1,6 @@
 // Manages Slash Command Interactions
 
 const { DiscordInteractions } = require("slash-commands");
-
-//Contains methods to execute, organized by locale and command name
-const METHODS = {
-  
-};
-
 class SlashManager {
   
   constructor(locale, client, token, public_key) {
@@ -14,10 +8,6 @@ class SlashManager {
     this.public_key = public_key;
     this.client = client;
     this.locale = locale;
-  }
-  
-  static get methods() {
-    return METHODS;
   }
   
   async getSlashClient() {
@@ -53,7 +43,7 @@ class SlashManager {
   
   static intFromType(type) {
     var top = {type};
-    if (!top.type || top.type.toLowerCase() == "string") top.type = 3; //string by default
+    if (!top.type || top.type.toLowerCase().startsWith("str")) top.type = 3; //string by default
     else if (top.type.toLowerCase() == "sub") top.type = 1;
     else if (top.type.toLowerCase() == "group") top.type = 2;
     else if (top.type.toLowerCase().startsWith("int")) top.type = 4;
@@ -61,6 +51,7 @@ class SlashManager {
     else if (top.type.toLowerCase() == "user") top.type = 6;
     else if (top.type.toLowerCase() == "channel") top.type = 7;
     else if (top.type.toLowerCase() == "role") top.type = 8;
+    else if (top.type.toLowerCase() == "mention") top.type = 9;
     else if (top.type.toLowerCase() == "float") top.type = 10;
     
     return top.type;
@@ -78,7 +69,7 @@ class SlashManager {
       "user",
       "channel",
       "role",
-      "unknown",
+      "mention",
       "float"
     ];
     
@@ -191,13 +182,9 @@ class SlashManager {
     return interaction;
   }
   
-  async add({name, desc, args, execute}) {
+  async add({name, desc, args}) {
     let slash = await this.slash;
     let command = this.generate({name, desc, args});
-    
-    var locale = this.locale ?? "global";
-    if (!(locale in METHODS)) METHODS[locale] = {};
-    METHODS[locale][name] = execute || function(){console.log(`No method to execute was attached to the slash command "${name}" in locale "${locale}"`)};
     
     if (this.locale) {
       return await slash
