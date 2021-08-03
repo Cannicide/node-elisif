@@ -1,8 +1,9 @@
-const evg = require("../index").evg;
-
 class ButtonUtility {
 
-    static db = evg.resolve("utility");
+    static get db() {
+        let evg = require("../index").evg;
+        return evg.resolve("utility");
+    }
 
     static get id() {
         var tab = ButtonUtility.db.table("extendables");
