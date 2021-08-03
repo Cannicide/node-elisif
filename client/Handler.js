@@ -56,9 +56,9 @@ function initialize(directory, prefix) {
   cmdfiles.push(aliases);
 
   //Get enabled expansions:
-  var expansions = fs.readdirSync("../expansions");
+  var expansions = fs.readdirSync(__dirname + "/../expansions");
   expansions.forEach(expansion => {
-    if (client.expansions.all().includes(expansion.substring(0, expansion.length - 3))) cmdfiles.push(require(`../expansions/${expansion.substring(0, expansion.length - 3)}`));
+    if (client.expansions.all().includes(expansion.substring(0, expansion.length - 3))) cmdfiles.push(require(`${__dirname + "/../expansions"}/${expansion.substring(0, expansion.length - 3)}`));
   });
 
   //Import commands:
