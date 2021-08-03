@@ -12,12 +12,12 @@ const fetch = require("node-fetch");
 class NodeElisif extends Handler {
 
     Command = Command;
-    SlashCommand = SlashCommand;
     interface = Interface;
     evg = EvG;
     interpreter = Interpreter;
     settings = Settings;
     fetch = fetch;
+    SlashCommand = SlashCommand;
 
     #instance;
 
