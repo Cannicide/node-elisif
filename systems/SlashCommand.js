@@ -150,7 +150,7 @@ class SlashCommand {
     static setupEvent(client) {
 
         client.on("slashCommand", (slash) => {
-            SlashManager.execute(slash);
+            SlashCommand.execute(slash);
         });
 
     }
