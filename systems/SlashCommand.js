@@ -335,12 +335,14 @@ class SlashCommand {
          * @param {String} options.desc - The description of the argument.
          * @param {String} [options.type] - The type of the argument.
          * @param {String} [options.choices] - Optional static, defined choices/values of the argument for the user to choose from.
+         * @param {boolean} [options.optional] - Whether the argument is optional or not.
          */
         constructor(options) {
             this.type = options?.type || "string";
             this.name = options?.name;
             this.desc = options?.desc;
             this.choices = options?.choices || [];
+            if (options && "optional" in options) this.optional = options.optional;
         }
 
         /**
@@ -388,9 +390,14 @@ class SlashCommand {
          */
         addChoices(choices) {
          
-            choices.forEach(this.addChoice);
+            choices.forEach(this.addChoice.bind(this));
             return this;
 
+        }
+
+        setOptional(bool) {
+            this.optional = bool;
+            return this;
         }
 
     }
