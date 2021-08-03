@@ -19,6 +19,18 @@ class SlashInteraction extends Interaction {
         //Define custom args properties with modified structures
         this.args_classic = [];
         this.args_object = {};
+
+        //Define accessible Elisif systems
+        this.interface = this.elisif.interface;
+        this.interpreter = this.elisif.interpreter;
+        this.evg = this.elisif.evg;
+        this.database = this.evg.resolve;
+        this.db = this.database;
+        this.dbAsync = this.evg.from;
+        this.dbJson = this.evg.cache;
+        this.dbDynamic = this.evg.remodel;
+        this.getGlobalSetting = (sett) => this.elisif.settings.Global().get(sett);
+        this.getLocalSetting = (sett) => this.elisif.settings.Local(this.guild?.id).get(sett);
       
         //Token-required utilities for responding to interactions
         if (data.token) {
@@ -34,6 +46,10 @@ class SlashInteraction extends Interaction {
 
     get label() {
         return this.name;
+    }
+
+    get author() {
+        return this.user;
     }
 
     isCommand() {

@@ -2,6 +2,7 @@
 
 const Handler = require('./client/Handler');
 const Command = require("./systems/Command");
+const SlashCommand = require("./systems/SlashCommand");
 const Interface = require("./systems/interface");
 const EvG = require("./systems/evg");
 const Interpreter = require("./systems/interpreter");
@@ -11,6 +12,7 @@ const fetch = require("node-fetch");
 class NodeElisif extends Handler {
 
     Command = Command;
+    SlashCommand = SlashCommand;
     interface = Interface;
     evg = EvG;
     interpreter = Interpreter;
