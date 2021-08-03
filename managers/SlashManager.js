@@ -43,6 +43,10 @@ class SlashManager {
   
   static intFromType(type) {
     var top = {type};
+
+    console.log("TYPE:", type);
+    console.log("TYPE PRIME:", top.type);
+
     if (!top.type || top.type.toLowerCase().startsWith("str")) top.type = 3; //string by default
     else if (top.type.toLowerCase() == "sub") top.type = 1;
     else if (top.type.toLowerCase() == "group") top.type = 2;
@@ -77,6 +81,7 @@ class SlashManager {
   }
   
   translateArg(top) {
+    console.log("TOP:",top);
     top.type = SlashManager.intFromType(top.type);
     
     if (top.optional) top.required = false;

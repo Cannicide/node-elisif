@@ -19,6 +19,8 @@ class NodeElisif extends Handler {
     fetch = fetch;
     SlashCommand = SlashCommand;
 
+    version = require("./package.json").version;
+
     #instance;
 
     constructor() {
