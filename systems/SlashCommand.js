@@ -338,10 +338,10 @@ class SlashCommand {
          * @param {boolean} [options.optional] - Whether the argument is optional or not.
          */
         constructor(options) {
-            this.type = options?.type || "string";
+            this.type = options?.type ?? "string";
             this.name = options?.name;
             this.desc = options?.desc;
-            this.choices = options?.choices || [];
+            this.choices = options?.choices ?? [];
             if (options && "optional" in options) this.optional = options.optional;
         }
 
