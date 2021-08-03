@@ -755,6 +755,7 @@ class NativePointsCommands {
     });
 
     static Leaderboard = new Command("pointslb", {
+        expansion: true,
         desc: "View the top players on the Points Leaderboard.",
         aliases: ["ranks", "pointlb", "levels", "pointslbs", "pointlbs"],
         args: [{

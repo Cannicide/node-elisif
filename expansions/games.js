@@ -427,6 +427,7 @@ class Trivia extends Game {
 module.exports = {
     commands: [
         new Command("dynamictrivia", {
+            expansion: true,
             desc: "Answer multiple increasingly challenging questions in a row to win this trivia game!",
             cooldown: 60,
             aliases: ["trivia", "dtrivia"]

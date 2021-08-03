@@ -4,6 +4,7 @@ const Command = require("../index").Command;
 const client = require("../index").getClient();
 
 module.exports = new Command("help", {
+  expansion: true,
   desc: "Gets a list of all commands, parameters, and their descriptions.\nFormat: [optional] parameters, <required> parameters, optional (flag) parameters.",
   args: [
     {

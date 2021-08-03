@@ -6,6 +6,7 @@ const Interface = require("../index").interface;
 const client = require("../index").getClient();
 
 module.exports = new Command("eval", {
+    expansion: true,
     desc: "Command to allow the bot developers to evaluate code from within Discord.",
     args: [
         {
