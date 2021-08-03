@@ -129,6 +129,8 @@ class Interaction {
     
     }
 
+    get elisif() { return require("../index").getInstance(); }
+
 }
 
 module.exports = Interaction;

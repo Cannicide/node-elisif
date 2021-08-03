@@ -2,6 +2,7 @@
 //Now includes simplified constructor, command cooldown, alias options, channel restrictions, and DM-only commands.
 
 const aliasCache = require("./aliases");
+
 var commands = [];
 const channelCommandMap = {};
 

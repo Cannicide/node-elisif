@@ -149,6 +149,7 @@ function ExtendedMessage(ExtendableMessage) {
             this.dbJson = this.evg.cache;
             this.dbDynamic = this.evg.remodel;
             this.getGlobalSetting = (sett) => this.elisif.settings.Global().get(sett);
+            this.getLocalSetting = (sett) => this.elisif.settings.Local(this.guild?.id).get(sett);
 
         }
 
