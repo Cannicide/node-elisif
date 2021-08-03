@@ -27,7 +27,7 @@ function ExtendedGuild(ExtendableGuild) {
         }
 
         get commands() {
-            return new SlashManager(message.guild.id, message.client);
+            return new SlashManager(this.id, this.client);
         }
 
         isExtended() {
