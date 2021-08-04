@@ -60,12 +60,12 @@ class SlashInteraction extends Interaction {
         //implement functionality here
     }
 
-    getArg(key) {
+    getArg(key, varArgsOnly) {
         if (key === undefined || !this.args || this.args.length < 1) return false;
         //Get arg by name
         if (isNaN(key)) return this.args_object?.[key];
         //Get arg by index
-        else return this.args_classic?.[key];
+        else return varArgsOnly ? this.varargs?.[key] : this.args_classic?.[key];
     }
 
     getArgs(...keys) {
@@ -78,6 +78,35 @@ class SlashInteraction extends Interaction {
 
     hasArgs(...keys) {
         return keys ? keys.every(key => this.hasArg(key)) : (this.args ? true : false);
+    }
+
+    /**
+     * Returns the selected subgroup of the slash command, if applicable.
+     */
+    get subgroup() {
+        if (!this.args || this.args.length < 1) return false;
+        if (this.args[0].type == "group") return this.args_classic[0];
+        return false;
+    }
+
+    /**
+     * Returns the selected subcommand of the slash command, if applicable.
+     */
+    get subcommand() {
+        if (this.subgroup && this.args_classic.length >= 2) return this.args_classic[1];
+        if (!this.args) return false;
+        if (this.args[0].type == "sub") return this.args_classic[0];
+        return false;
+    }
+
+    /**
+     * Returns the selected variable arguments of the slash command, if applicable, in a classic args structure.
+     * The variable arguments are any args used in the command apart from the subgroup and subcommand.
+     */
+    get varargs() {
+        if (this.subgroup && this.subcommand) return this.args_classic.slice(2);
+        if (this.subcommand) return this.args_classic.slice(1);
+        return this.args_classic;
     }
   
 }

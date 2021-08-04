@@ -102,61 +102,40 @@ class SlashManager {
     return top;
   }
   
-  static decipherArg(top, main) {
-    top.type = SlashManager.typeFromInt(top.type);
-    
-    if (["sub", "group"].includes(top.type)) main.args_classic.push(top.name);
-    else main.args_classic.push(top.value);
-    
-    if (["sub", "group"].includes(top.type)) main.args_object[top.name] = top.name;
-    else main.args_object[top.name] = top.value;
-    
-    if (top.options) {
-      top.args = top.options;
-      
-      const mapArgs = group => {
-        
-        //Resolve object values for users, channels, and roles based on the given ID
-        if (group.type == 6) {
-          //User
-          let id = group.value;
-          group.value = main.resolved.users?.[id];
-          group.value.asMember = () => main.resolved.members?.[id];
-        }
-        else if (group.type == 7) {
-          //Channel
-          let id = group.value;
-          group.value = main.resolved.channels?.[id];
-        }
-        else if (group.type == 8) {
-          //Role
-          let id = group.value;
-          group.value = main.resolved.roles?.[id];
-        }
-        
-        //Add argument values to classic and object forms of args
-        if (["1", "2"].includes(group.type)) main.args_classic.push(group.name);
-        else main.args_classic.push(group.value);
-        
-        if (["1", "2"].includes(group.type)) main.args_object[group.name] = group.name;
-        else main.args_object[group.name] = group.value;
-        
-        //Convert argument type from integer to human-readable string
-        group.type = SlashManager.typeFromInt(group.type);
-        
-        //Recursively continue mapping process if this argument is a subcommand or subcommandgroup
-        if (group.options) group.args = group.options = group.options.map(mapArgs);
-        
-        //Return this argument once all subarguments (if any) have been mapped
-        return group;
-        
-      };
-      
-      top.options = top.args = top.args.map(mapArgs);
-      
+  static decipherArg(group, main) {
+    //Resolve object values for users, channels, and roles based on the given ID
+    if (group.type == 6) {
+      //User
+      let id = group.value;
+      group.value = main.resolved.users?.[id];
+      group.value.asMember = () => main.resolved.members?.[id];
     }
-    
-    return top;
+    else if (group.type == 7) {
+      //Channel
+      let id = group.value;
+      group.value = main.resolved.channels?.[id];
+    }
+    else if (group.type == 8) {
+      //Role
+      let id = group.value;
+      group.value = main.resolved.roles?.[id];
+    }
+
+    //Add argument values to classic and object forms of args
+    if ([1, 2].includes(group.type)) main.args_classic.push(group.name);
+    else main.args_classic.push(group.value);
+
+    if ([1, 2].includes(group.type)) main.args_object[group.name] = group.name;
+    else main.args_object[group.name] = group.value;
+
+    //Convert argument type from integer to human-readable string
+    group.type = SlashManager.typeFromInt(group.type);
+
+    //Recursively continue mapping process if this argument is a subcommand or subcommandgroup
+    if (group.options) group.args = group.options = group.options.map(top => SlashManager.decipherArg(top, main));
+
+    //Return this argument once all subarguments (if any) have been mapped
+    return group;
   }
   
   generate({name, desc, args}) {
