@@ -132,7 +132,7 @@ class SlashCommand {
         }
         else {
 
-            let manager = new SlashManager(null, client.token, client.public_key);
+            let manager = new SlashManager(null, client, client.token, client.public_key);
             manager.add({
                 name: this.name,
                 desc: this.desc,
@@ -161,12 +161,31 @@ class SlashCommand {
      */
     static setupAll(client) {
 
+        //Setup all slash commands
         for (let command of Object.values(SlashCommand.COMMANDS)) {
             command.setup(client);
         }
 
         SlashCommand.setupEvent(client);
         SlashCommand.isPostSetup = true;
+
+        //Remove all unused guild slash commands
+        var guildCommands = Object.values(SlashCommand.COMMANDS).filter(cmd => cmd.guilds);
+        var usedGuilds = [];
+
+        guildCommands.forEach(cmd => {
+            cmd.guilds.forEach(guild => {
+                if (usedGuilds.includes(guild)) return;
+
+                let manager = new SlashManager(guild, client, client.token, client.public_key);
+                let matchingCommands = guildCommands.filter(command => command.guilds.includes(guild));
+                let names = matchingCommands.map(command => command.name);
+
+                usedGuilds.push(guild);
+
+                manager.deleteAllExcept(names);
+            });
+        });
 
     }
 

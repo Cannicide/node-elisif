@@ -212,6 +212,30 @@ class SlashManager {
     return await slash
     .deleteApplicationCommand(id, this.locale);
   }
+
+  /**
+   * Bulk deletes all slash commands in this guild that match the specified array of command names.
+   */
+  async bulkDelete(names) {
+
+    if (!this.locale) throw new Error('Cannot bulk delete global slash commands; only guild slash commands can be bulk deleted.');
+
+    let list = await this.list();
+    let ids = list.filter(cmd => cmd.name && names.includes(cmd.name)).map(command => command.id);
+    return await Promise.all(ids.map(id => this.delete({id})));
+
+  }
+
+  /**
+   * Bulk deletes all slash commands in this guild exccept those that match the specified array of command names.
+   */
+  async deleteAllExcept(names) {
+
+    let list = await this.list();
+    let newNames = list.map(cmd => cmd.name).filter(name => !names.includes(name));
+    return await this.bulkDelete(newNames);
+
+  }
   
 }
 
