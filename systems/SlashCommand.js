@@ -213,7 +213,7 @@ class SlashCommand {
         if (!command) return "Sorry, that slash command could not be found";
 
         //Check channels
-        let validChannel = command.channels.some(channel => channel == slash.channel.id || channel == slash.channel.name);
+        let validChannel = command.channels ? command.channels.some(channel => channel == slash.channel.id || channel == slash.channel.name) : true;
         if (!validChannel) return `Sorry, that command cannot be used in this channel.`;
 
         //Check perms
