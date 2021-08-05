@@ -5,10 +5,14 @@
 
 
 ## Information
-A powerful Discord Bot container, command handler, and partial extension of discord.js designed to be both simplistic and feature-rich. Based on the command handler and various systems I developed for my three discord bots: Elisif, Panacea, and Scavenger.
+A powerful Discord Bot container, command handler, and vast extension of discord.js designed to be both simplistic and feature-rich. Based on the command handler and various systems I developed for my three discord bots: Elisif, Panacea, and Scavenger.
 
-**Note: node-elisif has not been fully completed and tested yet.** Certain parts of the code, especially new features such as buttons and select menus, *may* cause errors.
+**Note: buttons, select menus, threads, and slash commands have not been fully tested yet.** Certain parts of the code, especially these new features, *may* cause errors. If you encounter any issues, please report them via Issue on the [Github repository](https://github.com/Cannicide/node-elisif).
 
-Several new updates are coming to node-elisif! Support for buttons and select menus has been added (still being worked on). Support for Voice Channel Activities (VCA) has been added; note, however, that this Discord feature is limited as it is still in early beta. A moderation expansion is also being worked on, and will be updated to include new buttons, alerts, punishment methods, auto-moderation, and more!
+Support for buttons and select menus has been added! Support for Voice Channel Activities (VCA) has been added; note, however, that this Discord feature is limited as it is still in early beta. Support for slash commands has also been added, designed to work very similarly to classic commands. Partial support for thread channels has also been added, including creating, editing, archiving, deleting, and adding members to threads! Thread-based events and events in threads, however, are not supported due to lack of support for such events in Discord API v8.
 
-No documentation currently exists for this module. Documentation is being worked on and will be linked here once completed. The upcoming moderation features and documentation will be available in node-elisif 2.x.x versions.
+Even more new features are still being developed for node-elisif! A moderation expansion is being worked on, and will be updated to include new buttons, alerts, punishment methods, auto-moderation, and more!
+
+Limited [documentation](https://github.com/Cannicide/node-elisif/blob/main/docs) currently exists for this module, found in the `docs` folder of the Github repository. The docs are still being worked on, and will be published to a website that will be linked here once completed.
+
+**Created by Cannicide#2753**

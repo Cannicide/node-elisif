@@ -1,6 +1,6 @@
 # Threads
 
-Node-elisif has partial support for threads. This includes creating threads, adding/removing members, editing threads, and deleting threads. However, this package has **NO** support for thread events, including message events inside threads. Node-elisif is built with discord.js 12.5.3, which uses Discord API v8. Thread events are only supported in Discord API v9; this will be added in discord.js 13.x.x.
+Node-elisif has partial support for threads. This includes creating threads, adding/removing members, editing threads, archiving/unarchiving threads, and deleting threads. However, this package has **NO** support for thread events, including message events inside threads. Node-elisif is built with discord.js 12.5.3, which uses Discord API v8. Thread events are only supported in Discord API v9; this will be added in discord.js 13.x.x.
 
 This example page, however, is under construction. The following is an example of how to use threads taken directly from the code of my testing bot. I have not added any explanations or descriptions to the code for now, but it should be mostly self-explanatory. Note that this example is made in Node 14.x, and makes use of the optional chaining operator. It may not work in older versions of Node unless you remove the optional chaining operator (the `?.` in `obj?.property`).
 

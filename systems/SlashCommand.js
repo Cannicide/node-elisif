@@ -1,4 +1,4 @@
-//Jay's SlashCommand class v1.0
+//Cannicide's SlashCommand class v1.0
 
 
 const SlashManager = require("../managers/SlashManager");

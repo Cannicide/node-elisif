@@ -1,4 +1,4 @@
-//Jay's Command Class v2.0
+//Cannicide's Command Class v2.0
 //Now includes simplified constructor, command cooldown, alias options, channel restrictions, and DM-only commands.
 
 const aliasCache = require("./aliases");
