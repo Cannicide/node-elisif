@@ -105,7 +105,7 @@ class SlashCommand {
      * @returns {SlashCommand.SlashCommandBuilder} SlashCommandBuilder
      */
     static from(name, options, method) {
-        return new SlashCommandBuilder(name, options, method);
+        return new SlashCommand.SlashCommandBuilder(name, options, method);
     }
 
     /**

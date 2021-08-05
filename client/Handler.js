@@ -241,16 +241,13 @@ class ExtendedClient extends Discord.Client {
    * @param {String} [p0.description] - The description of this discord bot. Used in some features and expansions, such as the help expansion.
    * @param {["eval", "help", "vca", "games", "points"]} [p0.expansions] - Expansions, also known as prewritten command packs, to add to this discord bot.
    */ 
-  constructor({intents, privilegedIntents, name, presences, logs, prefix, port, twitch, autoInitialize, presenceDuration, authors, description, expansions}) {
+  constructor({intents, privilegedIntents, name = "Discord Bot", presences, logs = false, prefix = "/", port, twitch, autoInitialize, presenceDuration, authors, description, expansions = []}) {
 
     super(preInitialize({intents: privilegedIntents ? allIntents : intents || bot_intents, ws:{intents: privilegedIntents ? allIntents : intents || bot_intents}}));
 
     if (client) {
       return client;
     }
-
-    name = name || "Discord Bot";
-    logs = logs || false;
 
     app.use(express.static('public'));
 
