@@ -1,11 +1,12 @@
 //A command to allow the bot developers to execute code and determine values of variables from in Discord itself
 
-const Command = require("../command");
-const evg = require("../evg");
-const Interface = require("../interface");
-const client = require("../index").Client.getInstance();
+const Command = require("../index").Command;
+const evg = require("../index").evg;
+const Interface = require("../index").interface;
+const client = require("../index").getClient();
 
 module.exports = new Command("eval", {
+    expansion: true,
     desc: "Command to allow the bot developers to evaluate code from within Discord.",
     args: [
         {

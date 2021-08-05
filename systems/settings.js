@@ -27,16 +27,19 @@ class LocalSettings {
 
     }
 
-    get(setting) {
+    get(setting, def) {
+        if (def !== undefined && !this.#table.has(setting)) {
+            this.#table.set(setting, def);
+        }
+
         return this.#table.get(setting);
     }
 
-    table(key) {
-        var table = () => this.#table.table(key);
+    table(key, def) {
 
-        if (!table()) this.#table.set(key, {});
+        if (!this.#table.has(key)) this.#table.set(key, def !== undefined ? def : {});
 
-        return table();
+        return this.#table.table(key);
     }
 
     exists() {

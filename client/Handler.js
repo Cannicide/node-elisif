@@ -2,10 +2,13 @@
 //A better, simpler way of handling a bot
 
 //Command class
-const Command = require("./command");
+const Command = require("../systems/Command");
+
+//SlashCommand class
+const SlashCommand = require("../systems/SlashCommand");
 
 //Global settings
-const Settings = require("./settings");
+const Settings = require("../systems/settings");
 
 //Express app initialized
 const express = require('express');
@@ -19,10 +22,10 @@ allIntents.push("GUILD_MEMBERS");
 allIntents.push("GUILD_PRESENCES");
 
 //Discord.js extension
-const DiscordExtender = require("./extendables");
+const DiscordExtender = require("../systems/extendables");
 
 //Interpreter
-const Interpreter = require("./interpreter");
+const Interpreter = require("../systems/interpreter");
 
 //File system initialized
 const fs = require("fs");
@@ -40,7 +43,7 @@ function initialize(directory, prefix) {
   * @type Command[]
   */
   var requisites = [];
-  var aliases = require("./aliases");
+  var aliases = require("../systems/aliases");
 
   pfix = prefix || pfix || "/";
 
@@ -53,9 +56,9 @@ function initialize(directory, prefix) {
   cmdfiles.push(aliases);
 
   //Get enabled expansions:
-  var expansions = fs.readdirSync(__dirname + "/expansions");
+  var expansions = fs.readdirSync(__dirname + "/../expansions");
   expansions.forEach(expansion => {
-    if (client.expansions.includes(expansion.substring(0, expansion.length - 3))) cmdfiles.push(require(`${__dirname + "/expansions"}/${expansion.substring(0, expansion.length - 3)}`));
+    if (client.expansions.all().includes(expansion.substring(0, expansion.length - 3))) cmdfiles.push(require(`${__dirname + "/../expansions"}/${expansion.substring(0, expansion.length - 3)}`));
   });
 
   //Import commands:
@@ -70,12 +73,13 @@ function initialize(directory, prefix) {
           })
 
           if (typeof file.initialize === 'function') {
-            file.initialize();
+            file.initialize(client);
           }
       }
   });
 
   commands = requisites[requisites.length - 1].getCommands();
+  SlashCommand.setupAll(client);
 
   if (Settings.Global().get("debug_mode")) console.log("Loaded commands:", commands.map(v => v.name));
 
@@ -235,9 +239,9 @@ class ExtendedClient extends Discord.Client {
    * @param {String} p0.authors[].username - The username of this developer. Does not need to match the actual discord username of this developer.
    * @param {String} p0.authors[].id - The Discord ID of this developer. Required for some features and expansions, such as the eval expansion.
    * @param {String} [p0.description] - The description of this discord bot. Used in some features and expansions, such as the help expansion.
-   * @param {["eval", "help"]} [p0.expansions] - Expansions, also known as prewritten command packs, to add to this discord bot.
+   * @param {["eval", "help", "vca", "games", "points"]} [p0.expansions] - Expansions, also known as prewritten command packs, to add to this discord bot.
    */ 
-  constructor({intents, privilegedIntents, name, presences, logs, prefix, port, twitch, autoInitialize, presenceDuration, authors, description, expansions}) {
+  constructor({intents, privilegedIntents, name = "Discord Bot", presences, logs = false, prefix = "/", port, twitch, autoInitialize, presenceDuration, authors, description, expansions = []}) {
 
     super(preInitialize({intents: privilegedIntents ? allIntents : intents || bot_intents, ws:{intents: privilegedIntents ? allIntents : intents || bot_intents}}));
 
@@ -245,18 +249,17 @@ class ExtendedClient extends Discord.Client {
       return client;
     }
 
-    name = name || "Discord Bot";
-    logs = logs || false;
-
     app.use(express.static('public'));
 
     port = port || process.env.PORT;
     if (!port) throw new Error("Please specify a port to listen on when initializing your Elisif Client.");
 
+    //Setup express server
     const listener = app.listen(port, function() {
       console.log(`${name} listening on port ${listener.address().port}`);
     });
     
+    //Setup command handling methods
     this.commands = {
       initialize: initialize,
       handle: handleCommand,
@@ -266,6 +269,7 @@ class ExtendedClient extends Discord.Client {
       }
     };
 
+    //Setup prefix methods
     this.prefix = {
       get: getPrefix,
       set: setPrefix
@@ -273,15 +277,25 @@ class ExtendedClient extends Discord.Client {
 
     if (prefix) this.prefix.set(prefix);
 
+    //Setup bot information
     this.authors = authors;
     this.description = description;
-    this.expansions = expansions;
-
-    this.hasExpansion = (expansion) => this.expansions.includes(expansion); 
-
     this.intents = intents || bot_intents;
     this.name = name;
     this.port = listener.address().port;
+
+    //Setup expansion methods
+    this.expansions = {
+      all: () => expansions,
+      has: (expansion) => this.expansions.all().includes(expansion),
+      get: (expansion) => {
+        if (!expansion) return this.expansions.all();
+        else if (this.expansions.has(expansion)) return require(`../expansions/${expansion}`);
+        else return false;
+      }
+    }
+
+    //Setup presence cycler method
     presences = presences || [`${this.prefix.get()}help`];
     twitch = twitch || 'https://twitch.tv/cannicide';
 
@@ -303,8 +317,41 @@ class ExtendedClient extends Discord.Client {
 
     }
 
+    //Utility method to create a discord.js enum
+    function createEnum(keys) {
+      const obj = {};
+      for (const [index, key] of keys.entries()) {
+        if (key === null) continue;
+        obj[key] = index;
+        obj[index] = key;
+      }
+      return obj;
+    }
+    
+    //Setup channel types enum including new thread channel types
+    Discord.Constants.ChannelTypes = createEnum([
+      'GUILD_TEXT',
+      'DM',
+      'GUILD_VOICE',
+      'GROUP_DM',
+      'GUILD_CATEGORY',
+      'GUILD_NEWS',
+      'GUILD_STORE',
+      ...Array(3).fill(null),
+      // 10
+      'GUILD_NEWS_THREAD',
+      'GUILD_PUBLIC_THREAD',
+      'GUILD_PRIVATE_THREAD',
+      'GUILD_STAGE_VOICE',
+    ]);
+    
+    //Setup thread channel types enum
+    Discord.Constants.ThreadChannelTypes = ['GUILD_NEWS_THREAD', 'GUILD_PUBLIC_THREAD', 'GUILD_PRIVATE_THREAD'];
+
+    //Assign this object to the client variable
     client = this;
 
+    //Setup ready event handler
     this.once("ready", () => {
       console.log(`${name} is up and running!`);
       if (Settings.Global().get("presence_cycler")) this.presenceCycler(presences);
@@ -341,7 +388,7 @@ class ExtendedClient extends Discord.Client {
             if (message.guild === null) {
                 
                 //Interpret for DiscordSRZ code or other DM interpretation
-                Interpreter.handleDm(message, message.content.split(" "));
+                Interpreter.dms.handle(message, message.content.split(" "));
     
                 return false;
             }
@@ -352,7 +399,7 @@ class ExtendedClient extends Discord.Client {
     
             //Handle messages to be interpreted:
             if (!cmd) {
-                Interpreter.handleMessage(message, message.content.split(" "));
+                Interpreter.messages.handle(message, message.content.split(" "));
             }
       
           }
@@ -364,12 +411,12 @@ class ExtendedClient extends Discord.Client {
 
         //Auto initialize interpreting reaction add
         this.on("messageReactionAdd", (r, user) => {
-          Interpreter.handleReaction(r, user, true);
+          Interpreter.reactions.handle(r, user, true);
         });
         
         //Auto initialize interpreting reaction remove
         this.on("messageReactionRemove", (r, user) => {
-          Interpreter.handleReaction(r, user, false);
+          Interpreter.reactions.handle(r, user, false);
         });
 
       }
@@ -378,6 +425,7 @@ class ExtendedClient extends Discord.Client {
 
     });
 
+    //Setup custom event handlers
     customEventHandlers(client);
 
   }

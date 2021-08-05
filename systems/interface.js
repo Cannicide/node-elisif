@@ -55,8 +55,8 @@ class EmbedMessage {
      * @param {String} [options.color] - The color of the Embed border.
      */
     constructor(message, options) {
-        let userID = message.author.id;
-        var tuser = message.client.users.cache.find(m => m.id == userID);
+        let userID = message.author?.id;
+        var tuser = message.client.users.cache.find(m => m.id == userID) ?? message.client.user;
 
         if (typeof options === "object" && typeof options !== "string") {
 
@@ -66,7 +66,7 @@ class EmbedMessage {
             if (!Array.isArray(footer)) footer = [footer];
 
             var embed = {embed: {
-                "color": color ? color : message.guild ? message.member.displayHexColor : tuser.toString().substring(2, 8),
+                "color": color ? color : message.guild ? message.member?.displayHexColor : tuser.toString().substring(2, 8),
                 "timestamp": !noTimestamp ? new Date() : false,
                 "footer": {
                 "icon_url": icon || tuser.avatarURL(),
