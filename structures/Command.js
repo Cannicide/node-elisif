@@ -10,8 +10,6 @@
     issues being identified in the error message (instead of just the first issue).
 */
 
-const Alias = require('../structures/Alias');
-
 class Command {
 
     constructor({ 
@@ -210,6 +208,7 @@ class Command {
 
     async addAliases(...aliases) {
 
+        const Alias = require('../structures/Alias');
         for (let alias of aliases) {
             new Alias(alias, this.name);
         }
