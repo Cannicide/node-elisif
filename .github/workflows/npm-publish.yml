@@ -6,7 +6,7 @@ name: Testing
 on:
   push:
     branches:
-      - main
+      - dev
 
 jobs:
   build:
@@ -29,6 +29,6 @@ jobs:
           node-version: 14
           registry-url: https://registry.npmjs.org/
       - run: npm ci
-      - run: npm publish
+      - run: npm publish --tag dev
         env:
           NODE_AUTH_TOKEN: ${{secrets.npm_token}}
