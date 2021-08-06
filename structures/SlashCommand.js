@@ -19,11 +19,11 @@ class SlashCommand {
     //Currently not implemented: @param {Number} [options.cooldown] - Set a cooldown on the command, in seconds. 
     /**
      * Creates a new executable Slash Command that can be called by users and run by the bot.
-     * @param {String} name - The name of the slash command, used to call the slash command and identify it in the help command.
      * @param {Object} options - Command options.
      * @param {String[]} [options.perms] - Any Discord permissions required to run the command.
      * @param {String[]} [options.roles] - Any Discord roles required to run the command.
-     * @param {String} [options.desc] - Optional description of the command.
+     * @param {String} options.name - The name of the slash command, used to call the slash command and identify it in the help command.
+     * @param {String} options.desc - Optional description of the command.
      * @param {String[]} [options.channels] - Specify channel names/IDs to restrict this command to.
      * @param {String[]} [options.guilds] - Specify guild IDs to restrict this command to.
      * @param {function(Object, String[]):void} method - The method that is executed when the command is called. Has parameters (message, args).
@@ -52,8 +52,8 @@ class SlashCommand {
      * @param {Boolean} [options.args[].args[].args[].optional] - Whether or not the argument is optional. Default is false.
      * @param {"string"|"str"|"integer"|"int"|"boolean"|"bool"|"user"|"channel"|"role"|"mention"|"float"} options.args[].args[].args[].type - The datatype of the argument.
      */
-    constructor(name, options, method) {
-        this.name = name;
+    constructor(options, method) {
+        this.name = options.name;
         this.method = method;
         this.perms = options.perms;
         this.roles = options.roles;

@@ -51,6 +51,8 @@ class Command {
 
         this.cooldowns = new Map();
 
+        console.log("OPTIONS:", this.options);
+
         const client = require("../index").getClient();
         this.initialize(client);
 

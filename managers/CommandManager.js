@@ -113,6 +113,7 @@ class CommandManager {
     }
 
     static get(commandName) {
+        console.log("COMMAND " + commandName, CommandManager.has(commandName));
         return CommandManager.has(commandName) ? CommandManager.#commands.get(commandName) : undefined;
     }
 
