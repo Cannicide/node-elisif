@@ -24,73 +24,19 @@ const DiscordExtender = require("../systems/extendables");
 //Interpreter
 const Interpreter = require("../systems/interpreter");
 
-var pfix = "/";
+//Expansion manager
+const ExpansionManager = require("../managers/ExpansionManager");
+
+//Presence cycler
+const PresenceCycler = require("../client/PresenceCyclerClient");
+
+//Prefix handler
+const PrefixHandler = require("../client/PrefixHandler");
+
 /**
  * @type ExtendedClient
  */
 var client = false;
-
-async function refreshCache() {
-
-  if (!Settings.Global().get("refresh_cache_on_boot")) return;
-
-  var totalMessagesFetched = 0;
-
-  for (var guild of client.guilds.cache.array()) {
-
-    for (var channel of guild.channels.cache.filter(c => c.type == "text").array()) {
-
-      var messages = await channel.messages.fetch();
-      totalMessagesFetched += messages.size;
-
-    }
-
-  };
-
-  console.log("Successfully fetched and cached " + totalMessagesFetched + " messages.");
-
-}
-
-function setPrefix(prefix) {
-  pfix = prefix ?? pfix || "/";
-  Settings.Global().set("global_prefix", pfix);
-  return pfix;
-}
-
-function getPrefix() {
-  pfix = Settings.Global().get("global_prefix");
-  return pfix;
-}
-
-//Cycle through various presences instead of a single discord presence.
-var index = 0;
-var presenceInterval = false;
-
-/**
- * A randomized presence message.
- * @returns {Presence}
- */
-class Presence {
-
-  #options;
-  #selected;
-
-  /**
-   * 
-   * @param {String[]} presences - A list of presences to cycle through.
-   */
-  constructor(presences) {
-
-    this.#options = presences;
-    this.#selected = this.#options[index];
-    index += 1;
-    if (index == this.#options.length)
-      index = 0;
-
-  }
-
-  get() { return this.#selected;}
-}
 
 class ExtendedClient extends Discord.Client {
 
@@ -147,12 +93,8 @@ class ExtendedClient extends Discord.Client {
     this.commands = CommandManager;
 
     //Setup prefix methods
-    this.prefix = {
-      get: getPrefix,
-      set: setPrefix
-    };
-
-    if (prefix) this.prefix.set(prefix);
+    this.prefix = new PrefixHandler();
+    this.prefix.set(prefix);
 
     //Setup bot information
     this.authors = authors;
@@ -163,37 +105,13 @@ class ExtendedClient extends Discord.Client {
     expansions.enable = this.expansions.enable ?? [];
 
     //Setup expansion methods
-    this.expansions = {
-      all: () => expansions.enable,
-      has: (expansion) => this.expansions.all().includes(expansion),
-      get: (expansion) => {
-        if (!expansion) return this.expansions.all();
-        else if (this.expansions.has(expansion)) return require(`../expansions/${expansion}`);
-        else return false;
-      }
-    }
+    this.expansions = new ExpansionManager(expansions.enable);
 
     //Setup presence cycler method
     presences = presences ?? [`${this.prefix.get()}help`];
     twitch = twitch ?? 'https://twitch.tv/cannicide';
 
-    this.presenceCycler = (presenceArray) => {
-
-      if (presenceInterval) clearInterval(presenceInterval);
-
-      var setPresence = function() {
-          var presence = new Presence(presenceArray);
-
-          //Allows the status of the bot to be PURPLE (I don't stream on twitch anyways)
-          this.user.setActivity(presence.get(), { type: 'STREAMING', url: twitch });
-      }.bind(this);
-
-      //Cycles the presence every x (or 10) minutes
-      presenceInterval = setInterval(setPresence, (presenceDuration && presenceDuration >= 0.5 ? presenceDuration : 10) * 60 * 1000);
-      
-      setPresence("immediate action");
-
-    }
+    this.PresenceCycler = new PresenceCycler(presences, presenceDuration, this);
 
     //Utility method to create a discord.js enum
     function createEnum(keys) {
@@ -232,7 +150,7 @@ class ExtendedClient extends Discord.Client {
     //Setup ready event handler
     this.once("ready", () => {
       console.log(`${name} is up and running!`);
-      if (Settings.Global().get("presence_cycler")) this.presenceCycler(presences);
+      if (Settings.Global().get("presence_cycler")) this.PresenceCycler.cycle();
       else this.user.setActivity(`${this.prefix.get()}help`, {type: 'STREAMING', url: twitch});
 
       const logGuild = logs ? this.guilds.cache.get(logs.guildID) : false;
@@ -299,7 +217,7 @@ class ExtendedClient extends Discord.Client {
 
       }
 
-      refreshCache();
+      this.refreshCache();
 
     });
 
@@ -313,6 +231,27 @@ class ExtendedClient extends Discord.Client {
    */
   static getInstance() {
     return client;
+  }
+
+  async refreshCache() {
+
+    if (!Settings.Global().get("refresh_cache_on_boot")) return;
+  
+    var totalMessagesFetched = 0;
+  
+    for (var guild of client.guilds.cache.array()) {
+  
+      for (var channel of guild.channels.cache.filter(c => c.type == "text").array()) {
+  
+        var messages = await channel.messages.fetch();
+        totalMessagesFetched += messages.size;
+  
+      }
+  
+    };
+  
+    console.log("Successfully fetched and cached " + totalMessagesFetched + " messages.");
+  
   }
 
 }
