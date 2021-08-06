@@ -19,6 +19,9 @@ const fs = require("fs");
 //Aliases initialized
 const AliasManager = require("../managers/AliasManager");
 
+//Global settings
+const Settings = require("../systems/settings");
+
 
 class CommandManager {
 
