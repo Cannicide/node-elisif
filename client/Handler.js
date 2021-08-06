@@ -102,7 +102,7 @@ class ExtendedClient extends Discord.Client {
     this.intents = intents ?? bot_intents;
     this.name = name;
     this.port = listener.address().port;
-    expansions.enable = this.expansions.enable ?? [];
+    expansions.enable = expansions.enable ?? [];
 
     //Setup expansion methods
     this.expansions = new ExpansionManager(expansions.enable);
