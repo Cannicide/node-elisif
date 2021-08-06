@@ -3,8 +3,9 @@
 const Command = require("../index").Command;
 const client = require("../index").getClient();
 
-module.exports = new Command("help", {
+module.exports = new Command({
   expansion: true,
+  name: "help",
   desc: "Gets a list of all commands, parameters, and their descriptions.\nFormat: [optional] parameters, <required> parameters, optional (flag) parameters.",
   args: [
     {
@@ -19,10 +20,18 @@ module.exports = new Command("help", {
   aliases: ["bothelp", client.name ? client.name.toLowerCase().replace(/[^a-z0-9]/g, "") : "elisifhelp"]
 }, (message) => {
 
-    var cmds = new Command(false, {}).getCommands();
-    var prefix = message.prefix;
+    var cmds, thumb;
     var args = message.args;
-    var thumb = message.guild.iconURL({dynamic: true});
+    var prefix = message.prefix;
+
+    if (message.guild) {
+      cmds = client.commands.all().filter(cmd => cmd.guilds.includes(message.guild.id) || cmd.guilds.includes(message.guild.name));
+      thumb = message.guild.iconURL({dynamic: true});
+    }
+    else {
+      cmds = client.commands.all();
+      thumb = client.user.displayAvatarURL({dynamic: true});
+    }
 
     function getCommandUsage(item) {
       var res = {
@@ -33,7 +42,7 @@ module.exports = new Command("help", {
       res.name = item.name.charAt(0).toUpperCase() + item.name.substring(1) + " Command";
       res.value = (item.desc ? item.desc + "\n" : "") + "```fix\n" + prefix + item.name;// + "\n";
 
-      let params = item.cmd.getArguments();
+      let params = item.args;
       if (!params) {
           res.value += "```\n** **";
       }
@@ -87,7 +96,7 @@ module.exports = new Command("help", {
           },
           {
             name: "Aliases",
-            value: cmd.isalias ? "Alias of " + cmd.aliases.join(", ") : (cmd.aliases.length > 0 ? cmd.aliases.join(", ") : "No aliases"),
+            value: cmd.is_alias ? "Alias of " + cmd.options.aliases.join(", ") : (cmd.options.aliases.length > 0 ? cmd.options.aliases.join(", ") : "No aliases"),
             inline: true
           },
           {
@@ -118,7 +127,7 @@ module.exports = new Command("help", {
 
       var pages = [];
       cmds.forEach((item) => {
-        if (!item.special && !item.isalias) {
+        if (!item.invisible && !item.is_alias) {
             var res = getCommandUsage(item);
             pages.push(res);
         }
@@ -126,7 +135,7 @@ module.exports = new Command("help", {
 
       message.channel.paginate({
         title: "**Commands**",
-        desc: client.description || "Now viewing the commands for this discord bot.",
+        desc: client.description ?? "Now viewing the commands for this discord bot.",
         fields: pages.slice(0, 2),
         thumbnail: thumb
       }, pages, 2);

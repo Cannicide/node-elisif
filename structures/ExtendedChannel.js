@@ -20,7 +20,7 @@ function ExtendedChannel(ExtendableChannel) {
 
             super(guild, data);
 
-            this.commands = this.elisif.Command.channelCommandMap[data.name] || this.elisif.Command.channelCommandMap[data.id];
+            this.commands = this.client.commands.getUsableInChannel(this);
 
         }
 

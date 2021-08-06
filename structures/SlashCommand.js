@@ -2,7 +2,7 @@
 
 
 const SlashManager = require("../managers/SlashManager");
-const SlashInteraction = require("../structures/SlashInteraction");
+const SlashInteraction = require("./SlashInteraction");
 
 
 /**

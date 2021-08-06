@@ -1,8 +1,9 @@
 //NodeElisif by Cannicide
 
 const Handler = require('./client/Handler');
-const Command = require("./systems/Command");
-const SlashCommand = require("./systems/SlashCommand");
+const Command = require("./structures/Command");
+const Alias = require("./structures/Alias");
+const SlashCommand = require("./structures/SlashCommand");
 const Interface = require("./systems/interface");
 const EvG = require("./systems/evg");
 const Interpreter = require("./systems/interpreter");
@@ -12,6 +13,7 @@ const fetch = require("node-fetch");
 class NodeElisif extends Handler {
 
     Command = Command;
+    Alias = Alias;
     interface = Interface;
     evg = EvG;
     interpreter = Interpreter;

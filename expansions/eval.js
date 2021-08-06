@@ -5,8 +5,9 @@ const evg = require("../index").evg;
 const Interface = require("../index").interface;
 const client = require("../index").getClient();
 
-module.exports = new Command("eval", {
+module.exports = new Command({
     expansion: true,
+    name: "eval",
     desc: "Command to allow the bot developers to evaluate code from within Discord.",
     args: [
         {

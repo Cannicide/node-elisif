@@ -72,8 +72,9 @@ class VCActivity {
 module.exports = {
   VCActivity,
   commands: [
-    new Command("vcactivity", {
+    new Command({
       expansion: true,
+      name: "vcactivity",
       desc: "Start or join interactive activities in your voice channel!",
       aliases: ["vca"]
     }, async (message) => {

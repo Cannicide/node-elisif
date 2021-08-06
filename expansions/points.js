@@ -652,7 +652,9 @@ class NativePointsCommands {
 
     }
 
-    static Points = new Command("points", {
+    static Points = new Command({
+        expansion: true,
+        name: "points",
         desc: "View how many points you and/or another user have.",
         aliases: ["rank"],
         args: [{
@@ -673,7 +675,9 @@ class NativePointsCommands {
     });
 
 
-    static Shop = new Command("shop", {
+    static Shop = new Command({
+        expansion: true,
+        name: "shop",
         desc: "View and purchase items from the Points Shop.",
         aliases: ["pointshop", "pointsshop"],
         args: [{
@@ -754,8 +758,9 @@ class NativePointsCommands {
 
     });
 
-    static Leaderboard = new Command("pointslb", {
+    static Leaderboard = new Command({
         expansion: true,
+        name: "pointslb",
         desc: "View the top players on the Points Leaderboard.",
         aliases: ["ranks", "pointlb", "levels", "pointslbs", "pointlbs"],
         args: [{

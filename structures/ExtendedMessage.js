@@ -52,12 +52,13 @@ function ExtendedMessage(ExtendableMessage) {
             //Set properties
             
             this.label = command;
+            this.labelWithPrefix = commandWithPrefix;
             this.components = data.components;
             this._data = data;
             this.defaultFlags = data.flags;
             this.#userArgs = args; //(Read-only args)
 
-            this.isCommand = () => this.label && this.client.commands.get(this.label);
+            this.isCommand = () => this.label && this.client.commands.has(this.label);
             this.getCommand = () => this.isCommand() ? this.client.commands.get(this.label) : false;
 
             //Command-only methods
@@ -368,7 +369,7 @@ function ExtendedMessage(ExtendableMessage) {
          * Directly replies to the current message with a new message. Supports inline replies!
          * @param {String} content - The content of the reply message.
          * @param {Object} options - The reply's options.
-         * @param {Boolean} [options.inline] - Whether or not this is an inline reply. Defaults to false (a plain discord.js text reply).
+         * @param {Boolean} [options.inline] - Whether or not this is an inline reply. Defaults to true.
          * @param {Boolean} [options.mention] - Whether or not this reply should mention/ping the user. Only applicable to inline replies. Defaults to true.
          * @returns Message
          */
@@ -376,7 +377,7 @@ function ExtendedMessage(ExtendableMessage) {
 
             options = options || {inline: false, mention: true};
             
-            if (!("inline" in options)) options.inline = false;
+            if (!("inline" in options)) options.inline = true;
             if (!("mention" in options)) options.mention = true;
             
             if (!options.inline) return super.reply(content);
