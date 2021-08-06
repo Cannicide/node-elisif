@@ -76,7 +76,7 @@ class CommandManager {
         //Get enabled expansions:
         var expansions = fs.readdirSync(__dirname + "/../expansions");
         expansions.forEach(expansion => {
-            if (client.expansions.all().includes(expansion.substring(0, expansion.length - 3)))
+            if (CommandManager.client.expansions.all().includes(expansion.substring(0, expansion.length - 3)))
                 files.push(require(`${__dirname + "/../expansions"}/${expansion.substring(0, expansion.length - 3)}`));
         });
 

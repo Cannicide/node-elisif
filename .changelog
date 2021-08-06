@@ -1,0 +1,6 @@
+- Fully rewrote command, alias, and command-handling systems
+- Made command, alias, and command-handling much cleaner, neater, and more efficient
+- Added command, alias, and expansion managers
+- Added command and alias structures
+- Moved command-handling, prefix handler, expansion manager, and presence cycler out of Handler class
+- Added this changelog file to keep track of all changes as they are made
