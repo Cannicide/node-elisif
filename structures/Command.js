@@ -217,14 +217,14 @@ class Command {
 
     }
 
-    async addDefaultAlias(client) {
+    addDefaultAlias(client) {
         if (this.name && this.method && !this.is_alias)
             this.aliases.add(`${client.name ? client.name.toLowerCase().replace(/[^a-z0-9]/g, "") : "elisif"}:` + this.name);
 
         return this;
     }
 
-    async setFlagArguments() {
+    setFlagArguments() {
         this.args.filter(arg => arg.flag).forEach(flag => {
 
             //Set flags to an array if existent
