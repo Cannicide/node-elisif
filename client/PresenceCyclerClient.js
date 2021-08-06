@@ -36,14 +36,14 @@ class PresenceCycler {
         this.client = client;
     }
 
-    cycle() {
+    cycle(url) {
         if (PresenceCycler.presenceInterval) clearInterval(PresenceCycler.presenceInterval);
 
         var setPresence = function() {
             var presence = new Presence(this.presenceArray);
 
             //Allows the status of the bot to be PURPLE (I don't stream on twitch anyways)
-            this.client.user.setActivity(presence.get(), { type: 'STREAMING', url: twitch });
+            this.client.user.setActivity(presence.get(), { type: 'STREAMING', url });
         }.bind(this);
 
       //Cycles the presence every x (or 10) minutes

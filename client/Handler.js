@@ -109,7 +109,7 @@ class ExtendedClient extends Discord.Client {
 
     //Setup presence cycler method
     presences = presences ?? [`${this.prefix.get()}help`];
-    twitch = twitch ?? 'https://twitch.tv/cannicide';
+    this.twitch = twitch ?? 'https://twitch.tv/cannicide';
 
     this.PresenceCycler = new PresenceCycler(presences, presenceDuration, this);
 
@@ -150,8 +150,8 @@ class ExtendedClient extends Discord.Client {
     //Setup ready event handler
     this.once("ready", () => {
       console.log(`${name} is up and running!`);
-      if (Settings.Global().get("presence_cycler")) this.PresenceCycler.cycle();
-      else this.user.setActivity(`${this.prefix.get()}help`, {type: 'STREAMING', url: twitch});
+      if (Settings.Global().get("presence_cycler")) this.PresenceCycler.cycle(this.twitch);
+      else this.user.setActivity(`${this.prefix.get()}help`, {type: 'STREAMING', url: this.twitch});
 
       const logGuild = logs ? this.guilds.cache.get(logs.guildID) : false;
       const logChannel = logs && logGuild ? logGuild.channels.cache.get(logGuild.channels.cache.find(c => c.name == logs.channelName).id) : false;
