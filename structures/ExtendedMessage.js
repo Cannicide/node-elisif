@@ -382,8 +382,11 @@ function ExtendedMessage(ExtendableMessage) {
             if (!("mention" in options)) options.mention = true;
             
             if (!options.inline) return super.reply(content);
-            
-            var template = APIMessage.create(this.channel, content, undefined).resolveData();
+
+            // Support for embed replies
+            var suboptions = !["string", "number"].includes(typeof content) ? content : undefined;
+
+            var template = APIMessage.create(this.channel, content, suboptions).resolveData();
             
             template.data.message_reference = { message_id: this.id };
             template.data.allowed_mentions = {
