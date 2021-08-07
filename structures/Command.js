@@ -161,7 +161,7 @@ class Command {
 
         checkRoles() {
             //Member must have at least ONE required roles
-            var hasRoles = !this.message.guild || this.command.roles.some(item => this.message.member.roles.cache.find(x => x.name == item));
+            var hasRoles = !this.message.guild || this.commands.roles.length < 1 || this.command.roles.some(item => this.message.member.roles.cache.find(x => x.name == item));
             if (!hasRoles) this.missingPerms = this.missingPerms.concat(this.command.roles.filter(item => !this.message.member.roles.cache.find(x => x.name == item)).map(perm => "Role: " + perm));
             return hasRoles;
         }
