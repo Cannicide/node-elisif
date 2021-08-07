@@ -114,12 +114,12 @@ module.exports = new Command({
 
       if (res.name == "Eval Command" && fields) fields.find(field => field.name == "Use Requirements").value = "**Users:** Bot developers only";
 
-      message.channel.embed({
+      message.channel.send(new message.interface.Embed(message, {
         title: res.name,
         desc: res.value,
         thumbnail: thumb,
         fields: fields
-      });
+      }));
 
     }
     else {
@@ -133,12 +133,12 @@ module.exports = new Command({
         }
       });
 
-      message.channel.paginate({
+      message.channel.send(new message.interface.Paginator(message, {
         title: "**Commands**",
         desc: client.description ?? "Now viewing the commands for this discord bot.",
         fields: pages.slice(0, 2),
         thumbnail: thumb
-      }, pages, 2);
+      }, pages, 2));
 
     }
 
