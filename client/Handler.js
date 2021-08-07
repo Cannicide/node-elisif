@@ -67,7 +67,21 @@ class ExtendedClient extends Discord.Client {
    * @param {Object} [p0.expansions] - Expansions, also known as prewritten command packs, to add to this discord bot.
    * @param {["eval", "help", "vca", "games", "points"]} p0.expansions.enable - List of expansions to enable.
    */ 
-  constructor({intents, privilegedIntents, name = "Discord Bot", presences, logs = false, prefix = "/", port, twitch, autoInitialize, presenceDuration, authors, description, expansions = {}}) {
+  constructor({
+    intents = bot_intents,
+    privilegedIntents = false,
+    name = "Discord Bot",
+    presences = undefined,
+    logs = false,
+    prefix = "/",
+    port = process.env.PORT,
+    twitch = 'https://twitch.tv/cannicide',
+    autoInitialize = undefined,
+    presenceDuration = 10,
+    authors = [],
+    description = undefined,
+    expansions = {}
+  }) {
 
     super((() => {
       //Initialize Discord.js extension before client construction
@@ -80,8 +94,6 @@ class ExtendedClient extends Discord.Client {
     }
 
     app.use(express.static('public'));
-
-    port = port ?? process.env.PORT;
     if (!port) throw new Error("Please specify a port to listen on when initializing your Elisif Client.");
 
     //Setup express server
@@ -99,7 +111,7 @@ class ExtendedClient extends Discord.Client {
     //Setup bot information
     this.authors = authors;
     this.description = description;
-    this.intents = intents ?? bot_intents;
+    this.intents = intents;
     this.name = name;
     this.port = listener.address().port;
     expansions.enable = expansions.enable ?? [];
@@ -109,7 +121,7 @@ class ExtendedClient extends Discord.Client {
 
     //Setup presence cycler method
     presences = presences ?? [`${this.prefix.get()}help`];
-    this.twitch = twitch ?? 'https://twitch.tv/cannicide';
+    this.twitch = twitch;
 
     this.PresenceCycler = new PresenceCycler(presences, presenceDuration, this);
 

@@ -48,7 +48,7 @@ class PresenceCycler {
 
       //Cycles the presence every x (or 10) minutes
       PresenceCycler.presenceInterval = setInterval(setPresence,
-        (this.presenceDuration && this.presenceDuration >= 0.5 ? this.presenceDuration : 10) * 60 * 1000);
+        (this.presenceDuration >= 0.5 ? this.presenceDuration : 10) * 60 * 1000);
       
       setPresence("immediate action");
     }
