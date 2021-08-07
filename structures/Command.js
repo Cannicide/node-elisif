@@ -178,7 +178,7 @@ class Command {
 
         checkMandatoryArgs() {
             // Because mandatory arguments must always come before optional arguments, a simple length check will suffice
-            return this.mandatoryArgs.length <= this.userArgs.length;
+            return this.mandatoryArgs.length == 0 || this.mandatoryArgs.length <= this.userArgs.length;
         }
 
         checkCooldown() {
