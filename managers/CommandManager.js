@@ -28,7 +28,6 @@ class CommandManager {
     static #commands = new Map();
 
     static add(command) {
-        console.log("Added command: " + command.name);
         if (command instanceof Command) {
             CommandManager.#commands.set(command.name, command);
             command.initialize(CommandManager.client);
@@ -113,7 +112,6 @@ class CommandManager {
     }
 
     static get(commandName) {
-        console.log("COMMAND " + commandName, CommandManager.has(commandName));
         return CommandManager.has(commandName) ? CommandManager.#commands.get(commandName) : undefined;
     }
 

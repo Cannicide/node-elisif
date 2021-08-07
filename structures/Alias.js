@@ -25,11 +25,11 @@ const CommandManager = require('../managers/CommandManager');
         options.desc = `Alias of the \`/${origcmd.name}\` command.`;
         options.aliases = [];
         options.is_alias = true;
+        options.execute = options.method;
+        options.initialize = options.initializeMethod;
     
         return options;
       })());
-
-      console.log("ORIGINAL:", original, "\nALIAS:", alias);
 
       //Add this alias name to the original command's aliases list
       CommandManager.get(original).aliases.add(alias);
