@@ -198,7 +198,7 @@ class Command {
     }
 
     async initialize(client) {
-        await this.initializeMethod(client);
+        this.initializeMethod(client);
 
         this.addDefaultAlias(client)
         .setFlagArguments();

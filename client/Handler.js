@@ -69,11 +69,11 @@ class ExtendedClient extends Discord.Client {
    */ 
   constructor({intents, privilegedIntents, name = "Discord Bot", presences, logs = false, prefix = "/", port, twitch, autoInitialize, presenceDuration, authors, description, expansions = {}}) {
 
-    super(() => {
+    super((() => {
       //Initialize Discord.js extension before client construction
       new DiscordExtender();
       return {intents: privilegedIntents ? allIntents : intents ?? bot_intents, ws:{intents: privilegedIntents ? allIntents : intents ?? bot_intents}};
-    });
+    })());
 
     if (client) {
       return client;

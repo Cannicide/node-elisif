@@ -16,7 +16,7 @@ const CommandManager = require('../managers/CommandManager');
  */
  class Alias extends Command {
     constructor(alias, original) {
-      super(() => {
+      super((() => {
         var origcmd = CommandManager.get(original);
         if (!origcmd) throw new Error("Cannot create an alias for a nonexistent command.");
         var options = origcmd.options;
@@ -27,7 +27,7 @@ const CommandManager = require('../managers/CommandManager');
         options.is_alias = true;
     
         return options;
-      });
+      })());
 
       console.log("ORIGINAL:", original, "\nALIAS:", alias);
 
