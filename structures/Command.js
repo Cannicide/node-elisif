@@ -204,7 +204,7 @@ class Command {
         this.addDefaultAlias(client)
         .setFlagArguments();
 
-        this.manager.add(this);
+        if (!this.manager.has(this.name)) this.manager.add(this);
         if (!this.is_alias) this.addAliases(...this.aliases);
 
         return this;
