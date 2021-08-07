@@ -51,7 +51,12 @@ class CommandManager {
             setTimeout(async () => {
 
                 await command.execute(message).catch(err => {
-                    message.reply("an error occurred:\n\n" + err);
+
+                    const baseMessage = `** @${message.author.username}, the following error(s) occurred **`;
+                    const upperHeader = "#" + "=".repeat(baseMessage.length - 2) + "#";
+                    const lowerHeader = "=".repeat(baseMessage.length);
+
+                    message.reply(new message.interface.Embed(message, {desc: "```md\n" + `${upperHeader}${baseMessage}${lowerHeader}\n\n${err}` + "```"}));
                 });
 
                 message.channel.stopTyping();

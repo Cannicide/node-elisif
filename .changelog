@@ -4,3 +4,8 @@
 - Added command and alias structures
 - Moved command-handling, prefix handler, expansion manager, and presence cycler out of Handler class
 - Added this changelog file to keep track of all changes as they are made
+- `message.reply()` is now inline by default; old functionality can still be used by setting `inline` option to `false`
+- `message.reply()` can now accept Embeds and other objects/options in its first parameter
+- Added `devs_only` property to make commands dev-only
+- Adjusted eval command in eval expansion to use new `devs_only` property
+- Adjusted command error message to use a code block within an embed, with FancyMessage-style colored text

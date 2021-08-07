@@ -20,6 +20,7 @@ class Command {
         desc = "",
         dm_only = false,
         guild_only = true,
+        devs_only = false,
         cooldown = 0,
         aliases = [],
         channels = [],
@@ -38,6 +39,7 @@ class Command {
         this.desc = desc;
         this.dm_only = dm_only;
         this.guild_only = guild_only;
+        this.devs_only = devs_only;
         this.cooldown = cooldown;
         this.aliases = new Set(aliases);
         this.channels = channels;
@@ -54,6 +56,9 @@ class Command {
 
         const client = require("../index").getClient();
         this.initialize(client);
+
+        if (this.devs_only && (!client.authors || client.authors.length < 1))
+            throw new Error(`node-elisif error: The developers of this bot and their IDs MUST be specified during the client's creation in order to create dev-only commands such as '${this.name}'.`);
 
     }
 
@@ -75,46 +80,49 @@ class Command {
             //Check for errors and filter failures
             const filter = new this.Filters(message, this);
             if (!filter.checkDmOnly()) {
-                errors.push("Sorry, that command only works in DMs.");
+                errors.push("\t* Sorry, that command only works in DMs.");
             }
             if (!filter.checkGuildOnly()) {
-                errors.push("Sorry, that command only works in guilds.");
+                errors.push("\t* Sorry, that command only works in guilds.");
             }
             if (!filter.checkGuilds()) {
-                errors.push("Sorry, that command cannot be used in this guild.");
+                errors.push("\t* Sorry, that command cannot be used in this guild.");
             }
             if (!filter.checkChannels()) {
-                errors.push("Sorry, that command cannot be used in this channel.");
+                errors.push("\t* Sorry, that command cannot be used in this channel.");
+            }
+            if (!filter.checkDevsOnly()) {
+                errors.push(`\t* Sorry, that command can only be used by the developers of ${message.client.name}.`);
             }
             if (!filter.checkCooldown()) {
-                errors.push("Sorry, you can't use that command again for another " + filter.cooldown + " seconds.");
+                errors.push("\t* Sorry, you can't use that command again for another " + filter.cooldown + " seconds.");
             }
             if (!filter.checkMandatoryArgs()) {
-                errors.push("Sorry, you need to provide the correct arguments for that command.");
+                errors.push("\t* Sorry, you need to provide the correct arguments for that command.");
                 var missedArgs = filter.mandatoryArgs.slice(filter.userArgs.length);
                 var error = "";
 
                 missedArgs.forEach(arg => {
                     var feedback = arg.feedback ?? `Please specify the argument: **\`${arg.name}\`**.`;
                     if (feedback != "none")
-                        error += "\t- " + feedback + "\n";
+                        error += "\t\t- " + feedback + "\n";
 
                     //Attaching Embed feedback in individual arg feedback properties is no longer supported.
                 });
 
-                error += `\t- Review the syntax for this command with \`${message.client.prefix.get()}help ${this.name}\`.`;
+                error += `\t\t- Review the syntax for this command with \`${message.client.prefix.get()}help ${this.name}\`.`;
                 errors.push(error);
             }
             if (!filter.checkPerms() || !filter.checkRoles()) {
-                errors.push("Sorry, you don't have permission to use that command.");
+                errors.push("\t* Sorry, you don't have permission to use that command.");
                 var missedPerms = filter.missingPerms;
                 var error = "";
 
                 missedPerms.forEach(perm => {
-                    error += "\t- Missing " + perm + "\n";
+                    error += "\t\t- Missing " + perm + "\n";
                 });
 
-                error += `\t- Review the perms needed for this command with \`${message.client.prefix.get()}help ${this.name}\`.`;
+                error += `\t\t- Review the perms needed for this command with \`${message.client.prefix.get()}help ${this.name}\`.`;
                 errors.push(error);
             }
 
@@ -150,6 +158,10 @@ class Command {
 
             //Establish missing perms properties
             this.missingPerms = [];
+        }
+
+        checkDevsOnly() {            
+            return this.command.devs_only ? this.message.client.authors.find(a => a.id == this.message.author.id) : true;
         }
 
         checkPerms() {
@@ -264,6 +276,7 @@ class Command {
             desc: this.desc,
             dm_only: this.dm_only,
             guild_only: this.guild_only,
+            devs_only: this.devs_only,
             cooldown: this.cooldown,
             aliases: Array.from(this.aliases),
             channels: this.channels,

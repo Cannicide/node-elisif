@@ -376,7 +376,7 @@ function ExtendedMessage(ExtendableMessage) {
          */
         async reply(content, options) {
 
-            options = options || {inline: false, mention: true};
+            options = options || {inline: true, mention: true};
             
             if (!("inline" in options)) options.inline = true;
             if (!("mention" in options)) options.mention = true;

@@ -9,6 +9,7 @@ module.exports = new Command({
     expansion: true,
     name: "eval",
     desc: "Command to allow the bot developers to evaluate code from within Discord.",
+    devs_only: true,
     args: [
         {
             name: "code",
@@ -27,15 +28,10 @@ module.exports = new Command({
         throw new Error("node-elisif error: The developers of this bot and their IDs MUST be specified during the client's creation in order to be able to use the eval command. This is because the eval command requires the Discord IDs of the developers in order to ensure that only they can user the eval command. Because the eval command can be used to run code, it is not safe for any users, apart from the bot developers, to have access to this command.");
     }
 
-    var isDev = false;
-
     client.authors.forEach((dev) => {
         if ((!("id" in dev) || !dev.id) && ("username" in dev && dev.username)) console.warn(`node-elisif warning: The developer "${dev.username}" did not have their ID specified during client construction, and may be unable to use the eval command.`);
         else if (!("id" in dev) || !dev.id) console.warn("node-elisif warning: A developer listed in client construction did not have their ID specified, so they may be unable to use the eval command.");
-        else if (message.author.id == dev.id) isDev = true;
     });
-
-    if (!isDev) return message.channel.send(`Only the developers of ${client.name} can use this command!`);
 
     try {
         var result = eval(message.args.join(" "));
