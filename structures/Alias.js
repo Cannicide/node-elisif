@@ -29,7 +29,7 @@ const CommandManager = require('../managers/CommandManager');
         return options;
       });
 
-      console.log("ORIGINAL:", original);
+      console.log("ORIGINAL:", original, "\nALIAS:", alias);
 
       //Add this alias name to the original command's aliases list
       CommandManager.get(original).aliases.add(alias);

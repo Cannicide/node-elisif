@@ -51,7 +51,7 @@ class Command {
 
         this.cooldowns = new Map();
 
-        console.log("OPTIONS:", this.options);
+        console.log("OPTIONS for", this.name + ":", this.options);
 
         const client = require("../index").getClient();
         this.initialize(client);
@@ -209,6 +209,8 @@ class Command {
     }
 
     async addAliases(...aliases) {
+
+        console.log("Setting up aliases of", this.name, "\nAlias list:", aliases);
 
         const Alias = require('../structures/Alias');
         for (let alias of aliases) {

@@ -64,7 +64,7 @@ class SlashCommand {
         this.args = options.args;
 
         //Add this command to the command list
-        SlashCommand.COMMANDS[name] = this;
+        SlashCommand.COMMANDS[this.name] = this;
     }
 
     /**
