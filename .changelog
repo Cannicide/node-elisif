@@ -9,3 +9,4 @@
 - Added `devs_only` property to make commands dev-only
 - Adjusted eval command in eval expansion to use new `devs_only` property
 - Adjusted command error message to use a code block within an embed, with FancyMessage-style colored text
+- Made EmbedInterface, help expansion, and ExtendedMessage more compatible with DMs

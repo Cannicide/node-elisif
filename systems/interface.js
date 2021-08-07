@@ -216,6 +216,8 @@ class Paginator {
      */
     constructor(message, embed, elements, perPage, allUsers) {
 
+        if (!(embed instanceof EmbedMessage)) embed = new EmbedMessage(message, embed);
+
         var insertions = 0;
         var pages = [];
         var page = [];
