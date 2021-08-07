@@ -22,7 +22,7 @@ const CommandManager = require('../managers/CommandManager');
         var options = origcmd.options;
     
         options.name = alias;
-        options.desc = `Alias of the \`/${origcmd.getName()}\` command.`;
+        options.desc = `Alias of the \`/${origcmd.name}\` command.`;
         options.aliases = [];
         options.is_alias = true;
     
