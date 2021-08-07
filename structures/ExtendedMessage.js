@@ -54,7 +54,7 @@ function ExtendedMessage(ExtendableMessage) {
             this.label = command;
             this.labelWithPrefix = commandWithPrefix;
             this.escapedPrefix = foundPrefix;
-            this.startsWithPrefix = this.labelWithPrefix.startsWith(this.escapedPrefix);
+            this.startsWithPrefix = this.labelWithPrefix.startsWith(this.prefix);
             this.components = data.components;
             this._data = data;
             this.defaultFlags = data.flags;
