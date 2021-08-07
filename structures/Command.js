@@ -139,8 +139,8 @@ class Command {
             //Establish cooldown time properties
             const now = Date.now();
             this.cooldownAmount = this.command.cooldown * 1000;
-            this.userCooldown = this.command.cooldowns.get(message.author.id) ?? (now - cooldownAmount);
-            this.expirationTime = this.userCooldown + cooldownAmount;
+            this.userCooldown = this.command.cooldowns.get(message.author.id) ?? (now - this.cooldownAmount);
+            this.expirationTime = this.userCooldown + this.cooldownAmount;
             this.now = now;
 
             const timeLeft = (this.expirationTime - now) / 1000;
