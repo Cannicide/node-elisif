@@ -25,7 +25,7 @@ module.exports = new Command({
     var prefix = message.prefix;
 
     if (message.guild) {
-      cmds = client.commands.all().filter(cmd => cmd.guilds.includes(message.guild.id) || cmd.guilds.includes(message.guild.name));
+      cmds = client.commands.all().filter(cmd => cmd.guilds.length == 0 || cmd.guilds.includes(message.guild.id) || cmd.guilds.includes(message.guild.name));
       thumb = message.guild.iconURL({dynamic: true});
     }
     else {
@@ -81,7 +81,7 @@ module.exports = new Command({
         fields = [
           {
             name: "DM-Only Command",
-            value: cmd.dm_only ? "Only works in DMs." : "Does not work in DMs.",
+            value: cmd.dm_only ? "Only works in DMs." : (cmd.guild_only ? "Only works in guilds." : "Works in both DMs and guilds."),
             inline: true
           },
           {
@@ -101,7 +101,7 @@ module.exports = new Command({
           },
           {
             name: "Special Properties",
-            value: (cmd.special ? "**Visible in Help:** No" : "**Visible in Help:** Yes") + "\n" + (cmd.flags ? "**Flags:** " + cmd.flags.map(flag => `${flag.name} (${flag.desc})`).join(", ") : ""),
+            value: (cmd.invisible ? "**Visible in Help:** No" : "**Visible in Help:** Yes") + "\n" + (cmd.flags ? "**Flags:** " + cmd.flags.map(flag => `${flag.name} (${flag.desc})`).join(", ") : ""),
             inline: true
           },
           {
