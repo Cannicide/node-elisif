@@ -27,7 +27,7 @@ class Command {
         is_alias = false,
         args = [],
         expansion = false,
-        execute = false,
+        execute = undefined,
         initialize = () => {}
     }, method) {
 
