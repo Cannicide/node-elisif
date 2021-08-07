@@ -80,49 +80,49 @@ class Command {
             //Check for errors and filter failures
             const filter = new this.Filters(message, this);
             if (!filter.checkDmOnly()) {
-                errors.push("\t* Sorry, that command only works in DMs.");
+                errors.push("  * Sorry, that command only works in DMs.");
             }
             if (!filter.checkGuildOnly()) {
-                errors.push("\t* Sorry, that command only works in guilds.");
+                errors.push("  * Sorry, that command only works in guilds.");
             }
             if (!filter.checkGuilds()) {
-                errors.push("\t* Sorry, that command cannot be used in this guild.");
+                errors.push("  * Sorry, that command cannot be used in this guild.");
             }
             if (!filter.checkChannels()) {
-                errors.push("\t* Sorry, that command cannot be used in this channel.");
+                errors.push("  * Sorry, that command cannot be used in this channel.");
             }
             if (!filter.checkDevsOnly()) {
-                errors.push(`\t* Sorry, that command can only be used by the developers of ${message.client.name}.`);
+                errors.push(`  * Sorry, that command can only be used by the developers of ${message.client.name}.`);
             }
             if (!filter.checkCooldown()) {
-                errors.push("\t* Sorry, you can't use that command again for another " + filter.cooldown + " seconds.");
+                errors.push("  * Sorry, you can't use that command again for another " + filter.cooldown + " seconds.");
             }
             if (!filter.checkMandatoryArgs()) {
-                errors.push("\t* Sorry, you need to provide the correct arguments for that command.");
+                errors.push("  * Sorry, you need to provide the correct arguments for that command.");
                 var missedArgs = filter.mandatoryArgs.slice(filter.userArgs.length);
                 var error = "";
 
                 missedArgs.forEach(arg => {
                     var feedback = arg.feedback ?? `Please specify the argument: **\`${arg.name}\`**.`;
                     if (feedback != "none")
-                        error += "\t\t- " + feedback + "\n";
+                        error += "\t- " + feedback + "\n";
 
                     //Attaching Embed feedback in individual arg feedback properties is no longer supported.
                 });
 
-                error += `\t\t- Review the syntax for this command with \`${message.client.prefix.get()}help ${this.name}\`.`;
+                error += `\t- Review the syntax for this command with \`${message.client.prefix.get()}help ${this.name}\`.`;
                 errors.push(error);
             }
             if (!filter.checkPerms() || !filter.checkRoles()) {
-                errors.push("\t* Sorry, you don't have permission to use that command.");
+                errors.push("  * Sorry, you don't have permission to use that command.");
                 var missedPerms = filter.missingPerms;
                 var error = "";
 
                 missedPerms.forEach(perm => {
-                    error += "\t\t- Missing " + perm + "\n";
+                    error += "\t- Missing " + perm + "\n";
                 });
 
-                error += `\t\t- Review the perms needed for this command with \`${message.client.prefix.get()}help ${this.name}\`.`;
+                error += `\t- Review the perms needed for this command with \`${message.client.prefix.get()}help ${this.name}\`.`;
                 errors.push(error);
             }
 

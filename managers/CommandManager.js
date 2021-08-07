@@ -56,7 +56,7 @@ class CommandManager {
                     const upperHeader = "#" + "=".repeat(baseMessage.length - 2) + "#";
                     const lowerHeader = "=".repeat(baseMessage.length);
 
-                    message.reply(new message.interface.Embed(message, {desc: "```md\n" + `${upperHeader}${baseMessage}${lowerHeader}\n\n${err}` + "```"}));
+                    message.reply(new message.interface.Embed(message, {desc: "```md\n" + `${upperHeader}\n${baseMessage}\n${lowerHeader}\n\n${err}` + "```"}));
                 });
 
                 message.channel.stopTyping();
