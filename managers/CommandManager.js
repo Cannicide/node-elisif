@@ -44,10 +44,9 @@ class CommandManager {
 
     static handle(message) {
 
-        var localPrefix = message.getLocalSetting("local_prefix") ?? message.client.prefix.get() ?? "/";
         var command = CommandManager.get(message.label);
 
-        if (command && message.labelWithPrefix.startsWith(localPrefix)) {
+        if (command && message.startsWithPrefix) {
             message.channel.startTyping();
 
             setTimeout(async () => {

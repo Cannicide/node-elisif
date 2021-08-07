@@ -53,6 +53,8 @@ function ExtendedMessage(ExtendableMessage) {
             
             this.label = command;
             this.labelWithPrefix = commandWithPrefix;
+            this.escapedPrefix = foundPrefix;
+            this.startsWithPrefix = this.labelWithPrefix.startsWith(this.escapedPrefix);
             this.components = data.components;
             this._data = data;
             this.defaultFlags = data.flags;
@@ -151,14 +153,13 @@ function ExtendedMessage(ExtendableMessage) {
             this.dbDynamic = this.evg.remodel;
             this.getGlobalSetting = (sett) => this.elisif.settings.Global().get(sett);
             this.getLocalSetting = (sett) => this.elisif.settings.Local(this.guild?.id).get(sett);
+            this.setGlobalSetting = (sett, val) => this.elisif.settings.Global().set(sett, val);
+            this.setLocalSetting = (sett, val) => this.elisif.settings.Local(this.guild?.id).set(sett, val);
 
         }
 
         get prefix() {
-            var localPrefix = this.elisif.settings.Local(this.guild.id).get("local_prefix");
-            if (!localPrefix) localPrefix = this.elisif.settings.Global().get("global_prefix");
-
-            return localPrefix;
+            return this.elisif.settings.Local(this.guild.id).get("local_prefix") ?? this.client.prefix.get() ?? "/";
         }
 
         /**
