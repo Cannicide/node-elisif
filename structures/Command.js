@@ -50,6 +50,7 @@ class Command {
         this.flags = false;
 
         this.cooldowns = new Map();
+        this.manager = require("../managers/CommandManager");
 
         console.log("OPTIONS for", this.name + ":", this.options);
 
@@ -203,6 +204,7 @@ class Command {
         this.addDefaultAlias(client)
         .setFlagArguments();
 
+        this.manager.add(this);
         if (!this.is_alias) this.addAliases(...this.aliases);
 
         return this;

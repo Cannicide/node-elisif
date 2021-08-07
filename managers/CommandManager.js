@@ -28,6 +28,7 @@ class CommandManager {
     static #commands = new Map();
 
     static add(command) {
+        console.log("Added command: " + command.name);
         if (command instanceof Command) {
             CommandManager.#commands.set(command.name, command);
             command.initialize(CommandManager.client);
@@ -87,12 +88,12 @@ class CommandManager {
         files.forEach((item) => {
             var file = typeof item === 'string' ? require(`${directory}/${item.substring(0, item.length - 3)}`) : item;
             if (file instanceof Command) {
-                CommandManager.add(file);
+                // CommandManager.add(file);
             }
             else if ("commands" in file) {
-                file.commands.forEach((alias) => {
-                    if (alias instanceof Command) CommandManager.add(alias);
-                });
+                // file.commands.forEach((alias) => {
+                //     if (alias instanceof Command) CommandManager.add(alias);
+                // });
 
                 if (typeof file.initialize === 'function') {
                     file.initialize(CommandManager.client);
