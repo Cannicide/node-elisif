@@ -159,7 +159,7 @@ function ExtendedMessage(ExtendableMessage) {
         }
 
         get prefix() {
-            return this.guild ? this.elisif.settings.Local(this.guild.id).get("local_prefix") : this.client.prefix.get();
+            return this.guild ? this.elisif.settings.Local(this.guild.id).get("local_prefix") || this.client.prefix.get() : this.client.prefix.get();
         }
 
         /**
