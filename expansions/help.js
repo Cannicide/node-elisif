@@ -133,12 +133,12 @@ module.exports = new Command({
         }
       });
 
-      message.channel.send(new message.interface.Paginator(message, {
+      new message.interface.Paginator(message, {
         title: "**Commands**",
         desc: client.description ?? "Now viewing the commands for this discord bot.",
         fields: pages.slice(0, 2),
         thumbnail: thumb
-      }, pages, 2));
+      }, pages, 2);
 
     }
 
