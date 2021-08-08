@@ -906,7 +906,7 @@ class NativeLevelingHandlers {
         client.on("message", message => {
 
             //Check if points system enabled in this guild
-            if (!message?.guild.settings.get("points.enabled")) return false;
+            if (!message?.guild?.settings.get("points.enabled")) return false;
 
             //No points for bots or DMs
             if (message.author.bot) return false;
