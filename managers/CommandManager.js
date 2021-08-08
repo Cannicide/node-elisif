@@ -46,12 +46,18 @@ class CommandManager {
         var command = CommandManager.get(message.label);
 
         if (command && message.startsWithPrefix) {
+
+            if ((!command.dm_only || command.guild_only) && message.channel.type == "dm") {
+                //Only allow DM-only commands in DMs
+                message.channel.send("```md\n# Sorry, you cannot use this command in a DM.\n> Please use this command in a guild.```");
+                return false;
+            }
+
             message.channel.startTyping();
 
             setTimeout(async () => {
 
                 await command.execute(message).catch(err => {
-
                     const baseMessage = `** @${message.author.username}, the following error(s) occurred **`;
                     const upperHeader = "#" + "=".repeat(baseMessage.length - 2) + "#";
                     const lowerHeader = "=".repeat(baseMessage.length);

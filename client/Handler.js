@@ -191,23 +191,21 @@ class ExtendedClient extends Discord.Client {
 
             // Avoid bot messages, DM and otherwise:
             if (message.author.bot) return false;
-    
-            // DM determination:
-            if (message.guild === null) {
-                
-                //Interpret for DiscordSRZ code or other DM interpretation
-                Interpreter.dms.handle(message, message.content.split(" "));
-    
-                return false;
-            }
-          
-    
+
             //Handle command:
             var cmd = this.commands.handle(message);
     
             //Handle messages to be interpreted:
             if (!cmd) {
-                Interpreter.messages.handle(message, message.content.split(" "));
+                // DM determination:
+                if (message.guild === null) {
+                    
+                  //Interpret for DiscordSRZ code or other DM interpretation
+                  Interpreter.dms.handle(message, message.content.split(" "));
+      
+                  return false;
+                }
+                else Interpreter.messages.handle(message, message.content.split(" "));
             }
       
           }
