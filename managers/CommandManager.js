@@ -47,9 +47,14 @@ class CommandManager {
 
         if (command && message.startsWithPrefix) {
 
-            if ((!command.dm_only || command.guild_only) && message.channel.type == "dm") {
-                //Only allow DM-only commands in DMs
+            if (command.guild_only && message.channel.type == "dm") {
+                //Only allow guild-only commands in guilds
                 message.channel.send("```md\n# Sorry, you cannot use this command in a DM.\n> Please use this command in a guild.```");
+                return false;
+            }
+            else if (command.dm_only && message.channel.type != "dm") {
+                //Only allow DM-only commands in DMs
+                message.channel.send("```md\n# Sorry, this command cannot be used in guilds.\n> Please use this command in DMs.```");
                 return false;
             }
 
