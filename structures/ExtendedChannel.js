@@ -126,7 +126,7 @@ function ExtendedChannel(ExtendableChannel) {
 
             var embed = new this.elisif.interface.Embed(this.lastMessage, embedOptions);
 
-            buttonUtilities.prevRow = 1;
+            ButtonUtility.prevRow = 1;
 
             var compArr = Array.isArray(btnArr) ? btnArr.map(v => ButtonUtility.genComponent(v)) : [ButtonUtility.genComponent(btnArr)];
             var components = [];
@@ -185,7 +185,7 @@ function ExtendedChannel(ExtendableChannel) {
 
             var embed = new this.elisif.interface.Embed(this.lastMessage, embedOptions);
 
-            selUtilities.prevRow = 1;
+            SelectUtility.prevRow = 1;
 
             var compArr = Array.isArray(selArr) ? selArr.map(v => SelectUtility.genComponent(v)) : [SelectUtility.genComponent(selArr)];
             var components = [];
