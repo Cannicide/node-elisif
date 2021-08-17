@@ -10,3 +10,14 @@
 - Adjusted eval command in eval expansion to use new `devs_only` property
 - Adjusted command error message to use a code block within an embed, with FancyMessage-style colored text
 - Made EmbedInterface, help expansion, and ExtendedMessage more compatible with DMs
+- Updated to node 16.x
+- Updated to discord.js 13.x.x
+- Added additional dependencies for discord.js 13.x.x
+- Deprecated Command class; regular commands will still work, but using slash commands instead is recommended
+- Fixed and updated SlashManager; now works with discord.js 13.x.x
+- Removed dependency `slash-commands`
+- SlashCommand class now uses Map instead of object literal to store commands
+- Replaced `method` parameter in SlashCommand class with `options.execute` property
+- Replaced `method` parameter in Command class with `options.execute` property
+- Added methods for adding each individual datatype of arguments to SubCommandBuilder and SlashCommandBuilder
+- Added method to SlashCommandBuilder for importing a Discord.js SlashCommandBuilder object as an elisif SlashCommand

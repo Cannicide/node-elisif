@@ -10,6 +10,9 @@
     issues being identified in the error message (instead of just the first issue).
 */
 
+/**
+ * @deprecated Text message commands are deprecated, use SlashCommand instead
+ */
 class Command {
 
     constructor({ 
@@ -30,7 +33,7 @@ class Command {
         expansion = false,
         execute = undefined,
         initialize = () => {}
-    }, method) {
+    }) {
 
         this.perms = perms;
         this.roles = roles;
@@ -47,7 +50,7 @@ class Command {
         this.is_alias = is_alias;
         this.args = args;
         this.expansion = expansion;
-        this.method = execute ?? method;
+        this.method = execute;
         this.initializeMethod = initialize;
         this.flags = false;
 

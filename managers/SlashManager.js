@@ -1,6 +1,5 @@
-// Manages Slash Command Interactions
+// Manages Slash Commands
 
-const { DiscordInteractions } = require("slash-commands");
 class SlashManager {
   
   constructor(locale, client, token, public_key) {
@@ -11,19 +10,21 @@ class SlashManager {
   }
   
   async getSlashClient() {
-    return new DiscordInteractions({
-      applicationId: (await this.client.fetchApplication()).id,
-      authToken: this.token ?? (this.client.token ?? process.env.TOKEN),
-      publicKey: this.public_key ?? process.env.PUBLIC_KEY,
-    });
+    return this.client.application?.fetch();
+  }
+
+  async getSlashGuildClient() {
+    return this.client.guilds.fetch(this.locale);
   }
   
   get slash() {
-    return this.getSlashClient();
+    return this.locale ?
+      this.getSlashGuildClient()?.then(slash => slash?.commands) :
+        this.getSlashClient()?.then(slash => slash?.commands);
   }
   
-  list() {
-    return this.slash.then(slash => this.locale ? slash.getApplicationCommands(this.locale) : slash.getApplicationCommands());
+  async list() {
+    return [...(await this.slash).cache.values()];
   }
   
   mapArgs(top) {
@@ -168,14 +169,7 @@ class SlashManager {
     let slash = await this.slash;
     let command = this.generate({name, desc, args});
     
-    if (this.locale) {
-      return await slash
-      .createApplicationCommand(command, this.locale);
-    }
-    else {
-      return await slash
-      .createApplicationCommand(command);
-    }
+    return await slash.create(command);
   }
   
   async edit({id}, {name, desc, args}) {
@@ -183,13 +177,13 @@ class SlashManager {
     let command = this.generate({name, desc, args});
     
     return await slash
-    .createApplicationCommand(command, this.locale, id);
+    .edit(id, command);
   }
   
   async delete({id}) {
     let slash = await this.slash;
     return await slash
-    .deleteApplicationCommand(id, this.locale);
+    .delete(id);
   }
 
   /**
