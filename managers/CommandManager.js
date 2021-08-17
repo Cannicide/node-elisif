@@ -43,16 +43,17 @@ class CommandManager {
 
     static handle(message) {
 
-        var command = CommandManager.get(message.label);
+        const msgutil = require("../index").util.message(message);
+        var command = CommandManager.get(msgutil.label);
 
-        if (command && message.startsWithPrefix) {
+        if (command && msgutil.startsWithPrefix) {
 
-            if (command.guild_only && message.channel.type == "dm") {
+            if (command.guild_only && message.channel.type == "DM") {
                 //Only allow guild-only commands in guilds
                 message.channel.send("```md\n# Sorry, you cannot use this command in a DM.\n> Please use this command in a guild.```");
                 return false;
             }
-            else if (command.dm_only && message.channel.type != "dm") {
+            else if (command.dm_only && message.channel.type != "DM") {
                 //Only allow DM-only commands in DMs
                 message.channel.send("```md\n# Sorry, this command cannot be used in guilds.\n> Please use this command in DMs.```");
                 return false;
@@ -67,7 +68,7 @@ class CommandManager {
                     const upperHeader = "#" + "=".repeat(baseMessage.length - 2) + "#";
                     const lowerHeader = "=".repeat(baseMessage.length);
 
-                    message.reply(new message.interface.Embed(message, {desc: "```md\n" + `${upperHeader}\n${baseMessage}\n${lowerHeader}\n\n${err}` + "```"}));
+                    message.reply(new msgutil.interface.Embed(message, {desc: "```md\n" + `${upperHeader}\n${baseMessage}\n${lowerHeader}\n\n${err}` + "```"}));
                 });
 
                 message.channel.stopTyping();

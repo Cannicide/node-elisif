@@ -6,20 +6,24 @@ const Alias = require("./structures/Alias");
 const SlashCommand = require("./structures/SlashCommand");
 const Interface = require("./systems/interface");
 const EvG = require("./systems/evg");
+const Utility = require("./util/Utility");
 const Interpreter = require("./systems/interpreter");
-const Settings = require("./systems/settings");
 const fetch = require("node-fetch");
 
 class NodeElisif extends Handler {
 
+    /**
+     * @deprecated
+     */
     Command = Command;
+
     Alias = Alias;
     interface = Interface;
     evg = EvG;
     interpreter = Interpreter;
-    settings = Settings;
     fetch = fetch;
     SlashCommand = SlashCommand;
+    util = Utility;
 
     version = require("./package.json").version;
 
@@ -42,8 +46,8 @@ class NodeElisif extends Handler {
         return NodeElisif;
     }
 
-    getClient() {
-        return this.Client.getInstance();
+    getClient(identifier) {
+        return this.Client.get(identifier);
     }
 
 }

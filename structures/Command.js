@@ -10,6 +10,8 @@
     issues being identified in the error message (instead of just the first issue).
 */
 
+const { util } = require("../index");
+
 /**
  * @deprecated Text message commands are deprecated, use SlashCommand instead
  */
@@ -69,19 +71,22 @@ class Command {
 
         if (!message) throw new Error("No message was detected by Command execution; this is an impossible occurrence and has resulted in a fatal error.");
 
+        //Get MessageUtility for this message
+        const msgutil = util.message(message);
+
         //Set valid flags, if any, on the message
         if (this.flags) {
-            message.setValidFlags(this.flags);
+            msgutil.setValidFlags(this.flags);
 
             //Refer to this getter to auto-remove flags from args property
-            message.cmdFlags;
+            msgutil.cmdFlags;
         }
 
         return new Promise(async (resolve, reject) => {
             let errors = [];
 
             //Check for errors and filter failures
-            const filter = new this.Filters(message, this);
+            const filter = new this.Filters(msgutil, this);
             if (!filter.checkDmOnly()) {
                 errors.push("  * Sorry, that command only works in DMs.");
             }
@@ -95,7 +100,7 @@ class Command {
                 errors.push("  * Sorry, that command cannot be used in this channel.");
             }
             if (!filter.checkDevsOnly()) {
-                errors.push(`  * Sorry, that command can only be used by the developers of ${message.client.name}.`);
+                errors.push(`  * Sorry, that command can only be used by the developers of ${msgutil.client.name}.`);
             }
             if (!filter.checkCooldown()) {
                 errors.push("  * Sorry, you can't use that command again for another " + filter.cooldown + " seconds.");
@@ -113,7 +118,7 @@ class Command {
                     //Attaching Embed feedback in individual arg feedback properties is no longer supported.
                 });
 
-                error += `\t- Review the syntax for this command with \`${message.client.prefix.get()}help ${this.name}\`.`;
+                error += `\t- Review the syntax for this command with \`${msgutil.client.prefix.get()}help ${this.name}\`.`;
                 errors.push(error);
             }
             if (!filter.checkPerms() || !filter.checkRoles()) {
@@ -125,7 +130,7 @@ class Command {
                     error += "\t- Missing " + perm + "\n";
                 });
 
-                error += `\t- Review the perms needed for this command with \`${message.client.prefix.get()}help ${this.name}\`.`;
+                error += `\t- Review the perms needed for this command with \`${msgutil.client.prefix.get()}help ${this.name}\`.`;
                 errors.push(error);
             }
 
@@ -137,18 +142,19 @@ class Command {
 
     Filters = class CommandFilters {
 
-        constructor(message, command) {
+        constructor(msgutil, command) {
+            this.msgutil = msgutil;
             this.message = message;
             this.command = command;
 
             //Establish mandatory arg properties
-            this.userArgs = message.args ?? [];
+            this.userArgs = msgutil.args ?? [];
             this.mandatoryArgs = this.command.args.filter(arg => !arg.optional);
 
             //Establish cooldown time properties
             const now = Date.now();
             this.cooldownAmount = this.command.cooldown * 1000;
-            this.userCooldown = this.command.cooldowns.get(message.author.id) ?? (now - this.cooldownAmount);
+            this.userCooldown = this.command.cooldowns.get(this.message.author.id) ?? (now - this.cooldownAmount);
             this.expirationTime = this.userCooldown + this.cooldownAmount;
             this.now = now;
 
@@ -156,21 +162,21 @@ class Command {
             const lastUseTimePassed = (now - this.userCooldown) / 1000;
             this.cooldown = timeLeft.toFixed(1);
 
-            message.setCooldownLeft(timeLeft);
-            message.setSinceLastUse(lastUseTimePassed);
+            msgutil.setCooldownLeft(timeLeft);
+            msgutil.setSinceLastUse(lastUseTimePassed);
 
             //Establish missing perms properties
             this.missingPerms = [];
         }
 
         checkDevsOnly() {            
-            return this.command.devs_only ? this.message.client.authors.find(a => a.id == this.message.author.id) : true;
+            return this.command.devs_only ? this.msgutil.client.authors.find(a => a.id == this.message.author.id) : true;
         }
 
         checkPerms() {
             //Member must have ALL required permissions
-            var hasPerms = !this.message.guild || this.command.perms.every(item => this.message.member.hasPermission(item.toUpperCase()));
-            if (!hasPerms) this.missingPerms = this.missingPerms.concat(this.command.perms.filter(item => !this.message.member.hasPermission(item.toUpperCase())).map(perm => "Perm: " + perm));
+            var hasPerms = !this.message.guild || this.command.perms.every(item => this.message.member.permissions.has(item.toUpperCase()));
+            if (!hasPerms) this.missingPerms = this.missingPerms.concat(this.command.perms.filter(item => !this.message.member.permissions.has(item.toUpperCase())).map(perm => "Perm: " + perm));
             return hasPerms;
         }
 
@@ -182,7 +188,7 @@ class Command {
         }
 
         checkDmOnly() {
-            return this.command.dm_only ? this.message.channel.type == "dm" : true;
+            return this.command.dm_only ? this.message.channel.type == "DM" : true;
         }
 
         checkGuildOnly() {

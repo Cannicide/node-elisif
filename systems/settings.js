@@ -16,14 +16,15 @@ class LocalSettings {
 
     /**
      * Local, guild-dependent settings
+     * @param {ExtendedClient} client - The extended client that these settings belong to.
      * @param {String} locale - Location at which to save local settings. Usually a guild ID.
      */
-    constructor(locale) {
+    constructor(client, locale) {
 
         if (isNaN(locale) && locale != "global") throw new Error("Invalid locale passed to LocalSettings constructor.");
 
         this.#id = locale;
-        this.#table = evg.table(locale);
+        this.#table = evg.table(client.user.id).table(locale);
 
     }
 
@@ -79,9 +80,10 @@ class GlobalSettings extends LocalSettings {
 
     /**
      * Global, bot-wide settings
+     * @param {ExtendedClient} client - The extended client that these settings belong to.
      */
-    constructor() {
-        super("global");
+    constructor(client) {
+        super(client, "global");
     }
 
     isLocal() {
@@ -109,22 +111,34 @@ class GlobalSettings extends LocalSettings {
 
 class Settings {
 
-    static Global() { 
-        var settings = new GlobalSettings();
+    /**
+     * @param {ExtendedClient} client - The extended client that these settings belong to.
+     */
+    constructor(client) {
+        this.client = client;
+    }
+
+    /**
+     * Get global settings for this client.
+     */
+    Global() { 
+        var settings = new GlobalSettings(this.client);
 
         if (!settings.exists()) settings.setGlobalDefaults();
 
         return settings;
-
     }
     
-    static Local(locale) {
-        var settings = new LocalSettings(locale);
+    /**
+     * Get local settings for a locale.
+     * @param {String} locale - Locale at which to save local settings, usually a guild ID.
+     */
+    Local(locale) {
+        var settings = new LocalSettings(this.client, locale);
 
         if (!settings.exists()) settings.setLocalDefaults();
 
         return settings;
-
     }
 }
 

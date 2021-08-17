@@ -10,6 +10,7 @@ const Settings = require("../systems/settings");
 //Express app initialized
 const express = require('express');
 const app = express();
+var appInitialized = false;
 
 //Discord.js initialized
 const Discord = require('discord.js');
@@ -34,9 +35,14 @@ const PresenceCycler = require("../client/PresenceCyclerClient");
 const PrefixHandler = require("../client/PrefixHandler");
 
 /**
- * @type ExtendedClient
+ * @type Map<String,ExtendedClient>
  */
-var client = false;
+const clients = new Map();
+
+/**
+ * @type Map<String,ExtendedClient>
+ */
+ const nclients = new Map();
 
 class ExtendedClient extends Discord.Client {
 
@@ -65,6 +71,7 @@ class ExtendedClient extends Discord.Client {
    * @param {String} p0.authors[].id - The Discord ID of this developer. Required for some features and expansions, such as the eval expansion.
    * @param {String} [p0.description] - The description of this discord bot. Used in some features and expansions, such as the help expansion.
    * @param {Object} [p0.expansions] - Expansions, also known as prewritten command packs, to add to this discord bot.
+   * @param {Object} [p0.djsOptions] - Optional additional options for the default discord.js client.
    * @param {["eval", "help", "vca", "games", "points"]} p0.expansions.enable - List of expansions to enable.
    */ 
   constructor({
@@ -80,26 +87,28 @@ class ExtendedClient extends Discord.Client {
     presenceDuration = 10,
     authors = [],
     description = undefined,
-    expansions = {}
+    expansions = {},
+    djsOptions = {}
   }) {
 
     super((() => {
       //Initialize Discord.js extension before client construction
       new DiscordExtender();
-      return {intents: privilegedIntents ? allIntents : intents ?? bot_intents, ws:{intents: privilegedIntents ? allIntents : intents ?? bot_intents}};
+      djsOptions.intents = privilegedIntents ? allIntents : intents ?? bot_intents;
+      return djsOptions;
     })());
 
-    if (client) {
-      return client;
+    if (!appInitialized) {
+      app.use(express.static('public'));
+      if (!port) throw new Error("Please specify a port to listen on when initializing your Elisif Client.");
+
+      //Setup express server
+      const listener = app.listen(port, function() {
+        console.log(`${name} listening on port ${listener.address().port}`);
+      });
+
+      appInitialized = true;
     }
-
-    app.use(express.static('public'));
-    if (!port) throw new Error("Please specify a port to listen on when initializing your Elisif Client.");
-
-    //Setup express server
-    const listener = app.listen(port, function() {
-      console.log(`${name} listening on port ${listener.address().port}`);
-    });
     
     //Setup command handling methods
     this.commands = CommandManager;
@@ -156,8 +165,11 @@ class ExtendedClient extends Discord.Client {
     //Setup thread channel types enum
     Discord.Constants.ThreadChannelTypes = ['GUILD_NEWS_THREAD', 'GUILD_PUBLIC_THREAD', 'GUILD_PRIVATE_THREAD'];
 
-    //Assign this object to the client variable
-    client = this;
+    //Assign this object to the ID-client map
+    clients.set(this.user?.id, this);
+
+    //Assign this object to the name-client map
+    nclients.set(name, this);
 
     //Setup ready event handler
     this.once("ready", () => {
@@ -239,8 +251,15 @@ class ExtendedClient extends Discord.Client {
   /**
    * @return ExtendedClient
    */
-  static getInstance() {
-    return client;
+  static get(identifier) {
+    if (!identifier) throw new Error("Please specify an identifier for the Elisif Client you want to retrieve. The identifier can be either the ID of the client user, or the name of the bot as configured in the client options.");
+
+    if (isNaN(identifier)) return nclients.get(identifier);
+    return clients.get(identifier);
+  }
+
+  get settings() {
+    return new Settings(this);
   }
 
   async refreshCache() {
@@ -269,5 +288,5 @@ class ExtendedClient extends Discord.Client {
 module.exports = class Handler {
   Client = ExtendedClient;
   express = app;
-  Discord = Discord
+  Discord = Discord;
 }
