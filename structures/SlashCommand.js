@@ -120,7 +120,7 @@ class SlashCommand {
 
             this.guilds.forEach(guild => {
 
-                let manager = new SlashManager(guild, client, client.token, client.public_key);
+                let manager = new SlashManager(client, guild);
                 manager.add({
                     name: this.name,
                     desc: this.desc,
@@ -132,7 +132,7 @@ class SlashCommand {
         }
         else {
 
-            let manager = new SlashManager(null, client, client.token, client.public_key);
+            let manager = new SlashManager(client);
             manager.add({
                 name: this.name,
                 desc: this.desc,
@@ -161,31 +161,61 @@ class SlashCommand {
      */
     static setupAll(client) {
 
-        //Setup all slash commands
-        for (let command of SlashCommand.COMMANDS.values()) {
-            command.setup(client);
-        }
+        /*
+            NEW WAY OF SETTING UP COMMANDS
+            Uses ApplicationCommandManager.set() to set all commands in a given locale.
+        */
 
-        SlashCommand.setupEvent(client);
-        SlashCommand.isPostSetup = true;
+        const guildCommands = [...SlashCommand.COMMANDS.values()].filter(cmd => cmd.guilds);
+        const appCommands = [...SlashCommand.COMMANDS.values()].filter(cmd => !cmd.guilds || cmd.guilds.length == 0);
 
-        //Remove all unused guild slash commands
-        var guildCommands = [...SlashCommand.COMMANDS.values()].filter(cmd => cmd.guilds);
-        var usedGuilds = [];
+        //Setup all guild commands
 
-        guildCommands.forEach(cmd => {
-            cmd.guilds.forEach(guild => {
-                if (usedGuilds.includes(guild)) return;
+        let guilds = new Set();
+        guildCommands.forEach(cmd => cmd.guilds.forEach(guilds.add, guilds));
 
-                let manager = new SlashManager(guild, client, client.token, client.public_key);
-                let matchingCommands = guildCommands.filter(command => command.guilds.includes(guild));
-                let names = matchingCommands.map(command => command.name);
-
-                usedGuilds.push(guild);
-
-                manager.deleteAllExcept(names);
-            });
+        guilds.forEach(guild => {
+            let guildManager = new SlashManager(client, guild);
+            guildManager.setAll(guildCommands.filter(cmd => cmd.guilds.includes(guild)));
         });
+
+        //Setup all application commands
+
+        let appManager = new SlashManager(client);
+        appManager.setAll(appCommands);
+
+
+
+        /*
+            OLD WAY OF SETTING UP COMMANDS
+            Uses SlashCommand.setup() on all slash commands.
+        */
+
+        // //Setup all slash commands
+        // for (let command of SlashCommand.COMMANDS.values()) {
+        //     command.setup(client);
+        // }
+
+        // SlashCommand.setupEvent(client);
+        // SlashCommand.isPostSetup = true;
+
+        // //Remove all unused guild slash commands
+        // var guildCommands = [...SlashCommand.COMMANDS.values()].filter(cmd => cmd.guilds);
+        // var usedGuilds = [];
+
+        // guildCommands.forEach(cmd => {
+        //     cmd.guilds.forEach(guild => {
+        //         if (usedGuilds.includes(guild)) return;
+
+        //         let manager = new SlashManager(guild, client, client.token, client.public_key);
+        //         let matchingCommands = guildCommands.filter(command => command.guilds.includes(guild));
+        //         let names = matchingCommands.map(command => command.name);
+
+        //         usedGuilds.push(guild);
+
+        //         manager.deleteAllExcept(names);
+        //     });
+        // });
 
     }
 

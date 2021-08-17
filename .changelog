@@ -21,3 +21,4 @@
 - Replaced `method` parameter in Command class with `options.execute` property
 - Added methods for adding each individual datatype of arguments to SubCommandBuilder and SlashCommandBuilder
 - Added method to SlashCommandBuilder for importing a Discord.js SlashCommandBuilder object as an elisif SlashCommand
+- Added new method of setting up all commands in a locale to SlashManager

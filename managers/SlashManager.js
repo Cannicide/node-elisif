@@ -2,9 +2,9 @@
 
 class SlashManager {
   
-  constructor(locale, client, token, public_key) {
-    this.token = token;
-    this.public_key = public_key;
+  constructor(client, locale) {
+    // this.token = token;
+    // this.public_key = public_key;
     this.client = client;
     this.locale = locale;
   }
@@ -170,6 +170,13 @@ class SlashManager {
     let command = this.generate({name, desc, args});
     
     return await slash.create(command);
+  }
+
+  async setAll(commands) {
+    var slashData = commands.map(command => this.generate(command));
+    let slash = await this.slash;
+
+    return await slash.set(slashData);
   }
   
   async edit({id}, {name, desc, args}) {
