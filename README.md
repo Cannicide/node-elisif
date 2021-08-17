@@ -13,4 +13,14 @@ Support for buttons and select menus has been added! Support for Voice Channel A
 
 Limited [documentation](https://github.com/Cannicide/node-elisif/blob/v12/docs) currently exists for this module, found in the `docs` folder of the Github repository. The docs for this v12 branch of the package are incomplete, and will unfortunately not be completed due to many of its features breaking as a result of the latest updates to discord.js. The docs for the more updated main and dev branches most likely will not work for projects using this branch, as much of the package will be rewritten to support discord.js 13.x.x.
 
+## Usage
+
+Use the latest version of node-elisif for Discord.js v12.5.3 by adding the following to your `package.json` dependencies:
+
+```json
+"elisif": "twelve"
+```
+
+This will import specifically the latest version of node-elisif that supports Discord.js v12.5.3. To use newer versions of node-elisif, and consequently newer versions of discord.js, refer to the READMEs of the main or dev branches.
+
 **Created by Cannicide#2753**
