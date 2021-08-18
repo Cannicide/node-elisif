@@ -12,14 +12,18 @@ class MessageUtility {
     #collecting = false;
     #menu_collecting = false;
 
-    constructor(message) {
+    /**
+     * @param {import("./Utility")} util
+    */
+    constructor(message, util) {
 
         if (MessageUtility.map.has(message.id)) return MessageUtility.map.get(message.id);
 
         this.message = message;
         this.guild = message.guild;
         this.channel = message.channel;
-
+        
+        this.util = util;
         this.elisif = require("../index").getInstance();
         this.client = this.elisif.getClient(message.client.user.id);
 
@@ -346,6 +350,12 @@ class MessageUtility {
         this.#menu_collecting = false;
 
         return true;
+    }
+
+    //Structure Utility Methods:
+
+    member() {
+        return this.util.member(this.message.member);
     }
 
 }

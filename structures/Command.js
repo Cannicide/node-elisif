@@ -175,8 +175,8 @@ class Command {
 
         checkPerms() {
             //Member must have ALL required permissions
-            var hasPerms = !this.message.guild || this.command.perms.every(item => this.message.member.permissions.has(item.toUpperCase()));
-            if (!hasPerms) this.missingPerms = this.missingPerms.concat(this.command.perms.filter(item => !this.message.member.permissions.has(item.toUpperCase())).map(perm => "Perm: " + perm));
+            var hasPerms = !this.message.guild || this.msgutil.member().hasPerms(this.command.perms.map(item => item.toUpperCase()));
+            if (!hasPerms) this.missingPerms = this.missingPerms.concat(this.command.perms.filter(item => !this.msgutil.member().hasPerms(item.toUpperCase())).map(perm => "Perm: " + perm));
             return hasPerms;
         }
 

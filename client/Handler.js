@@ -14,10 +14,11 @@ var appInitialized = false;
 
 //Discord.js initialized
 const Discord = require('discord.js');
-var bot_intents = ["GUILDS", "GUILD_BANS", "GUILD_VOICE_STATES", "GUILD_MESSAGES", "GUILD_MESSAGE_REACTIONS", "GUILD_MESSAGE_TYPING", "DIRECT_MESSAGES"];
-const allIntents = Object.assign([], bot_intents);
-allIntents.push("GUILD_MEMBERS");
-allIntents.push("GUILD_PRESENCES");
+
+//Utility class and intent enums
+const Utility = require("../util/Utility");
+const bot_intents = Utility.getIntentEnums();
+const priv_intents = Utility.getPrivilegedIntentEnums();
 
 //Discord.js extension
 const DiscordExtender = require("../systems/extendables");
@@ -42,11 +43,11 @@ const clients = new Map();
 /**
  * @type Map<String,ExtendedClient>
  */
- const nclients = new Map();
+const nclients = new Map();
 
 class ExtendedClient extends Discord.Client {
 
-  isextended = true;
+  is_extended = true;
 
   /**
    * Extended Discord Client by Cannicide#2753
@@ -94,7 +95,7 @@ class ExtendedClient extends Discord.Client {
     super((() => {
       //Initialize Discord.js extension before client construction
       new DiscordExtender();
-      djsOptions.intents = privilegedIntents ? allIntents : intents ?? bot_intents;
+      djsOptions.intents = privilegedIntents ? intents.concat(priv_intents) : intents;
       return djsOptions;
     })());
 

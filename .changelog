@@ -22,3 +22,11 @@
 - Added methods for adding each individual datatype of arguments to SubCommandBuilder and SlashCommandBuilder
 - Added method to SlashCommandBuilder for importing a Discord.js SlashCommandBuilder object as an elisif SlashCommand
 - Added new method of setting up all commands in a locale to SlashManager
+- Added multi-client support; multiple bots can now be setup on a single server using node-elisif
+- Modified settings, index, and handler to work with new multi-client system
+- Added ability to modify discord.js client settings through node-elisif client options
+- Enabling privileged intents in client options now appends them to the provided intents, instead of enabling all intents
+- Added Utility, MessageUtility, TextChannelUtility, GuildUtility, and GuildMemberUtility utility classes
+- Added methods to Utility class for converting string intents and permissions into new discord.j 13.x.x enums
+- Modified Handler to work with new intent enums utility
+- Modified Command to work with new permisson enums utility
