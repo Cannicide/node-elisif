@@ -1,6 +1,7 @@
 
 const MessageUtility = require('./MessageUtility');
 const GuildMemberUtility = require('./GuildMemberUtility');
+const StructureUtility = require('./StructureUtility');
 const { Intents, Permissions } = require('discord.js');
 
 class Utility {
@@ -67,12 +68,14 @@ class Utility {
 
     //Structure Utility Methods:
 
+    Structure = StructureUtility;
+
     message(message) {
-        return new MessageUtility(message, this);
+        return this.Structure.get(message.id) ?? new MessageUtility(message, this);
     }
 
     member(member) {
-        return new GuildMemberUtility(member, this);
+        return this.Structure.get(member.id) ?? new GuildMemberUtility(member, this);
     }
 
 }

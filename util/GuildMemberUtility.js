@@ -1,18 +1,20 @@
 //@ts-check
 
-class GuildMemberUtility {
+const StructureUtility = require("./StructureUtility");
 
-    static map = new Map();
+class GuildMemberUtility extends StructureUtility {
 
     /**
      * @param {import("./Utility")} util
     */
     constructor(member, util) {
 
-        if (GuildMemberUtility.map.has(member.id)) return GuildMemberUtility.map.get(member.id);
-
+        super(member.id, util);
         this.member = member;
-        this.util = util;
+
+        //Add this utility object to the map, mapped with the message ID
+        this.set();
+
     }
 
     hasPerms(...perms) {

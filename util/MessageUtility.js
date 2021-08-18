@@ -1,7 +1,7 @@
 
-class MessageUtility {
+const StructureUtility = require("./StructureUtility");
 
-    static map = new Map();
+class MessageUtility extends StructureUtility {
 
     #setFlags;
     #userArgs;
@@ -17,14 +17,12 @@ class MessageUtility {
     */
     constructor(message, util) {
 
-        if (MessageUtility.map.has(message.id)) return MessageUtility.map.get(message.id);
+        super(message.id, util);
 
         this.message = message;
         this.guild = message.guild;
         this.channel = message.channel;
         
-        this.util = util;
-        this.elisif = require("../index").getInstance();
         this.client = this.elisif.getClient(message.client.user.id);
 
         //Determine args and command
@@ -144,8 +142,7 @@ class MessageUtility {
         this.setLocalSetting = (sett, val) => this.client.settings.Local(this.guild?.id).set(sett, val);
 
         //Add this utility object to the map, mapped with the message ID
-
-        MessageUtility.map.set(this.message.id, this);
+        this.set();
     }
 
     getMessage() {
