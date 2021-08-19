@@ -25,26 +25,42 @@ const Settings = require("../systems/settings");
 
 class CommandManager {
 
-    static #commands = new Map();
+    #commands = new Map();
 
-    static add(command) {
+    constructor(client) {
+        this.client = client;
+    }
+
+
+    add(command) {
         if (command instanceof Command) {
-            CommandManager.#commands.set(command.name, command);
-            command.initialize(CommandManager.client);
+            command.initialize(this.client);
+            this.#commands.set(command.name, command);
             return command;
         }
         else return false;
     }
 
-    static remove(command) {
-        if (command instanceof Command) CommandManager.#commands.delete(command.name);
-        else CommandManager.#commands.delete(command);
+    importCommands(files) {
+        files.forEach(item => {
+            var file = typeof item === 'string' ? require(`${directory}/${item.substring(0, item.length - 3)}`) : item;
+            if (file instanceof Command && !this.has(file.name)) this.add(file);
+            else if ("commands" in file) {
+                file.commands.filter(alias => alias instanceof Command && !this.has(alias.name)).forEach(alias => this.add(alias));
+                if (typeof file.initialize === 'function') file.initialize(this.client);
+            }
+        });
     }
 
-    static handle(message) {
+    remove(command) {
+        if (command instanceof Command) this.#commands.delete(command.name);
+        else this.#commands.delete(command);
+    }
+
+    handle(message) {
 
         const msgutil = require("../index").util.message(message);
-        var command = CommandManager.get(msgutil.label);
+        var command = this.get(msgutil.label);
 
         if (command && msgutil.startsWithPrefix) {
 
@@ -59,7 +75,7 @@ class CommandManager {
                 return false;
             }
 
-            message.channel.startTyping();
+            message.channel.sendTyping();
 
             setTimeout(async () => {
 
@@ -71,7 +87,6 @@ class CommandManager {
                     message.reply(new msgutil.interface.Embed(message, {desc: "```md\n" + `${upperHeader}\n${baseMessage}\n${lowerHeader}\n\n${err}` + "```"}));
                 });
 
-                message.channel.stopTyping();
             }, 1000);
 
             //Is a command, successfully handled
@@ -82,74 +97,56 @@ class CommandManager {
 
     }
 
-    static initialize(directory) {
+    initialize(directory) {
 
         if (directory.endsWith("/")) directory = directory.substring(0, directory.length - 1);
 
         //Get user's commands:
         var files = fs.readdirSync(directory);
 
-        //Get aliases defined through Command constructor:
-        files.push(CommandManager.aliases);
-
         //Get enabled expansions:
         var expansions = fs.readdirSync(__dirname + "/../expansions");
         expansions.forEach(expansion => {
-            if (CommandManager.client.expansions.all().includes(expansion.substring(0, expansion.length - 3)))
+            if (this.client.expansions.all().includes(expansion.substring(0, expansion.length - 3)))
                 files.push(require(`${__dirname + "/../expansions"}/${expansion.substring(0, expansion.length - 3)}`));
         });
 
         //Import commands:
-        files.forEach((item) => {
-            var file = typeof item === 'string' ? require(`${directory}/${item.substring(0, item.length - 3)}`) : item;
-            if (file instanceof Command) {
-                // CommandManager.add(file);
-            }
-            else if ("commands" in file) {
-                // file.commands.forEach((alias) => {
-                //     if (alias instanceof Command) CommandManager.add(alias);
-                // });
+        this.importCommands(files);
 
-                if (typeof file.initialize === 'function') {
-                    file.initialize(CommandManager.client);
-                }
-            }
-        });
+        //Import aliases:
+        this.importCommands([this.aliases]);
 
-        SlashCommand.setupAll(CommandManager.client);
+        SlashCommand.setupAll(this.client);
 
-        if (Settings.Global().get("debug_mode")) console.log("Loaded commands:", CommandManager.all().map(v => v.name));
+        if (Settings.Global().get("debug_mode")) console.log("Loaded commands:", this.all().map(v => v.name));
 
-        return CommandManager.all();
+        return this.all();
 
     }
 
-    static has(commandName) {
-        return CommandManager.#commands.has(commandName);
+    has(commandName) {
+        return this.#commands.has(commandName);
     }
 
-    static get(commandName) {
-        return CommandManager.has(commandName) ? CommandManager.#commands.get(commandName) : undefined;
+    get(commandName) {
+        return this.has(commandName) ? this.#commands.get(commandName) : undefined;
     }
 
-    static all() {
-        return Array.from(CommandManager.#commands.values());
+    all() {
+        return Array.from(this.#commands.values());
     }
 
-    static getUsableInChannel(channel) {
+    getUsableInChannel(channel) {
         var { id, name } = channel;
-        return CommandManager.all().filter(command => command.channels.includes(id) || command.channels.includes(name));
+        return this.all().filter(command => command.channels.includes(id) || command.channels.includes(name));
     }
 
-    static get commands() {
-        return CommandManager.#commands;
+    get commands() {
+        return this.#commands;
     }
 
-    static get client() {
-        return require("../index").getClient();
-    }
-
-    static aliases = new AliasManager();
+    aliases = new AliasManager();
 
 }
 

@@ -15,9 +15,9 @@ const CommandManager = require('../managers/CommandManager');
  * @param {String} original - Name of the original
  */
  class Alias extends Command {
-    constructor(alias, original) {
+    constructor(client, alias, original) {
       super((() => {
-        var origcmd = CommandManager.get(original);
+        var origcmd = client.commands.get(original);
         if (!origcmd) throw new Error(`Cannot create an alias for the nonexistent command: ${original}.\nCommand: ${origcmd}`);
         var options = origcmd.options;
     
@@ -32,13 +32,13 @@ const CommandManager = require('../managers/CommandManager');
       })());
 
       //Add this alias name to the original command's aliases list
-      CommandManager.get(original).aliases.add(alias);
+      client.commands.get(original).aliases.add(alias);
 
       //Add the original command's name to this alias' aliases list
       this.aliases.add(original);
 
       //Add this Command object to the aliases collection
-      CommandManager.aliases.add(this);
+      client.commands.aliases.add(this);
   
     }
 }

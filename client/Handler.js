@@ -112,7 +112,7 @@ class ExtendedClient extends Discord.Client {
     }
     
     //Setup command handling methods
-    this.commands = CommandManager;
+    this.commands = new CommandManager(this);
 
     //Setup prefix methods
     this.prefix = new PrefixHandler();
@@ -134,37 +134,6 @@ class ExtendedClient extends Discord.Client {
     this.twitch = twitch;
 
     this.PresenceCycler = new PresenceCycler(presences, presenceDuration, this);
-
-    //Utility method to create a discord.js enum
-    function createEnum(keys) {
-      const obj = {};
-      for (const [index, key] of keys.entries()) {
-        if (key === null) continue;
-        obj[key] = index;
-        obj[index] = key;
-      }
-      return obj;
-    }
-    
-    //Setup channel types enum including new thread channel types
-    Discord.Constants.ChannelTypes = createEnum([
-      'GUILD_TEXT',
-      'DM',
-      'GUILD_VOICE',
-      'GROUP_DM',
-      'GUILD_CATEGORY',
-      'GUILD_NEWS',
-      'GUILD_STORE',
-      ...Array(3).fill(null),
-      // 10
-      'GUILD_NEWS_THREAD',
-      'GUILD_PUBLIC_THREAD',
-      'GUILD_PRIVATE_THREAD',
-      'GUILD_STAGE_VOICE',
-    ]);
-    
-    //Setup thread channel types enum
-    Discord.Constants.ThreadChannelTypes = ['GUILD_NEWS_THREAD', 'GUILD_PUBLIC_THREAD', 'GUILD_PRIVATE_THREAD'];
 
     //Assign this object to the ID-client map
     clients.set(this.user?.id, this);

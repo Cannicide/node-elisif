@@ -57,10 +57,10 @@ class Command {
         this.flags = false;
 
         this.cooldowns = new Map();
-        this.manager = require("../managers/CommandManager");
+        // this.manager = require("../managers/CommandManager");
 
-        const client = require("../index").getClient();
-        this.initialize(client);
+        // const client = require("../index").getClient();
+        // this.initialize(client);
 
         if (this.devs_only && (!client.authors || client.authors.length < 1))
             throw new Error(`node-elisif error: The developers of this bot and their IDs MUST be specified during the client's creation in order to create dev-only commands such as '${this.name}'.`);
@@ -223,17 +223,17 @@ class Command {
         this.addDefaultAlias(client)
         .setFlagArguments();
 
-        if (!this.manager.has(this.name)) this.manager.add(this);
-        if (!this.is_alias) this.addAliases(...this.aliases);
+        // if (!this.manager.has(this.name)) this.manager.add(this);
+        if (!this.is_alias) this.addAliases(client, ...this.aliases);
 
         return this;
     }
 
-    async addAliases(...aliases) {
+    async addAliases(client, ...aliases) {
 
         const Alias = require('../structures/Alias');
         for (let alias of aliases) {
-            new Alias(alias, this.name);
+            new Alias(client, alias, this.name);
         }
 
         return this;
