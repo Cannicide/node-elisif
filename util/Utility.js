@@ -3,6 +3,7 @@ const MessageUtility = require('./MessageUtility');
 const TextChannelUtility = require('./TextChannelUtility');
 const GuildMemberUtility = require('./GuildMemberUtility');
 const { ButtonUtility, SelectUtility, ComponentUtility } = require('./ComponentUtility');
+const SlashUtility = require('./SlashUtility');
 const StructureUtility = require('./StructureUtility');
 const { Intents, Permissions } = require('discord.js');
 
@@ -172,6 +173,10 @@ class Utility {
 
     component(component) {
         return ComponentUtility.fromInteraction(component);
+    }
+
+    slash(interaction) {
+        return this.Structure.get(interaction.id) ?? new SlashUtility(interaction, this);
     }
 
 }

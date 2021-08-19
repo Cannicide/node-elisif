@@ -79,6 +79,24 @@ class SlashManager {
     
     return num < types.length ? types[num] : "unknown";
   }
+
+  static intFromEnum(en) {
+    var types = [
+      "unknown",
+      "SUB_COMMAND",
+      "SUB_COMMAND_GROUP",
+      "STRING",
+      "INTEGER",
+      "BOOLEAN",
+      "USER",
+      "CHANNEL",
+      "ROLE",
+      "MENTIONABLE",
+      "NUMBER"
+    ];
+
+    return isNaN(en) ? types.findIndex(enu => enu == en) : en;
+  }
   
   translateArg(top) {
     top.type = SlashManager.intFromType(top.type);
@@ -105,13 +123,13 @@ class SlashManager {
   
   static decipherArg(group, main) {
     //Resolve object values for users, channels, and roles based on the given ID
-    if (group.type == 6) {
+    if (SlashManager.intFromEnum(group.type) == 6) {
       //User
       let id = group.value;
       group.value = main.resolved.users?.[id];
       group.value.asMember = () => main.resolved.members?.[id];
     }
-    else if (group.type == 7) {
+    else if (SlashManager.intFromEnum(group.type) == 7) {
       //Channel
       let id = group.value;
       group.value = main.resolved.channels?.[id];
@@ -123,14 +141,14 @@ class SlashManager {
     }
 
     //Add argument values to classic and object forms of args
-    if ([1, 2].includes(group.type)) main.args_classic.push(group.name);
+    if ([1, 2].includes(SlashManager.intFromEnum(group.type))) main.args_classic.push(group.name);
     else main.args_classic.push(group.value);
 
-    if ([1, 2].includes(group.type)) main.args_object[group.name] = group.name;
+    if ([1, 2].includes(SlashManager.intFromEnum(group.type))) main.args_object[group.name] = group.name;
     else main.args_object[group.name] = group.value;
 
     //Convert argument type from integer to human-readable string
-    group.type = SlashManager.typeFromInt(group.type);
+    group.type = SlashManager.typeFromInt(SlashManager.intFromEnum(group.type));
 
     //Recursively continue mapping process if this argument is a subcommand or subcommandgroup
     if (group.options) group.args = group.options = group.options.map(top => SlashManager.decipherArg(top, main));

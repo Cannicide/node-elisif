@@ -2,6 +2,7 @@
 
 
 const SlashManager = require("../managers/SlashManager");
+const Utility = require("../util/Utility");
 
 
 /**
@@ -244,11 +245,14 @@ class SlashCommand {
         let failsFilter = SlashCommand.failsFilter(command, slash);
 
         if (!failsFilter) {
-            const slashInteraction = SlashManager.generateFromInteraction(slash.command);
+            const slashInteraction = SlashManager.generateFromInteraction(Utility.slash(slash));
             return command.method(slashInteraction);
         }
         else {
-            return slash.delayedReply("An error occurred:\n\n" + failsFilter, true, 2500);
+            return slash.reply({
+                content: "An error occurred:\n\n" + failsFilter,
+                ephemeral: true
+            });
         }
     }
 
