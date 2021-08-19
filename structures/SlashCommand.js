@@ -2,7 +2,6 @@
 
 
 const SlashManager = require("../managers/SlashManager");
-const SlashInteraction = require("./SlashInteraction");
 
 
 /**
@@ -221,7 +220,7 @@ class SlashCommand {
 
     /**
      * Gets the SlashCommand object that correlates with the specified SlashInteraction object.
-     * @param {SlashInteraction} slash - A raw SlashInteraction object.
+     * @param {CommandInteraction} slash - A raw SlashInteraction object.
      */
     static getCommand(slash) {
         if (SlashCommand.COMMANDS.has(slash.name)) {

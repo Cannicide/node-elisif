@@ -127,7 +127,7 @@ class ExtendedClient extends Discord.Client {
     expansions.enable = expansions.enable ?? [];
 
     //Setup expansion methods
-    this.expansions = new ExpansionManager(expansions.enable);
+    this.expansions = new ExpansionManager(expansions);
 
     //Setup presence cycler method
     presences = presences ?? [`${this.prefix.get()}help`];

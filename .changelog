@@ -40,3 +40,6 @@
 - Converted ComponentUtility, ButtonUtility, and SelectUtility to use discord.js 13.x.x
 - Converted ButtonManager to UtilButtonManager, now uses discord.js 13.x.x and structure utility classes
 - Converted SelectMenuManager to UtilSelectManager, now uses discord.js 13.x.x and structure utility classes
+- Added NamespacedCommand and NamespacedSlashCommand; these allow command options to access the client that initialized the command.
+- Added ExpansionCommand and ExpansionSlashCommand extending namespaced commands; allow accessing expansion settings in command options
+- All expansion commands now use the new utility methods, and those that access the client now use ExpansionCommand

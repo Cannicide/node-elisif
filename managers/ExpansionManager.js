@@ -1,8 +1,9 @@
 
 class ExpansionManager {
 
-    constructor(enabledExpansions) {
-        this.expansions = enabledExpansions;
+    constructor(expansions) {
+        this.expansions = expansions.enable;
+        this.settings = expansions;
     }
 
     all() {
@@ -17,6 +18,10 @@ class ExpansionManager {
         if (!expansion) return this.all();
         else if (this.has(expansion)) return require(`../expansions/${expansion}`);
         else return false;
+    }
+
+    settings(expansion) {
+        return this.settings[expansion];
     }
 }
 

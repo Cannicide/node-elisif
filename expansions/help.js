@@ -1,12 +1,11 @@
 // A built-in help command to view information and usage of all existent, visible bot commands.
 
-const Command = require("../index").Command;
-const client = require("../index").getClient();
+const { ExpansionCommand: Command, util } = require("../index");
 
-module.exports = new Command({
+module.exports = new Command((client, settings) => ({
   expansion: true,
   name: "help",
-  desc: "Gets a list of all commands, parameters, and their descriptions.\nFormat: [optional] parameters, <required> parameters, optional (flag) parameters.",
+  desc: settings?.desc ?? "Gets a list of all commands, parameters, and their descriptions.\nFormat: [optional] parameters, <required> parameters, optional (flag) parameters.",
   args: [
     {
       name: "command",
@@ -17,12 +16,13 @@ module.exports = new Command({
       flag: "Displays only basic command info."
     }
   ],
-  aliases: ["bothelp", client.name ? client.name.toLowerCase().replace(/[^a-z0-9]/g, "") : "elisifhelp"]
-}, (message) => {
+  aliases: ["bothelp", client.name ? client.name.toLowerCase().replace(/[^a-z0-9]/g, "") : "elisifhelp"],
+  
+  execute(message) {
 
     var cmds, thumb;
-    var args = message.args;
-    var prefix = message.prefix;
+    var args = util.message(message).args;
+    var prefix = util.message(message).prefix;
 
     if (message.guild) {
       cmds = client.commands.all().filter(cmd => cmd.guilds.length == 0 || cmd.guilds.includes(message.guild.id) || cmd.guilds.includes(message.guild.name));
@@ -114,12 +114,12 @@ module.exports = new Command({
 
       if (res.name == "Eval Command" && fields) fields.find(field => field.name == "Use Requirements").value = "**Users:** Bot developers only";
 
-      message.channel.send(new message.interface.Embed(message, {
+      util.channel(message.channel, message).embed({
         title: res.name,
         desc: res.value,
         thumbnail: thumb,
         fields: fields
-      }));
+      });
 
     }
     else {
@@ -133,7 +133,7 @@ module.exports = new Command({
         }
       });
 
-      new message.interface.Paginator(message, {
+      util.channel(message.channel, message).paginate({
         title: "**Commands**",
         desc: client.description ?? "Now viewing the commands for this discord bot.",
         fields: pages.slice(0, 2),
@@ -142,4 +142,5 @@ module.exports = new Command({
 
     }
 
-});
+  }
+}));

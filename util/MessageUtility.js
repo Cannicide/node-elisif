@@ -289,7 +289,7 @@ class MessageUtility extends StructureUtility {
          * @returns 
          */
      startButtonCollector(func) {
-        if (this.message.components.find(row => row.components.find(c => c.custom_id)) && !this.#collecting) {
+        if (this.message.components.find(row => row.components.find(c => c.type == "BUTTON")) && !this.#collecting) {
 
             this.#buttonCollector = (button) => {                 
                 if (this.#collecting && button.message.id == this.message.id) func(button);
@@ -320,7 +320,7 @@ class MessageUtility extends StructureUtility {
      * @returns 
      */
      startMenuCollector(func) {
-        if (this.message.components.find(row => row.components.find(c => c.custom_id)) && !this.#menu_collecting) {
+        if (this.message.components.find(row => row.components.find(c => c.type == "SELECT_MENU")) && !this.#menu_collecting) {
 
             this.#menuCollector = (menu) => {                 
                 if (this.#menu_collecting && menu.message.id == this.message.id) func(menu);
@@ -343,6 +343,12 @@ class MessageUtility extends StructureUtility {
         this.#menu_collecting = false;
 
         return true;
+    }
+
+    deleteTimeout(seconds) {
+        setTimeout(() => {
+            this.message.delete();
+        }, seconds * 1000);
     }
 
     //Message Components:

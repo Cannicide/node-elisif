@@ -6,7 +6,8 @@ const { MessageActionRow, MessageButton, MessageSelectMenu } = require("discord.
 class ComponentUtility {
 
     constructor(component) {
-        this._data = component;
+        this._data = component.component;
+        this._int = component;
     }
 
     static fromInteraction(compInteraction) {
@@ -14,10 +15,10 @@ class ComponentUtility {
         if (!compInteraction) return undefined;
 
         let comp = compInteraction.component;
-        if (!comp && compInteraction.customId) comp = compInteraction;
+        if (!comp && compInteraction.customId) compInteraction = {component:compInteraction};
 
-        if (compInteraction.componentType == "SELECT_MENU") return new SelectUtility(comp);
-        else if (compInteraction.componentType == "BUTTON") return new ButtonUtility(comp);
+        if (compInteraction.componentType == "SELECT_MENU") return new SelectUtility(compInteraction);
+        else if (compInteraction.componentType == "BUTTON") return new ButtonUtility(compInteraction);
         return undefined;
     }
 
@@ -260,6 +261,10 @@ class SelectUtility extends ComponentUtility {
 
     getOptionByLabel(label) {
         return this._data.options.find(option => option.label == label);
+    }
+
+    get selected() {
+        return this._int.values;
     }
 
 }

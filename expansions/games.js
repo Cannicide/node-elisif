@@ -2,7 +2,7 @@
 
 
 const fetch = require("node-fetch");
-const Command = require("../index").Command;
+const { Command, getClient, util } = require("../index");
 const rainbowLine = "https://cdn.discordapp.com/attachments/728320173009797190/861743129241976852/rainbow_line.gif";
 
 function givePoints(client, userID, points) {
@@ -47,7 +47,7 @@ class Game {
         this.player = player;
         this.opponent = opponent ? opponent : false;
         this.channel = channel;
-        this.client = channel.client;
+        this.client = getClient(channel.client.user.id);
 
         var gameName = this.constructor.name;
 
@@ -136,7 +136,7 @@ class Game {
      */
     render(embed) {
         if(this.#render_calls++ == 0) {
-            return this.channel.embed(embed);
+            return util.channel(this.channel)?.embed(embed);
         }
     }
 
@@ -167,7 +167,7 @@ class Trivia extends Game {
 
     get difficulty() {
 
-        var setting = this.message.getGlobalSetting("games.trivia.difficulty");
+        var setting = util.message(this.message).getGlobalSetting("games.trivia.difficulty");
 
         var difficulties = {
             easy: "easy",
@@ -191,7 +191,7 @@ class Trivia extends Game {
 
     get uri() {
         var uri = this.#uri + this.difficulty;
-        var alwaysTrueFalse = this.message.getGlobalSetting("games.trivia.only_tf");
+        var alwaysTrueFalse = util.message(this.message).getGlobalSetting("games.trivia.only_tf");
 
         if (alwaysTrueFalse) uri += "&type=boolean";
         return uri;
@@ -282,7 +282,7 @@ class Trivia extends Game {
         var current_data = this.questions.shift();
         var catImage = await this.placeholderImage();
 
-        if (this.message.getGlobalSetting("debug_mode") || this.message.getGlobalSetting("games.cheat_mode")) console.log(`Answer to Trivia #${this.score + 1}: ${current_data.answer}`);
+        if (util.message(this.message).getGlobalSetting("debug_mode") || util.message(this.message).getGlobalSetting("games.cheat_mode")) console.log(`Answer to Trivia #${this.score + 1}: ${current_data.answer}`);
 
         var embed = {
             title: `Question ${this.score + 1}/${this.target}`,
@@ -313,7 +313,7 @@ class Trivia extends Game {
             //Double check that the game is still running
             if (!this.isRunning) return;
 
-            var m = await this.channel.selectMenu(embed, {
+            var m = await util.channel(this.channel).selectMenu(embed, {
                 placeholder: "Select an answer...",
                 options: current_data.options
             });
@@ -321,7 +321,7 @@ class Trivia extends Game {
             m.startMenuCollector(async menu => {
 
                 if (menu.user.id != this.player.id) {
-                    var full_command = this.message.prefix + this.message.label;
+                    var full_command = util.message(this.message).prefix + util.message(this.message).label;
                     menu.reply("Please start your own game using `" + full_command + "` to play Dynamic Trivia!", true);
                     return;
                 }
@@ -343,44 +343,50 @@ class Trivia extends Game {
                     if (this.score == this.target) {
 
                         var reward = this.reward(this.target);
-                        menu.delayedReply("** **", false, 4000, new this.message.interface.Embed(this.message, {
-                            title: "Dynamic Trivia - Victory!",
-                            color: "50E3C2", //Cyan
-                            desc: `✅ You answered correctly!\n\n**🎉 You won the game!**${reward}\n** **`,
-                            fields: [
-                                {
-                                    name: "Your Choice",
-                                    value: choice
-                                },
-                                {
-                                    name: "Answer",
-                                    value: answer
-                                }
-                            ],
-                            footer: [this.player.username, `Completed ${this.score}/${this.target}`]
-                        }));
+                        menu.deferReply();
+                        setTimeout(() => {
+                            menu.reply(util.message(this.message).interface.genEmbeds({
+                                title: "Dynamic Trivia - Victory!",
+                                color: "50E3C2", //Cyan
+                                desc: `✅ You answered correctly!\n\n**🎉 You won the game!**${reward}\n** **`,
+                                fields: [
+                                    {
+                                        name: "Your Choice",
+                                        value: choice
+                                    },
+                                    {
+                                        name: "Answer",
+                                        value: answer
+                                    }
+                                ],
+                                footer: [this.player.username, `Completed ${this.score}/${this.target}`]
+                            }, this.message));
+                        }, 4000);
                         return;
 
                     }
                     //Next question
                     else {
 
-                        menu.delayedReply("** **", false, 4000, new this.message.interface.Embed(this.message, {
-                            title: "Dynamic Trivia - Correct!",
-                            color: "769332", //Green
-                            desc: `✅ You answered correctly!\n*Loading next question...*\n** **`,
-                            fields: [
-                                {
-                                    name: "Your Choice",
-                                    value: choice
-                                },
-                                {
-                                    name: "Answer",
-                                    value: answer
-                                }
-                            ],
-                            footer: [this.player.username, `Completed ${this.score}/${this.target}`]
-                        }));
+                        menu.deferReply();
+                        setTimeout(() => {
+                            menu.reply(util.message(this.message).interface.genEmbeds({
+                                title: "Dynamic Trivia - Correct!",
+                                color: "769332", //Green
+                                desc: `✅ You answered correctly!\n*Loading next question...*\n** **`,
+                                fields: [
+                                    {
+                                        name: "Your Choice",
+                                        value: choice
+                                    },
+                                    {
+                                        name: "Answer",
+                                        value: answer
+                                    }
+                                ],
+                                footer: [this.player.username, `Completed ${this.score}/${this.target}`]
+                            }, this.message));
+                        }, 4000);
                         return this.render();
 
                     }
@@ -389,22 +395,25 @@ class Trivia extends Game {
                 //Incorrect answer
                 else {
 
-                    menu.delayedReply("** **", false, 4000, new this.message.interface.Embed(this.message, {
-                        title: "Dynamic Trivia - Game Over...",
-                        color: "D0021B", //Red
-                        desc: `<:no:669928674119778304> You answered incorrectly...\n\n**😿 Game over!**\nYou correctly answered ${this.score} questions in a row.\n** **`,
-                        fields: [
-                            {
-                                name: "Your Choice",
-                                value: choice
-                            },
-                            {
-                                name: "Answer",
-                                value: answer
-                            }
-                        ],
-                        footer: [this.player.username, `Completed ${this.score}/${this.target}`]
-                    }));
+                    menu.deferReply();
+                    setTimeout(() => {
+                        menu.reply(util.message(this.message).interface.genEmbeds({
+                            title: "Dynamic Trivia - Game Over...",
+                            color: "D0021B", //Red
+                            desc: `<:no:669928674119778304> You answered incorrectly...\n\n**😿 Game over!**\nYou correctly answered ${this.score} questions in a row.\n** **`,
+                            fields: [
+                                {
+                                    name: "Your Choice",
+                                    value: choice
+                                },
+                                {
+                                    name: "Answer",
+                                    value: answer
+                                }
+                            ],
+                            footer: [this.player.username, `Completed ${this.score}/${this.target}`]
+                        }, this.message));
+                    }, 4000);
                     this.endGame();
                     return;
 
@@ -431,8 +440,8 @@ module.exports = {
             name: "dynamictrivia",
             desc: "Answer multiple increasingly challenging questions in a row to win this trivia game!",
             cooldown: 60,
-            aliases: ["trivia", "dtrivia"]
-        }, async (message) => {
+            aliases: ["trivia", "dtrivia"],
+            async execute(message) {
 
             let game = new Trivia(message);
 
@@ -460,7 +469,7 @@ module.exports = {
 
             game.render();
 
-        })
+        }})
     ],
 
     initialize(client) {
