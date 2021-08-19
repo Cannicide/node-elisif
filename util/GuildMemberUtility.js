@@ -9,7 +9,7 @@ class GuildMemberUtility extends StructureUtility {
     */
     constructor(member, util) {
 
-        super(member.id, util);
+        super(member, util);
         this.member = member;
 
         //Add this utility object to the map, mapped with the message ID

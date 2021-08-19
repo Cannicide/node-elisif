@@ -8,9 +8,10 @@ class StructureUtility {
     */
     constructor(snowflake, util) {
         this.util = util;
-        this.snowflake = snowflake;
+        this.snowflake = snowflake.id;
         
         this.elisif = require("../index").getInstance();
+        this.client = this.elisif.getClient(snowflake.client.user.id);
     }
 
     static get(snowflake) {
@@ -22,6 +23,10 @@ class StructureUtility {
 
     set() {
         return StructureUtility.map.set(this.snowflake, this);
+    }
+
+    isUtility() {
+        return true;
     }
 
 }

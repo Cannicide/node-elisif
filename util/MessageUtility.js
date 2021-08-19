@@ -17,13 +17,11 @@ class MessageUtility extends StructureUtility {
     */
     constructor(message, util) {
 
-        super(message.id, util);
+        super(message, util);
 
         this.message = message;
         this.guild = message.guild;
         this.channel = message.channel;
-        
-        this.client = this.elisif.getClient(message.client.user.id);
 
         //Determine args and command
 
@@ -151,10 +149,6 @@ class MessageUtility extends StructureUtility {
 
     get prefix() {
         return this.guild ? this.client.settings.Local(this.guild.id).get("local_prefix") || this.client.prefix.get() : this.client.prefix.get();
-    }
-
-    isUtility() {
-        return true;
     }
 
     hasComponents() {
@@ -353,6 +347,10 @@ class MessageUtility extends StructureUtility {
 
     member() {
         return this.util.member(this.message.member);
+    }
+
+    channel() {
+        return this.util.channel(this.message.channel, this.message);
     }
 
 }

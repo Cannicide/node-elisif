@@ -33,5 +33,7 @@
 - Added ContentSupplier utility to work with elisif-modified message content and embeds
 - Added ElisifSet utility to make working with Sets easier, currently used by Interface.textMenu()
 - Added MultiResolvePromise utility, a promise-like structure that allows for resolving more than once. Used by Interface.reactMenu()
+- Added bindNth utility method, allowing for binding the nth argument of a provided function with the provided binding arguments
 - Completely rewrote all interfaces such that they are static, promisified methods with ten times better documentation
 - Updated interfaces to work with discord.js 13.x.x
+- Removed node-elisif thread classes (these were based on discord.js 13.x.x, but now we have the real thing)

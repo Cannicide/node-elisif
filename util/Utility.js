@@ -1,5 +1,6 @@
 
 const MessageUtility = require('./MessageUtility');
+const TextChannelUtility = require('./TextChannelUtility');
 const GuildMemberUtility = require('./GuildMemberUtility');
 const StructureUtility = require('./StructureUtility');
 const { Intents, Permissions } = require('discord.js');
@@ -66,6 +67,12 @@ class Utility {
         return perms.map(perm => this.permToEnum(perm));
     }
 
+    bindNth(self, fn, ...bound_args) {
+        return function (...args) {
+            return fn.call(self, ...args, ...bound_args);
+        };
+    }
+
     ContentSupplier = class MessageContentSupplier {
         constructor(origin, contentData = {}) {
 
@@ -91,7 +98,7 @@ class Utility {
         }
 
         static asEmbedsIfSupplier(supplier) {
-            if (MessageContentSupplier.is(supplier)) {
+            if (MessageContentSupplier.is(supplier) && supplier.origin == "embedContext") {
                 let contentData = supplier.thisAsEmbeds();
                 if (supplier.content) contentData.content = supplier.content;
                 return contentData;
@@ -154,6 +161,10 @@ class Utility {
 
     member(member) {
         return this.Structure.get(member.id) ?? new GuildMemberUtility(member, this);
+    }
+
+    channel(channel, message = null) {
+        return this.Structure.get(channel.id) ?? new TextChannelUtility(channel, this, message);
     }
 
 }

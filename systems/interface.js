@@ -68,7 +68,7 @@ class Interface {
 
         }
 
-        return new ContentSupplier("fancyList", contentData);
+        return new ContentSupplier("fullContext", contentData);
 
     }
 
@@ -132,12 +132,48 @@ class Interface {
         };
 
         if (!thumbnail) embed.thumbnail = undefined;
-        return new ContentSupplier("embed", embed);
+        return new ContentSupplier("embedContext", embed);
 
     }
 
     /**
-     * Creates and sends the defined embed(s) to the provided channel.
+     * Generates the defined embed(s), returning a message-sendable MessageContentSupplier.
+     * @param {Object[]|String|Set|ElisifSet|ContentSupplier|ContentSupplier[]} embeds - An array of embeds to send OR String content of the message OR a ContentSupplier/ContentSupplier[] containing message content data.
+     * @param {import("discord.js").Message} [message] - The optional message from which to set some default options, such as username in footer.
+    */
+    static genEmbeds(embeds = [], message = null) {
+        let embedsData = [], content = null;
+
+        //Handle all possible datatypes of `embeds`
+        if (typeof embeds === "string") content = embeds;
+        else if (Array.isArray(embeds)) embedsData = embeds;
+        else if (embeds instanceof ElisifSet) embedsData = embeds.toArray();
+        else if (embeds instanceof Set) embedsData = [...embeds.values()];
+        else if (embeds instanceof ContentSupplier && (embeds.origin == "fullContext")) {
+            content = embeds.content;
+            embedsData = embeds.embeds ?? embedsData;
+        }
+        else if ((embeds instanceof ContentSupplier && embeds.origin == "embedContext") || typeof embeds === "object") {
+            embedsData = [embeds];
+            content = embeds.content;
+        }
+        
+        //Generate embeds from any object literals in `embedsData`
+        embedsData = embedsData.map(embed => {
+            if (embed instanceof ContentSupplier && embed.origin == "embedContext") return embed;
+            return Interface.createEmbed(embed, message);
+        });
+
+        //Construct and return the message
+
+        return new ContentSupplier("fullContext", {
+            "embeds": embedsData,
+            "content": content
+        });
+    }
+
+    /**
+     * Generates and sends the defined embed(s) to the provided channel.
      * One of message or channel MUST be specified; if neither is specified, an error is thrown.
      * @param {Object[]|String|Set|ElisifSet|ContentSupplier|ContentSupplier[]} embeds - An array of embeds to send OR String content of the message OR a ContentSupplier/ContentSupplier[] containing message content data.
      * @param {import("discord.js").Message} [message] - The optional message from which to set some default options, such as username in footer.
@@ -149,33 +185,11 @@ class Interface {
         if (!message && !channel) throw new Error("Neither message nor channel was provided; cannot retrieve channel to send the embed(s) to.");
         
         channel = channel ?? message.channel;
-        let embedsData = [];
-
-        //Handle all possible datatypes of `embeds`
-        if (typeof embeds === "string") content = embeds;
-        else if (Array.isArray(embeds)) embedsData = embeds;
-        else if (embeds instanceof ElisifSet) embedsData = embeds.toArray();
-        else if (embeds instanceof Set) embedsData = [...embeds.values()];
-        else if (embeds instanceof ContentSupplier && (embeds.content || embeds.embeds)) {
-            content = embeds.content;
-            embedsData = embeds.embeds ?? embedsData;
-        }
-        else if ((embeds instanceof ContentSupplier && embeds.origin == "embed") || typeof embeds === "object") embedsData = [embeds];
-        
-        //Generate embeds from any object literals in `embedsData`
-        embedsData = embedsData.map(embed => {
-            if (embed instanceof ContentSupplier && embed.origin == "embed") return embed;
-            return Interface.createEmbed(embed, message);
-        });
 
         //Construct and send the message
 
-        let supplier = new ContentSupplier("sendEmbed", {
-            "embeds": embedsData,
-            "content": content
-        });
-
-        channel.send(supplier);
+        let supplier = Interface.genEmbeds(embeds, message);
+        return channel.send(supplier);
 
     }
 
@@ -361,7 +375,7 @@ class Interface {
         allUsers = false
     }) {
 
-        if (!(embed instanceof ContentSupplier) || embed.origin != "embed") embed = Interface.createEmbed(embed, message);
+        if (!(embed instanceof ContentSupplier) || embed.origin != "embedContext") embed = Interface.createEmbed(embed, message);
 
         var insertions = 0;
         var pages = [];
@@ -382,7 +396,7 @@ class Interface {
         if (pages[pages.length - 1] != page && page.length != 0) pages.push(page);
         embed.fields = pages[pageIndex];
 
-        embed.footer = embed.embed.footer || {text: ""};
+        embed.footer = embed.footer ?? {text: ""};
         embed.footer.text += " • " + (pages.length == 0 ? 0 : pageIndex + 1) + "/" + pages.length;
 
         const menu = Interface.reactMenu({
