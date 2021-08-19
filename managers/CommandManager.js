@@ -84,7 +84,7 @@ class CommandManager {
                     const upperHeader = "#" + "=".repeat(baseMessage.length - 2) + "#";
                     const lowerHeader = "=".repeat(baseMessage.length);
 
-                    message.reply(new msgutil.interface.Embed(message, {desc: "```md\n" + `${upperHeader}\n${baseMessage}\n${lowerHeader}\n\n${err}` + "```"}));
+                    message.reply(msgutil.interface.createEmbed({desc: "```md\n" + `${upperHeader}\n${baseMessage}\n${lowerHeader}\n\n${err}` + "```"}, message));
                 });
 
             }, 1000);
