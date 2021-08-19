@@ -2,6 +2,7 @@
 const MessageUtility = require('./MessageUtility');
 const TextChannelUtility = require('./TextChannelUtility');
 const GuildMemberUtility = require('./GuildMemberUtility');
+const { ButtonUtility, SelectUtility, ComponentUtility } = require('./ComponentUtility');
 const StructureUtility = require('./StructureUtility');
 const { Intents, Permissions } = require('discord.js');
 
@@ -154,6 +155,8 @@ class Utility {
     //Structure Utility Methods:
 
     Structure = StructureUtility;
+    Button = ButtonUtility;
+    SelectMenu = SelectUtility;
 
     message(message) {
         return this.Structure.get(message.id) ?? new MessageUtility(message, this);
@@ -165,6 +168,10 @@ class Utility {
 
     channel(channel, message = null) {
         return this.Structure.get(channel.id) ?? new TextChannelUtility(channel, this, message);
+    }
+
+    component(component) {
+        return ComponentUtility.fromInteraction(component);
     }
 
 }

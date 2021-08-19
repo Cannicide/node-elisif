@@ -1,4 +1,85 @@
-class ButtonUtility {
+//@ts-check
+
+// @ts-ignore
+const { MessageActionRow, MessageButton, MessageSelectMenu } = require("discord.js");
+
+class ComponentUtility {
+
+    constructor(component) {
+        this._data = component;
+    }
+
+    static fromInteraction(compInteraction) {
+
+        if (!compInteraction) return undefined;
+
+        let comp = compInteraction.component;
+        if (!comp && compInteraction.customId) comp = compInteraction;
+
+        if (compInteraction.componentType == "SELECT_MENU") return new SelectUtility(comp);
+        else if (compInteraction.componentType == "BUTTON") return new ButtonUtility(comp);
+        return undefined;
+    }
+
+    get index() {
+      
+        var index = 0;
+        var comp;
+          
+        this._data.message.components.forEach(row => {
+  
+          var newcomp = row.components.findIndex(c => c.customId && c.customId == this._data.customId);
+          
+          if (!comp && newcomp < 0) {
+            index+= row.components.length;
+          }
+          else if (!comp && newcomp >= 0) {
+            index += newcomp;
+            comp = true;
+          }
+  
+        });
+        
+        return index;
+        
+    }
+
+    get row() {
+  
+        var rowindex = this._data.message.components.findIndex(row => {
+  
+          return row.components.find(c => c.customId && c.customId == this._data.customId);
+  
+        });
+        
+        return rowindex <= -1 ? false : rowindex + 1;
+        
+    }
+    
+    //Index within row, relative to the start of the row
+    get rowIndex() {
+    
+        var row = this.row;
+        
+        if (!row) return false;
+        
+        var rowindex = this._data.message.components[row - 1].components.findIndex(c => c.customId && c.customId == this._data.customId);
+        
+        return rowindex <= -1 ? false : rowindex;
+    
+    }
+
+    asComponent() {
+        return this._data;
+    }
+
+}
+
+class ButtonUtility extends ComponentUtility {
+
+    constructor(button) {
+        super(button);
+    }
 
     static get db() {
         let evg = require("../index").evg;
@@ -20,43 +101,28 @@ class ButtonUtility {
         return id;
     }
 
-    static resolveEmoji(emoji) {
-        var emote = {
-            name: null,
-            id: null
-        }
-        
-        if (!emoji) emote = null; 
-        else if (emoji.id) emote.id = emoji.id;
-        else if (isNaN(emoji)) emote.name = emoji;
-        else emote.id = emoji;
-        
-        if (emoji && emoji.animated) emote.animated = emoji.animated;
-        
-        return emote;
-    }
-
     static colorValues = {
-        "blue": 1,
-        "blurple": 1,
-        "primary": 1,
-        "gray": 2,
-        "grey": 2,
-        "secondary": 2,
-        "green": 3,
-        "success": 3,
-        "red": 4,
-        "danger": 4,
-        "link": 5,
-        "url": 5
+        "blue": "PRIMARY",
+        "blurple": "PRIMARY",
+        "primary": "PRIMARY",
+        "gray": "SECONDARY",
+        "grey": "SECONDARY",
+        "secondary": "SECONDARY",
+        "green": "SUCCESS",
+        "success": "SUCCESS",
+        "red": "DANGER",
+        "danger": "DANGER",
+        "failure": "DANGER",
+        "link": "LINK",
+        "url": "LINK"
     }
 
-    static numToColor = {
-        1: "blue",
-        2: "gray",
-        3: "green",
-        4: "red",
-        5: "url"
+    static enumToColor = {
+        "PRIMARY": "blue",
+        "SECONDARY": "gray",
+        "SUCCESS": "green",
+        "DANGER": "red",
+        "URL": "url"
     }
 
     static convertColor(color) {
@@ -66,144 +132,136 @@ class ButtonUtility {
 
     static deconvertColor(num) {
 
-        return ButtonUtility.numToColor[num];
+        return ButtonUtility.enumToColor[num];
 
     }
 
     static prevRow = 1
 
-    static genComponent(options) {
+    static genComponent({
+        color = "blue",
+        emoji = "",
+        label = "[No label set]",
+        disabled = false,
+        url = null,
+        id = null,
+        row = null
+    }) {
         
-        options = options || {
-            color: "url",
-            emoji: "",
-            label: "[No label set]",
-            disabled: false,
-            url: "https://google.com",
-            id: false,
-            row: 1
-        };
-        
-        if (!("color" in options) || !options.color) {
-            options.color = "blue";
-        }
-        
-        if ("url" in options) {
-            options.color = "url";
-            options.id = undefined;
+        if (url) {
+            color = "url";
+            id = undefined;
         }
         else {
-            if (!options.id) {
-            options.id = ButtonUtility.genID();
+            if (!id) {
+                id = ButtonUtility.genID();
             }
             
-            options.url = undefined;
+            url = undefined;
         }
         
-        if (!("label" in options) || !options.label) options.label = "[No label set]";
-        else if (options.label.length > 80) options.label = "[Label too large]";
-        
-        if (!("row" in options) || !options.row) options.row = Math.floor(ButtonUtility.prevRow += 0.2);
+        if (label.length > 80) label = "[Label too large]";
+        if (!row) row = Math.floor(ButtonUtility.prevRow += 0.2);
         
         var component = {
-            type: 2,
-            style: ButtonUtility.convertColor(options.color),
-            label: options.label,
-            emoji: ButtonUtility.resolveEmoji(options.emoji),
-            custom_id: options.id,
-            url: options.url,
-            disabled: options.disabled,
-            row: options.row - 1
+            data: new MessageButton()
+                .setStyle(ButtonUtility.convertColor(color))
+                .setLabel(label)
+                .setURL(url)
+                .setEmoji(emoji)
+                .setCustomId(id)
+                .setDisabled(disabled),
+            row: row - 1
         };
         
         return component;
     
     }
 
+    get color() {
+        var comp = this._data;
+        if (!comp) return undefined;
+        
+        return ButtonUtility.deconvertColor(comp.style);
+    }
+
 };
 
-class SelectUtility {
+class SelectUtility extends ComponentUtility {
 
     static genID() {
         var id = "ELISIFSEL" + (ButtonUtility.id);
         return id;
     }
 
-    static resolveEmoji(emoji) {
-        return ButtonUtility.resolveEmoji(emoji);
-    }
-
     static prevRow = 1;
 
-    static genComponent(settings) {
-        
-        settings = settings || {
-            placeholder: "",
-            min: 1,
-            max: 1,
-            options: [
-                {
-                    label: "[No label set]",
-                    value: "none",
-                    description: "No options were specified for this Select Menu.",
-                    emoji: "",
-                    default: true
-                }
-            ],
-            id: false,
-            row: 1
-        };
-        
-        if (!("placeholder" in settings) || !settings.placeholder) {
-            settings.placeholder = "Select an option...";
-        }
-
-        if (!("min" in settings) || !settings.min) settings.min = 1;
-        if (!("max" in settings) || !settings.max) settings.max = 1;
-        
-        if (!("options" in settings) || !settings.options) {
-            settings.options = [];
-            settings.options.push({
+    static genComponent({
+        placeholder = "Select an option...",
+        min = 1,
+        max = 1,
+        options = [
+            {
                 label: "[No label set]",
                 value: "none",
                 description: "No options were specified for this Select Menu.",
                 emoji: "",
                 default: true
-            });
-        }
-
-        if (!("id" in settings) || !settings.id) {
-            settings.id = SelectUtility.genID();
-        }
-
-        settings.options.forEach(options => {
+            }
+        ],
+        id = null,
+        row = null
+    }) {
         
-            if (!("label" in options) || !options.label) options.label = "[No label set]";
+        if (!id) {
+            id = SelectUtility.genID();
+        }
+
+        options.forEach(options => {
+        
+            if (!options.label) options.label = "[No label set]";
             else if (options.label.length > 25) options.label = "[Label too large]";
 
-            if (!("value" in options) || !options.value) options.value = options.label;
+            if (!options.value) options.value = options.label;
             else if (options.value.length > 100) throw new Error("Select Menu Option value too large for: " + `${options.label}`);
-
-            if ("emoji" in options && options.emoji) options.emoji = SelectUtility.resolveEmoji(options.emoji);
 
         });
         
-        if (!("row" in settings) || !settings.row) settings.row = SelectUtility.prevRow++;
+        if (!row) row = SelectUtility.prevRow++;
         
         var component = {
-            type: 3,
-            custom_id: settings.id,
-            row: settings.row - 1,
-            options: settings.options,
-            placeholder: settings.placeholder,
-            min_values: settings.min,
-            max_values: settings.max
+            data: new MessageSelectMenu()
+                .setPlaceholder(placeholder)
+                .setMaxValues(max)
+                .setMinValues(min)
+                .addOptions(options)
+                .setCustomId(id),
+            row: row - 1
         };
         
         return component;
     
     }
 
+    //Index within row, relative to the start of the row; always 0 for select menus
+    get rowIndex() { return 0 };
+
+    get max() {
+        return this._data.maxValues;
+    }
+
+    get min() {
+        return this._data.minValues;
+    }
+
+    getOptionByValue(value) {
+        return this._data.options.find(option => option.value == value);
+    }
+
+    getOptionByLabel(label) {
+        return this._data.options.find(option => option.label == label);
+    }
+
 }
 
-module.exports = { ButtonUtility, SelectUtility };
+module.exports = { ButtonUtility, SelectUtility, ComponentUtility };

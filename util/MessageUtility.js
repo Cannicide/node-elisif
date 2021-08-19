@@ -1,5 +1,7 @@
 
 const StructureUtility = require("./StructureUtility");
+const ButtonManager = require("../managers/UtilButtonManager");
+const SelectManager = require("../managers/UtilSelectManager");
 
 class MessageUtility extends StructureUtility {
 
@@ -341,6 +343,16 @@ class MessageUtility extends StructureUtility {
         this.#menu_collecting = false;
 
         return true;
+    }
+
+    //Message Components:
+
+    get buttons() {
+        return new ButtonManager(this.message, this);
+    }
+    
+    get menus() {
+        return new SelectManager(this.message, this);
     }
 
     //Structure Utility Methods:

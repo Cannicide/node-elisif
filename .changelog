@@ -37,3 +37,6 @@
 - Completely rewrote all interfaces such that they are static, promisified methods with ten times better documentation
 - Updated interfaces to work with discord.js 13.x.x
 - Removed node-elisif thread classes (these were based on discord.js 13.x.x, but now we have the real thing)
+- Converted ComponentUtility, ButtonUtility, and SelectUtility to use discord.js 13.x.x
+- Converted ButtonManager to UtilButtonManager, now uses discord.js 13.x.x and structure utility classes
+- Converted SelectMenuManager to UtilSelectManager, now uses discord.js 13.x.x and structure utility classes
