@@ -13,6 +13,9 @@ const Command = require("../structures/Command");
 //SlashCommand class
 const SlashCommand = require("../structures/SlashCommand");
 
+//NamespacedCommand class
+const { NamespacedCommand } = require("../structures/NamespacedCommand");
+
 //File system initialized
 const fs = require("fs");
 
@@ -44,8 +47,11 @@ class CommandManager {
     importCommands(files) {
         files.forEach(item => {
             var file = typeof item === 'string' ? require(`${directory}/${item.substring(0, item.length - 3)}`) : item;
+
+            if (file instanceof NamespacedCommand) file = file.build(this.client);
             if (file instanceof Command && !this.has(file.name)) this.add(file);
             else if ("commands" in file) {
+                file.commands = file.commands.map(cmd => cmd instanceof NamespacedCommand ? cmd.build(this.client) : cmd);
                 file.commands.filter(alias => alias instanceof Command && !this.has(alias.name)).forEach(alias => this.add(alias));
                 if (typeof file.initialize === 'function') file.initialize(this.client);
             }

@@ -4,6 +4,7 @@ const Handler = require('./client/Handler');
 const Command = require("./structures/Command");
 const Alias = require("./structures/Alias");
 const SlashCommand = require("./structures/SlashCommand");
+const { NamespacedCommand, NamespacedSlashCommand } = require("./structures/NamespacedCommand");
 const Interface = require("./systems/interface");
 const EvG = require("./systems/evg");
 const Utility = require("./util/Utility");
@@ -17,12 +18,18 @@ class NodeElisif extends Handler {
      */
     Command = Command;
 
+    /**
+     * @deprecated
+     */
+    NamespacedCommand = NamespacedCommand;
+
     Alias = Alias;
     interface = Interface;
     evg = EvG;
     interpreter = Interpreter;
     fetch = fetch;
     SlashCommand = SlashCommand;
+    NamespacedSlashCommand = NamespacedSlashCommand;
     util = Utility;
 
     version = require("./package.json").version;

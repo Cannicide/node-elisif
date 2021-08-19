@@ -1,6 +1,6 @@
 {
   "name": "elisif",
-  "version": "3.0.9-dev.0",
+  "version": "3.1.0-dev.0",
   "description": "A powerful Discord Bot container, command handler, and vast extension of discord.js. Supports buttons, dropdowns, slash commands, VCA, and threads.",
   "main": "index.js",
   "dependencies": {
