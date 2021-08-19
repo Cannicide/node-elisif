@@ -30,3 +30,7 @@
 - Added methods to Utility class for converting string intents and permissions into new discord.j 13.x.x enums
 - Modified Handler to work with new intent enums utility
 - Modified Command to work with new permisson enums utility
+- Added ContentSupplier utility to work with elisif-modified message content and embeds
+- Added ElisifSet utility to make working with Sets easier, currently used by Interface.textMenu()
+- Added MultiResolvePromise utility, a promise-like structure that allows for resolving more than once. Used by Interface.reactMenu()
+- Completely rewrote all interfaces such that they are static, promisified methods with ten times better documentation

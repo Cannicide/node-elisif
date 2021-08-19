@@ -1,44 +1,81 @@
-/**
- * Creates a new FancyMessage, helping to make the Interface more interactive and aesthetically appealing.
- * @constructor
- * @param {String} title - Title of the FancyMessage
- * @param {String} question - Question asked to the user
- * @param {Array} bullets - List of answers that the user can respond with
- * @param {Object} [options] - Options to customize title type, and bullet type
- * @param {"="|"#"} [options.title] - Customize title type
- * @param {"*"|"-"} [options.bullet] - Customize the bullet type
- */
-class FancyMessage {
-    constructor(title, question, bullets, options) {
-        options = options || { title: "=", bullet: "*" };
+//@ts-check
 
-        if (options.title == "=") {
-            var stylizedTitle = title + "\n===============================";
+const { ContentSupplier, ElisifSet, MRPromise } = require('../util/Utility');
+class Interface {
+
+    /**
+     * Creates a new fancy list, displaying a set of answer choices to a question in a fancy code block menu.
+     * Can be used by text menu interfaces to create a functional answer selector.
+     * @param {Object} options - Options for this fancy list
+     * @param {String} options.title - Title of the fancy list
+     * @param {String} options.question - Question prompted to the user
+     * @param {Set} options.choices - List of answers to the prompted question
+     * @param {boolean} [options.isTextMenu] - Whether or not this fancy list is being used for a text menu. Adds a "menu will close" message to the end of the fancy list
+     * @param {Number} [options.textMenuTime] - The number of minutes that the text menu will last. Defaults to 5.
+     * @param {"="|"#"} [options.titleType] - Select the type of markdown to use when displaying the title
+     * @param {"*"|"-"} [options.bulletType] - Select the type of bullet point to use when displaying the answer choices
+     * @param {Object} [options.embed] - Options for placing this fancy list within an embed
+     * @param {boolean} [options.embed.use] - Whether or not to use an embed to display the fancy list
+     * @param {import("discord.js").Message} [options.embed.message] - The discord.js Message to extract default embed options from
+     */
+    static fancyList({
+        title,
+        question,
+        choices = new Set(),
+        titleType = "=",
+        bulletType = "*",
+        isTextMenu = false,
+        textMenuTime = 5,
+        embed = { use: false, message: null }
+    }) {
+
+        var contentData;
+        var bullets = [...choices.values()].map(choice => bulletType + " " + choice).join("\n");
+        const messageMenuWarning = `\n\n<!-- Menu will close in ${textMenuTime} minutes.\nDo not include punctuation or the command prefix in your response. -->`;
+
+        //Fancy list for normal message
+        if (!embed.use) {
+
+            if (titleType == "=") {
+                var stylizedTitle = title + "\n===============================";
+            }
+            else {
+                var stylizedTitle = "# " + title + " #";
+            }
+
+            var msg = `\`\`\`md\n${stylizedTitle}\`\`\`\n\`\`\`md\n< ${question} >\n\n`;
+            msg += bullets;
+            if (isTextMenu) msg += messageMenuWarning;
+            msg += "\`\`\`";
+
+            contentData = {content: msg};
+
         }
+        //Fancy list for embed message
         else {
-            var stylizedTitle = "# " + title + " #";
+
+            var msg = `\`\`\`md\n< ${question} >\n\n`;
+            msg += bullets;
+            if (isTextMenu) msg += messageMenuWarning;
+            msg += "\`\`\`";
+
+            contentData = {embeds: [
+                Interface.createEmbed({
+                    title,
+                    desc: msg
+                }, embed.message)
+            ]};
+
         }
 
-        var msg = `\`\`\`md\n${stylizedTitle}\`\`\`\n\`\`\`md\n< ${question} >\n\n`;
-        var stylizedBullets = "";
-
-        bullets.forEach((bullet) => {
-            stylizedBullets += options.bullet + " " + bullet + "\n";
-        });
-
-        msg += stylizedBullets + "\n<!-- Menu will close in 5 minutes.\nDo not include punctuation or the command prefix in your response. -->\`\`\`";
-
-        this.get = () => { return msg; };
+        return new ContentSupplier("fancyList", contentData);
 
     }
-}
 
-class EmbedMessage {
     /**
-     * Creates a new Embed, which can be used with or without the interface.
-     * @constructor
+     * Creates a new embed object, which can be used with both discord.js methods and node-elisif methods.
      * @param {Object} options - Represents either the Embed's options or String content for a plain message.
-     * @param {Object} message - The message containing the call to the currently processing command.
+     * @param {String} [options.content] - The content of the message to which this embed belongs. Used by ContentSupplier.asEmbedsIfSupplier().
      * @param {String} [options.thumbnail] - The URL to the preferred thumbnail of the Embed.
      * @param {Object[]} [options.fields] - An array of the contents of the Embed, separated by field.
      * @param {String} options.fields[].name - The title of the field.
@@ -51,172 +88,278 @@ class EmbedMessage {
      * @param {String} [options.image] - The URL of the Embed's image.
      * @param {String} [options.video] - The URL of the Embed's video.
      * @param {Boolean} [options.noTimestamp] - Whether or not to remove the timestamp from the Embed.
-     * @param {String} [options.content] - The plain text content of the message itself.
      * @param {String} [options.color] - The color of the Embed border.
+     * @param {Object} [message] - The optional message from which to set some default options, such as username in footer.
      */
-    constructor(message, options) {
-        let client = require("../index").getClient();
-        let userID = message?.author?.id ?? client.user.id;
-        var tuser = client.users.cache.find(m => m.id == userID);
+    static createEmbed({
+        thumbnail,
+        fields,
+        desc,
+        title,
+        footer,
+        icon,
+        image,
+        video,
+        noTimestamp,
+        color
+    }, message = null) {
 
-        if (typeof options === "object" && typeof options !== "string") {
+        let client = require("../index").getClient(message?.client.user.id);
+        let userID = message?.author?.id ?? client?.user.id;
+        var tuser = client?.users.cache.find(m => m.id == userID);
 
-            var {thumbnail, fields, desc, title, footer, icon, image, video, noTimestamp, content, color} = options;
-            color = color ?? (message?.guild ? message.member?.displayHexColor : tuser.toString().substring(2, 8));
+        color = color ?? message?.member?.displayHexColor ?? tuser?.toString().substring(2, 8) ?? "#000000";
 
-            footer = footer ?? [tuser.username];
-            if (!Array.isArray(footer)) footer = [footer];
+        footer = footer ?? [tuser?.username];
+        if (!Array.isArray(footer)) footer = [footer];
 
-            var embed = {embed: {
-                "color": color,
-                "timestamp": !noTimestamp ? new Date() : false,
-                "footer": {
-                "icon_url": icon || tuser.avatarURL(),
+        var embed = {
+            "color": color,
+            "timestamp": !noTimestamp ? new Date() : false,
+            "footer": footer[0] ? {
+                "icon_url": icon ?? tuser?.avatarURL(),
                 "text": footer.join(" • ")
-                },
-                "thumbnail": {
+            } : undefined,
+            "thumbnail": {
                 "url": thumbnail
-                },
-                "author": {},
-                "fields": fields || [],
-                "image": {url:image} || {},
-                "video": {url:video} || {},
-                "description": desc || "",
-                "title": title || ""
-            }
-            };
+            },
+            "author": {},
+            "fields": fields ?? [],
+            "image": {url:image} ?? {},
+            "video": {url:video} ?? {},
+            "description": desc ?? "",
+            "title": title ?? ""
+        };
 
-            if (!thumbnail) embed.embed.thumbnail = {};
-            if (content) embed.content = content;
+        if (!thumbnail) embed.thumbnail = undefined;
+        return new ContentSupplier("embed", embed);
 
-            embed.remove = (property) => {
-                delete embed.embed[property];
-                return embed;
-            }
-
-            embed.set = (property, value) => {
-                embed.embed[property] = value;
-                return embed;
-            }
-
-            embed.embeds = [embed.embed];
-
-        }
-        else {
-
-            var embed = {
-                content: options
-            };
-
-        }
-
-        return embed;
     }
-}
 
-class Interface {
     /**
-     * Creates a new Interface, an interactive means of receiving input from the user.
-     * Works fine with FancyMessage.
-     * @param {Object | Function} message - Message containing the command that led to calling on the interface
-     * @param {String} question - Question to ask user for a response
+     * Creates and sends the defined embed(s) to the provided channel.
+     * One of message or channel MUST be specified; if neither is specified, an error is thrown.
+     * @param {Object[]|String|Set|ElisifSet|ContentSupplier|ContentSupplier[]} embeds - An array of embeds to send OR String content of the message OR a ContentSupplier/ContentSupplier[] containing message content data.
+     * @param {import("discord.js").Message} [message] - The optional message from which to set some default options, such as username in footer.
+     * @param {import("discord.js").TextChannel|import("discord.js").DMChannel|import("discord.js").NewsChannel} [channel] - The optional channel to send the embeds to.
+     * @param {String} [content] - The optional content of the message containing the embeds.
+    */
+    static embed(embeds = [], message = null, channel = null, content = null) {
+
+        if (!message && !channel) throw new Error("Neither message nor channel was provided; cannot retrieve channel to send the embed(s) to.");
+        
+        channel = channel ?? message.channel;
+        let embedsData = [];
+
+        //Handle all possible datatypes of `embeds`
+        if (typeof embeds === "string") content = embeds;
+        else if (Array.isArray(embeds)) embedsData = embeds;
+        else if (embeds instanceof ElisifSet) embedsData = embeds.toArray();
+        else if (embeds instanceof Set) embedsData = [...embeds.values()];
+        else if (embeds instanceof ContentSupplier && (embeds.content || embeds.embeds)) {
+            content = embeds.content;
+            embedsData = embeds.embeds ?? embedsData;
+        }
+        else if ((embeds instanceof ContentSupplier && embeds.origin == "embed") || typeof embeds === "object") embedsData = [embeds];
+        
+        //Generate embeds from any object literals in `embedsData`
+        embedsData = embedsData.map(embed => {
+            if (embed instanceof ContentSupplier && embed.origin == "embed") return embed;
+            return Interface.createEmbed(embed, message);
+        });
+
+        //Construct and send the message
+
+        let supplier = new ContentSupplier("sendEmbed", {
+            "embeds": embedsData,
+            "content": content
+        });
+
+        channel.send(supplier);
+
+    }
+
+    /**
+     * Creates and sends a new text menu interface, using a fancy list as the question in place of a standard message.
+     * The list menu interface is a functional choice selector, which displays several choices and allows the user to pick from them.
+    */
+    static async listMenu({
+        fancyListOptions = {},
+        textMenuOptions = {}
+    }) {
+        // @ts-ignore
+        const fancyList = Interface.fancyList(fancyListOptions);
+
+        // @ts-ignore
+        textMenuOptions.question = fancyList;
+        // @ts-ignore
+        textMenuOptions.maxResponses = 1;
+
+        // @ts-ignore
+        return Interface.textMenu(textMenuOptions);
+    }
+
+    /**
+     * Creates and sends a new text menu interface, an interactive means of receiving message input from the user.
+     * Can be used with interface.fancyList().
+     * @param {Object} opts - The options for the text menu.
+     * @param {import("discord.js").Message} opts.message - The message to respond to with this text menu.
+     * @param {String|ContentSupplier} opts.question - Question to ask user for a response
+     * @param {String} [opts.error] - An additional error message to display if the user does not respond in time.
+     * @param {String} [opts.errorEmoji] - An optional error emote to display if the user does not respond in time. Defaults to an emote in Cannicide's test server (used by my bots).
+     * @param {Number} [opts.maxResponses] - The maximum number of responses the user can provide before the bot responds / promise fulfills. Defaults to 1.
+     * @param {Object} [opts.options] - An object containing extra options for the discord.js message collector used by the text menu.
+     * @param {Number} [opts.time] - The time limit for the user to respond, in minutes. Defaults to 5 minutes.
+     * @param {boolean} [opts.deleteSelf] - Whether or not the text menu should delete the question message once the user has answered or time has run out.
+     * @returns {Promise<{responses: ElisifSet, question: import("discord.js").Message}>} - A promise that resolves with the responses and question message.
      */
-    constructor(message, question, callback, type, options) {
+    static async textMenu({
+        message,
+        question,
+        error,
+        errorEmoji = "<a:no_animated:670060124399730699>",
+        maxResponses = null,
+        options = {max: 1},
+        time = 5,
+        deleteSelf = false
+    }) {
 
         var collected = false;
         var closed = false;
         var deleted = false;
 
-        var opts = options || {max: 1};
+        options.max = maxResponses ?? options.max ?? 1;
 
-        var qMessage;
-        message.channel.send(question).then((msg) => {
-            qMessage = msg;
-        });
+        var qMessage = await message.channel.send(ContentSupplier.asEmbedsIfSupplier(question));
 
-        const collector = message.channel.createMessageCollector(m => m.author.id == message.author.id, opts);
+        const responses = new ElisifSet();
+        const collector = message.channel.createMessageCollector(m => m.author.id == message.author.id, options);
 
-        collector.on("collect", msg => {
-            collected = true;
-            callback(msg, qMessage);
-
-            if (!deleted && opts.deleteSelf) {
+        //Deletion method
+        const deleteQuestion = () => {
+            if (!deleted && deleteSelf) {
                 deleted = true;
                 qMessage.delete();
             }
-        });
+        };
 
-        collector.on("end", () => {
-            closed = true;
-            if (!deleted && opts.deleteSelf) {
-                deleted = true;
-                qMessage.delete();
-            }
-        });
+        return new Promise((resolve, reject) => {
 
-        setTimeout(() => {
-            if (closed) return;
-            else if (!collected) {
-                collector.stop("User did not give a response within 5 minutes.");
-                qMessage.edit(`<a:no_animated:670060124399730699> <@!${message.author.id}>, the menu closed because you did not respond within 5 minutes. ${type.match("report") ? `**Failed to report your ${type.split(".")[1]}.** Please follow ALL of the instructions in the given time to report the ${type.split(".")[1]} properly.` : ""}`);
-                closed = true;
-                callback(false);
-                if (!deleted && opts.deleteSelf) {
-                    deleted = true;
-                    qMessage.delete();
+            collector.on("collect", msg => {
+                responses.add(msg);
+
+                if (responses.size >= options.max) {
+                    collected = true;
+                    // @ts-ignore
+                    resolve({responses, question: qMessage});
+                    deleteQuestion();
                 }
-            }
-        }, 5 * 60 * 1000);
+            });
+
+            collector.on("end", () => {
+                closed = true;
+                deleteQuestion();
+            });
+
+            setTimeout(() => {
+                if (closed || collected) return;
+
+                const reason = `User did not give ${responses.size == 0 ? "a response" : "enough responses"} within ${time} minutes.`;
+
+                collector.stop(reason);
+                reject(reason);
+
+                qMessage.edit(`${errorEmoji} <@!${message.author.id}>, the menu closed because you did not respond within ${time} minutes. ${error ?? ""}`);
+                closed = true;
+                deleteQuestion();
+
+            }, time * 60 * 1000);
+
+        });
 
     }
-}
 
-class ReactionInterface {
     /**
-     * Creates a new ReactionInterface, a reaction collector to perform actions on user reaction
-     * @param {Object} message - Discord message object
-     * @param {String} question - Message to send and collect reactions from
-     * @param {function(message, reaction)} callback - Callback to execute on collect
-     * @param {Number} [time] - Optional time in milliseconds to wait for reaction
+     * Creates and sends a new reaction menu, a reaction collector to perform actions on user reaction.
+     * 
+     * Note: `Interface.reactMenu()` returns an MRPromise. Unlike regular Promises, the output of an MRPromise can only be retrieved with `MRPromise.manyThen((message, reaction) => void)`.
+     * Errors can also only be received using `MRPromise.manyCatch(reason => void)`. If multiple promise rejection errors occur, the method defined by `.manyCatch()` will execute for each error.
+     * The MRPromise is used instead of a regular Promise because it can resolve multiple times. This means the method defined by `.manyThen()` will execute every time a valid reaction is received.
+     * 
+     * Example use: `Interface.reactMenu({...}).manyThen((m, r) => ...).manyCatch(reason => ...)`
+     * 
+     * @param {Object} options - The options for the reaction menu
+     * @param {import("discord.js").Message} options.message - The message to respond to with this reaction menu
+     * @param {String} options.question - Message to send and collect reactions from
+     * @param {String[]} options.reactions - Reactions to send and collect with this reaction menu
+     * @param {Number} [options.time] - Optional time in minutes to wait for any of the given reactions. Defaults to 2 minutes.
+     * @param {boolean} [options.allUsers] - Whether to collect the reactions of all users, or just the author of the message. Defaults to false (just the author).
+     * @returns {MRPromise} - A multi-resolve promise that resolves with the question message and reactions.
      */
-    constructor(message, question, reactions, callback, time, allUsers) {
+    static reactMenu({
+        message,
+        question,
+        reactions = [],
+        time = 2,
+        allUsers = false
+    }) {
 
-        message.channel.send(question).then(m => {
+        var previous = false;
+        var collected = false;
 
-            var previous = false;
+        // @ts-ignore
+        return new MRPromise(async () => {
+            return message.channel.send(ContentSupplier.asEmbedsIfSupplier(question));
+        }, (m, resolve, reject) => {
 
             reactions.forEach((reaction) => {
 
-                if (previous) previous = previous.then(r => {return m.react(reaction)})
+                // @ts-ignore
+                if (previous) previous = previous.then(_r => {return m.react(reaction)})
+                // @ts-ignore
                 else previous = m.react(reaction);
 
-                let collector = m.createReactionCollector((r, user) => (r.emoji.name === reaction || r.emoji.id === reaction) && (allUsers || user.id === message.author.id), { time: time || 120000 });
+                let collector = m.createReactionCollector((r, user) => (r.emoji.name === reaction || r.emoji.id === reaction) && (allUsers || user.id === message.author.id), { time: time * 60 * 1000 });
 
                 collector.on("collect", r => {
                     r.users.remove(message.author);
 
-                    callback(m, r);
+                    collected = true;
+                    resolve(m, r);
                 });
 
             });
 
+            setTimeout(() => {
+
+                if (collected) return;
+                reject(`User did not react within ${time} minutes.`);
+
+            }, time * 60 * 1000);
+
         });
     }
-}
 
-class Paginator {
     /**
-     * Creates a new Pagination Interface, a reaction collector that cycles through pages on user reaction
-     * @param {Object} message - Discord message object
-     * @param {EmbedMessage} embed - Message to send and paginate
-     * @param {Object[]} elements - Array of fields to cycle through when paginating
-     * @param {String} elements[].name - Field title
-     * @param {String} elements[].value - Field content
-     * @param {Number} perPage - Number of elements per page
+     * Creates and sends a new reaction pagination menu, a reaction collector that cycles through pages of an embed on user reaction
+     * @param {Object} options - The options for the reaction pagination menu
+     * @param {import("discord.js").Message} options.message - Discord message object
+     * @param {ContentSupplier|Object} options.embed - The embed to send and paginate 
+     * @param {Object[]} options.elements - Array of fields to cycle through when paginating
+     * @param {String} options.elements[].name - Field title
+     * @param {String} options.elements[].value - Field content
+     * @param {Number} options.perPage - Number of elements per page. Defaults to 2.
+     * @param {boolean} [options.allUsers] - Whether all users can interact with the pagination menu, or just the author of the provided message. It is recommended to keep this false for the best experience. Defaults to false.
      */
-    constructor(message, embed, elements, perPage, allUsers) {
+    static async reactionPaginator({
+        message,
+        embed,
+        elements = [],
+        perPage = 2,
+        allUsers = false
+    }) {
 
-        if (!(embed instanceof EmbedMessage)) embed = new EmbedMessage(message, embed);
+        if (!(embed instanceof ContentSupplier) || embed.origin != "embed") embed = Interface.createEmbed(embed, message);
 
         var insertions = 0;
         var pages = [];
@@ -235,12 +378,21 @@ class Paginator {
         });
 
         if (pages[pages.length - 1] != page && page.length != 0) pages.push(page);
-        embed.embed.fields = pages[pageIndex];
+        embed.fields = pages[pageIndex];
 
-        embed.embed.footer = embed.embed.footer || {text: ""};
-        embed.embed.footer.text += " • " + (pages.length == 0 ? 0 : pageIndex + 1) + "/" + pages.length;
+        embed.footer = embed.embed.footer || {text: ""};
+        embed.footer.text += " • " + (pages.length == 0 ? 0 : pageIndex + 1) + "/" + pages.length;
 
-        new ReactionInterface(message, embed, ['⬅️', '➡️'], (m, r) => {
+        const menu = Interface.reactMenu({
+            message,
+            question: embed,
+            reactions: ['⬅️', '➡️'],
+            time: 60,
+            allUsers
+        });
+
+        // @ts-ignore
+        menu.manyThen((m, r) => {
 
             if (r.emoji.name == '⬅️') {
                 //Back
@@ -250,9 +402,9 @@ class Paginator {
                     pageIndex = 0;
                 }
                 else {
-                    embed.embed.fields = pages[pageIndex];
-                    embed.embed.footer.text = embed.embed.footer.text.substring(0, embed.embed.footer.text.lastIndexOf("•")) + "• " + (pageIndex + 1) + "/" + pages.length;
-                    m.edit(embed);
+                    embed.fields = pages[pageIndex];
+                    embed.footer.text = embed.footer.text.substring(0, embed.footer.text.lastIndexOf("•")) + "• " + (pageIndex + 1) + "/" + pages.length;
+                    m.edit({embeds: [embed]});
                 }
             }
             else {
@@ -263,21 +415,16 @@ class Paginator {
                     pageIndex = pages.length - 1;
                 }
                 else {
-                    embed.embed.fields = pages[pageIndex];
-                    embed.embed.footer.text = embed.embed.footer.text.substring(0, embed.embed.footer.text.lastIndexOf("•")) + "• " + (pageIndex + 1) + "/" + pages.length;
-                    m.edit(embed);
+                    embed.fields = pages[pageIndex];
+                    embed.footer.text = embed.footer.text.substring(0, embed.footer.text.lastIndexOf("•")) + "• " + (pageIndex + 1) + "/" + pages.length;
+                    m.edit({embeds: [embed]});
                 }
             }
 
-        }, 1000 * 60 * 60, allUsers);
+        });
+
     }
 
 }
 
-module.exports = {
-    Interface: Interface,
-    FancyMessage: FancyMessage,
-    Embed: EmbedMessage,
-    ReactionInterface: ReactionInterface,
-    Paginator: Paginator
-};
+module.exports = Interface;
