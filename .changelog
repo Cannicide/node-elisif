@@ -34,3 +34,4 @@
 - Added ElisifSet utility to make working with Sets easier, currently used by Interface.textMenu()
 - Added MultiResolvePromise utility, a promise-like structure that allows for resolving more than once. Used by Interface.reactMenu()
 - Completely rewrote all interfaces such that they are static, promisified methods with ten times better documentation
+- Updated interfaces to work with discord.js 13.x.x

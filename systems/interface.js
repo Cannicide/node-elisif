@@ -229,11 +229,12 @@ class Interface {
         var deleted = false;
 
         options.max = maxResponses ?? options.max ?? 1;
+        options.filter = m => m.author.id == message.author.id;
 
         var qMessage = await message.channel.send(ContentSupplier.asEmbedsIfSupplier(question));
 
         const responses = new ElisifSet();
-        const collector = message.channel.createMessageCollector(m => m.author.id == message.author.id, options);
+        const collector = message.channel.createMessageCollector(options);
 
         //Deletion method
         const deleteQuestion = () => {
@@ -319,7 +320,8 @@ class Interface {
                 // @ts-ignore
                 else previous = m.react(reaction);
 
-                let collector = m.createReactionCollector((r, user) => (r.emoji.name === reaction || r.emoji.id === reaction) && (allUsers || user.id === message.author.id), { time: time * 60 * 1000 });
+                let filter = (r, user) => (r.emoji.name === reaction || r.emoji.id === reaction) && (allUsers || user.id === message.author.id);
+                let collector = m.createReactionCollector({ filter, time: time * 60 * 1000 });
 
                 collector.on("collect", r => {
                     r.users.remove(message.author);
