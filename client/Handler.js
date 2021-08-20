@@ -10,7 +10,7 @@ const Settings = require("../systems/settings");
 //Express app initialized
 const express = require('express');
 const app = express();
-var appInitialized = false;
+var listener = undefined;
 
 //Discord.js initialized
 const Discord = require('discord.js');
@@ -99,16 +99,14 @@ class ExtendedClient extends Discord.Client {
       return djsOptions;
     })());
 
-    if (!appInitialized) {
+    if (!listener) {
       app.use(express.static('public'));
       if (!port) throw new Error("Please specify a port to listen on when initializing your Elisif Client.");
 
       //Setup express server
-      const listener = app.listen(port, function() {
+      listener = app.listen(port, function() {
         console.log(`${name} listening on port ${listener.address().port}`);
       });
-
-      appInitialized = true;
     }
     
     //Setup command handling methods
