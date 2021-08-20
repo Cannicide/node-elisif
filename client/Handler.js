@@ -114,26 +114,17 @@ class ExtendedClient extends Discord.Client {
     //Setup command handling methods
     this.commands = new CommandManager(this);
 
-    //Setup prefix methods
-    this.prefix = new PrefixHandler(this);
-    this.prefix.set(prefix);
-
     //Setup bot information
     this.authors = authors;
     this.description = description;
     this.intents = intents;
     this.name = name;
+    this.twitch = twitch;
     this.port = listener.address().port;
     expansions.enable = expansions.enable ?? [];
 
     //Setup expansion methods
     this.expansions = new ExpansionManager(expansions);
-
-    //Setup presence cycler method
-    presences = presences ?? [`${this.prefix.get()}help`];
-    this.twitch = twitch;
-
-    this.PresenceCycler = new PresenceCycler(presences, presenceDuration, this);
 
     //Assign this object to the ID-client map
     clients.set(this.user?.id, this);
@@ -144,6 +135,15 @@ class ExtendedClient extends Discord.Client {
     //Setup ready event handler
     this.once("ready", () => {
       console.log(`${name} is up and running!`);
+
+      //Setup prefix methods
+      this.prefix = new PrefixHandler(this);
+      this.prefix.set(prefix);
+
+      //Setup presence cycler method
+      presences = presences ?? [`${this.prefix.get()}help`];
+      this.PresenceCycler = new PresenceCycler(presences, presenceDuration, this);
+
       if (Settings.Global().get("presence_cycler")) this.PresenceCycler.cycle(this.twitch);
       else this.user.setActivity(`${this.prefix.get()}help`, {type: 'STREAMING', url: this.twitch});
 
