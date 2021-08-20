@@ -1,16 +1,18 @@
 
-const Settings = require("../systems/settings");
-
 class PrefixHandler {
+
+    constructor(client) {
+        this.client = client;
+    }
 
     set(prefix) {
         let pfix = prefix ?? "/";
-        Settings.Global().set("global_prefix", pfix);
+        this.client.settings.Global().set("global_prefix", pfix);
         return pfix;
       }
       
     get() {
-        let pfix = Settings.Global().get("global_prefix");
+        let pfix = this.client.settings.Global().get("global_prefix");
         return pfix;
     }
 

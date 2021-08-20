@@ -25,8 +25,8 @@ class SlashUtility extends StructureUtility {
         this.interpreter = this.elisif.interpreter;
         this.evg = this.elisif.evg;
         this.db = this.evg;
-        this.getGlobalSetting = (sett) => this.elisif.settings.Global().get(sett);
-        this.getLocalSetting = (sett) => this.elisif.settings.Local(this.guild?.id).get(sett);
+        this.getGlobalSetting = (sett) => this.client.settings.Global().get(sett);
+        this.getLocalSetting = (sett) => this.client.settings.Local(this.guild?.id).get(sett);
         this.setGlobalSetting = (sett, val) => this.client.settings.Global().set(sett, val);
         this.setLocalSetting = (sett, val) => this.client.settings.Local(this.guild?.id).set(sett, val);
 

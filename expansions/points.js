@@ -1,7 +1,7 @@
 // An expansion implementing a configurable Points System to allow guild members to gain rewards for doing certain actions.
 
 const db = require("../index").evg.remodel("points");
-const Settings = require("../index").settings;
+var Settings;
 const fs = require("fs");
 
 const { ExpansionCommand: Command, util } = require("../index");
@@ -165,7 +165,8 @@ class PointsConfig {
 
   }
 
-  constructor(locale) {
+  constructor(locale, client) {
+    Settings = client.settings;
     this.config = () => {
       return Settings.Local(locale).table("points.config", PointsConfig.getDefaultConfig());
     }
@@ -191,7 +192,7 @@ class PointsSystem {
     this.points = db.table(locale);
     if (!this.points) this.points = db.table(locale);
 
-    var config = new PointsConfig(locale);
+    var config = new PointsConfig(locale, client);
     this.conf = () => config.config();
 
     this.client = client;

@@ -22,10 +22,6 @@ const fs = require("fs");
 //Aliases initialized
 const AliasManager = require("../managers/AliasManager");
 
-//Global settings
-const Settings = require("../systems/settings");
-
-
 class CommandManager {
 
     #commands = new Map();
@@ -125,7 +121,7 @@ class CommandManager {
 
         SlashCommand.setupAll(this.client);
 
-        if (Settings.Global().get("debug_mode")) console.log("Loaded commands:", this.all().map(v => v.name));
+        if (this.client.settings.Global().get("debug_mode")) console.log("Loaded commands:", this.all().map(v => v.name));
 
         return this.all();
 

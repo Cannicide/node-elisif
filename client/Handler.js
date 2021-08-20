@@ -115,7 +115,7 @@ class ExtendedClient extends Discord.Client {
     this.commands = new CommandManager(this);
 
     //Setup prefix methods
-    this.prefix = new PrefixHandler();
+    this.prefix = new PrefixHandler(this);
     this.prefix.set(prefix);
 
     //Setup bot information
@@ -234,7 +234,7 @@ class ExtendedClient extends Discord.Client {
 
   async refreshCache() {
 
-    if (!Settings.Global().get("refresh_cache_on_boot")) return;
+    if (!this.settings.Global().get("refresh_cache_on_boot")) return;
   
     var totalMessagesFetched = 0;
   
