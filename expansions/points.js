@@ -259,7 +259,7 @@ class PointsSystem {
       var dailyCap = leveling.get(cause).dailyCap;
 
       if (dailyCap == "{amount}" && "shopItem" in leveling.get(cause)) {
-        var shop = new PointsShop(this.guild, {id: user});
+        var shop = new PointsShop(this.guild, {id: user}, this.client);
         var purchase = shop.getPurchase(leveling.get(cause).shopItem);
 
         dailyCap = purchase.amount;
@@ -338,6 +338,7 @@ class PointsSystem {
       if (passesChecks) {
         this.addPoints(user, award);
         this.addPoints(user, Math.abs(award), type);
+        this.client.debug("Awarded user points for:", cause.toUpperCase());
       }
 
     }
@@ -653,7 +654,7 @@ class NativePointsCommands {
 
     }
 
-    static Points = new Command((client, _settings) => ({
+    static Points = new Command("points", (client, settings) => ({
         expansion: true,
         name: "points",
         desc: "View how many points you and/or another user have.",
@@ -662,6 +663,10 @@ class NativePointsCommands {
             name: "user",
             optional: true
         }],
+        initialize() {
+            // Initialize points expansion settings
+            settings.guilds?.forEach(g => client.settings.Local(g).set("points.enabled", true));
+        },
         async execute(message) {
         
           // TEST POINTS COMMAND
@@ -676,7 +681,7 @@ class NativePointsCommands {
     }));
 
 
-    static Shop = new Command((client, _settings) => ({
+    static Shop = new Command("points", (client, _settings) => ({
         expansion: true,
         name: "shop",
         desc: "View and purchase items from the Points Shop.",
@@ -695,15 +700,15 @@ class NativePointsCommands {
           // SHOP DISABLE FUNCTIONALITY:
           // If the user passes a disable argument, disable the shop for this guild until re-enabled.
 
-          if (util.message(message).hasArg(0, "disable")) {
+          if (util.Message(message).hasArg(0, "disable")) {
               //Disable shop for this guild
-              message.guild.settings.set("points.shop_disabled", true);
+              message.guild.util.settings.set("points.shop_disabled", true);
               message.channel.send("Disabled the Points Shop for this guild.");
               return;
           }
-          else if (util.message(message).hasArg(0, "enable")) {
+          else if (util.Message(message).hasArg(0, "enable")) {
               //Enable shop for this guild
-              message.guild.settings.set("points.shop_disabled", false);
+              message.guild.util.settings.set("points.shop_disabled", false);
               message.channel.send("Enabled the Points Shop for this guild.");
               return;
           }
@@ -711,7 +716,7 @@ class NativePointsCommands {
           // SHOP DISABLED FUNCTIONALITY:
           // If the shop is disabled for this guild, return an error message.
 
-          if (message.guild.settings.get("points.shop_disabled")) {
+          if (message.guild.util.settings.get("points.shop_disabled")) {
               message.channel.send("The Points Shop is currently disabled for this guild.");
               return;
           }
@@ -753,14 +758,14 @@ class NativePointsCommands {
 
           var final_render = pre_render.join("\n");
 
-          util.channel(message.channel, message).embed({
+          message.channel.util.embed({
               desc: final_render
           });
 
         }
     }));
 
-    static Leaderboard = new Command((client, _settings) => ({
+    static Leaderboard = new Command("points", (client, settings) => ({
         expansion: true,
         name: "pointslb",
         desc: "View the top players on the Points Leaderboard.",
@@ -825,15 +830,19 @@ class NativePointsCommands {
               if (type == "total") type = "points";
 
               //Add header field
-              var header = type == "points" ? "Total" : type.slice(0, 1).toUpperCase() + type.slice(1);
+              var header = (type == "points" ? "Total" : type.slice(0, 1).toUpperCase() + type.slice(1)) + " Points";
               output.fields.push({
                   name: "** **",
-                  value: `> **${header} Points**`
+                  value: `** **\n**${"=".repeat(header.length)}**\n> **${header}**\n**${"=".repeat(header.length)}**`,
+                  inline: settings.leaderboard?.inline
               });
 
               var board = lb.boards[type];
               var players = [];
               var points = [];
+
+              //Ensure board for this category exists
+              if (!board) board = [];
 
               //Ensure board is always at least 5 point user objects long
               if (board.length < 5) board.push(...new Array(5 - board.length).fill({tag: "-", points: "-"}));
@@ -871,9 +880,9 @@ class NativePointsCommands {
           var categories = ["message", "action", "voice", "bonus", "total"];
 
           // If a category is specified, only display that category
-          if (util.message(message).hasArg(0)) {
+          if (util.Message(message).hasArg(0)) {
 
-              var category = util.message(message).args[0].toLowerCase();
+              var category = util.Message(message).args[0].toLowerCase();
               if (categories.indexOf(category) == -1) return message.reply(`Invalid Points Leaderboard category. Must be one of: ${categories.join(", ")}.`);
 
               categories = [category];
@@ -881,7 +890,7 @@ class NativePointsCommands {
           }
 
           categories.forEach(category => render_field(category));
-          return util.channel(message.channel, message).embed(output);
+          return util.Channel(message.channel, message).embed(output);
         
         }
     }));
@@ -906,10 +915,12 @@ class NativeLevelingHandlers {
     //and giving points for Daily Boost
     static Message(client) {
 
-        client.on("message", message => {
+        client.on("messageCreate", message => {
+
+            util.Message(message).Guild();
 
             //Check if points system enabled in this guild
-            if (!message?.guild?.settings.get("points.enabled")) return false;
+            if (!message?.guild?.util.settings.get("points.enabled")) return false;
 
             //No points for bots or DMs
             if (message.author.bot) return false;
@@ -920,16 +931,16 @@ class NativeLevelingHandlers {
             system.autoAward(message.author.id, "daily_boost");
 
             //No points for commands
-            if (message.isCommand()) return false;
+            if (message.util.isCommand()) return false;
 
             //Ensure message points given only in configured category channels, if any
-            var categories = message.guild.settings.get("points.message_categories");
+            var categories = message.guild.util.settings.get("points.message_categories");
             if (categories && categories.length > 0 && message.channel.parent && !categories.find(c => c.name.toLowerCase() == message.channel.parent.name.toLowerCase())) return false;
 
             //Ensure user meets cooldown threshold
             //Establish cooldown times
             const now = Date.now();
-            const cooldownAmount = (message.guild.settings.get("points.message_cooldown") || 5 * 60) * 1000;
+            const cooldownAmount = (message.guild.util.settings.get("points.message_cooldown") || 5 * 60) * 1000;
             const userTimestamp = NativeLevelingHandlers.message_timestamps[message.author.id] || (now - cooldownAmount);
             const expirationTime = userTimestamp + cooldownAmount;
 

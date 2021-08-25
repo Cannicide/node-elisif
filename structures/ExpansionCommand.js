@@ -12,7 +12,7 @@ class ExpansionCommand extends NamespacedCommand {
     }
 
     build(client) {
-        super.build((() => {
+        return super.build((() => {
             this.optionsFunction = Utility.bindNth(this, this.optionsFunction, client.expansions.settings(this.name));
             return client;
         })());
@@ -28,7 +28,7 @@ class ExpansionSlashCommand extends NamespacedSlashCommand {
     }
 
     build(client) {
-        super.build((() => {
+        return super.build((() => {
             this.optionsFunction = Utility.bindNth(this, this.optionsFunction, client.expansions.settings(this.name));
             return client;
         })());

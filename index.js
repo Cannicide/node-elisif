@@ -61,7 +61,8 @@ class NodeElisif extends Handler {
     }
 
     getClient(identifier) {
-        return this.Client.get(identifier);
+        let cl = this.Client.get(identifier);
+        return cl;
     }
 
 }

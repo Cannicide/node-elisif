@@ -20,6 +20,10 @@ class AliasManager {
         return this.aliases;
     }
 
+    set commands(commands) {
+        this.aliases = commands;
+    }
+
     get() {
         return this.aliases;
     }

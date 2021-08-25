@@ -1,11 +1,9 @@
 {
   "name": "elisif",
-  "version": "3.2.0-dev.0",
+  "version": "3.2.6-dev.0",
   "description": "A powerful Discord Bot system, command handler, slash command handler, and partial extension of discord.js.",
   "main": "index.js",
   "dependencies": {
-    "@discordjs/rest": "^0.1.0-canary.0",
-    "discord-api-types": "^0.22.0",
     "discord.js": "^13.1.0",
     "express": "^4.17.1",
     "node-fetch": "^2.6.1",
@@ -13,7 +11,7 @@
   },
   "scripts": {
     "start": "node index.js",
-    "test": "echo 'No tests available'"
+    "test": "node --trace-warnings ./test/testClient.js"
   },
   "engines": {
     "node": "16.x"

@@ -3,15 +3,15 @@ class ExpansionManager {
 
     constructor(expansions) {
         this.expansions = expansions.enable;
-        this.settings = expansions;
+        this.expansion_settings = expansions;
     }
 
     all() {
-        return this.expansions
+        return this.expansions;
     }
 
     has(expansion) {
-        return this.all().includes(expansion)
+        return this.all().includes(expansion);
     }
 
     get(expansion) {
@@ -21,7 +21,7 @@ class ExpansionManager {
     }
 
     settings(expansion) {
-        return this.settings[expansion];
+        return this.expansion_settings[expansion] ?? {};
     }
 }
 

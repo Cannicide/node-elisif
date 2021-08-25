@@ -104,6 +104,26 @@ class SlashUtility extends StructureUtility {
         return this.args_classic;
     }
 
+    get flatArgs() {
+        return this.args_classic;
+    }
+
+    get mappedArgs() {
+        let map = new Map()
+        Object.keys(this.args_object).forEach(key => map.set(key, this.args_object[key]));
+        return map;
+    }
+
+    //Structure Utility Methods:
+
+    Member() {
+        return this.util.Member(this.interaction.member);
+    }
+
+    Channel() {
+        return this.util.Channel(this.interaction.channel, this.interaction);
+    }
+
 }
 
 module.exports = SlashUtility;

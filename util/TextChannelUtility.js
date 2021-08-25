@@ -72,9 +72,10 @@ class TextChannelUtility extends StructureUtility {
      * @param {String} elements[].value - Field content
      * @param {Number} perPage - Number of elements per page
      */
-    paginate(options, elements, perPage, message = this.lastMessage) {
+    paginate(options, elements, perPage, time, useReactions = false, message = this.lastMessage) {
         let embed = this.elisif.interface.createEmbed(options, message);
-        return this.elisif.interface.reactionPaginator({message, embed, elements, perPage});
+        if (useReactions) return this.elisif.interface.reactionPaginator({message, embed, elements, time, perPage});
+        else return this.elisif.interface.buttonPaginator({message, embed, elements, time, perPage})
     }
 
     /**
@@ -89,7 +90,7 @@ class TextChannelUtility extends StructureUtility {
      * @param {String} [btnArr[].id] - The optional custom ID of this button. If unspecified, Elisif generates an unique ID for you.
      * @param {Number} [btnArr[].row] - The optional row of buttons & menus, or "action row", to add this button to. If unspecified, Elisif will select the next available row.
      */
-    async button(embedOptions, btnArr, message) {
+    async button(embedOptions, btnArr, message = this.lastMessage) {
 
         let embed = this.elisif.interface.genEmbeds(embedOptions, message);
 
@@ -121,7 +122,7 @@ class TextChannelUtility extends StructureUtility {
         embed.components = components;
 
         let msg = await this.channel.send(embed);
-        return this.util.message(msg);
+        return this.util.Message(msg);
     }
 
     /**
@@ -140,7 +141,7 @@ class TextChannelUtility extends StructureUtility {
      * @param {String} [selArr[].id] - The optional custom ID of this select menu. If unspecified, Elisif generates an unique ID for you.
      * @param {Number} [selArr[].row] - The optional row of buttons & menus, or "action row", to add this select menu to. If unspecified, Elisif will select the next available row.
      */
-    async selectMenu(embedOptions, selArr, message) {
+    async selectMenu(embedOptions, selArr, message = this.lastMessage) {
 
         let embed = this.elisif.interface.genEmbeds(embedOptions, message);
 
@@ -173,7 +174,7 @@ class TextChannelUtility extends StructureUtility {
         embed.components = components;
 
         let msg = await this.channel.send(embed);
-        return this.util.message(msg);
+        return this.util.Message(msg);
     }
 
 }

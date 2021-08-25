@@ -1,24 +1,33 @@
 //@ts-check
 
 // @ts-ignore
-const { MessageActionRow, MessageButton, MessageSelectMenu } = require("discord.js");
+const { MessageButton, MessageSelectMenu } = require("discord.js");
 
 class ComponentUtility {
 
-    constructor(component) {
+    constructor(component, util, message) {
         this._data = component.component;
         this._int = component;
+        this.message = message ?? this._int.message;
+        this.util = util;
     }
 
-    static fromInteraction(compInteraction) {
+    static COMPONENT_TYPE = [
+        "UNKNOWN",
+        "UNKNOWN",
+        "BUTTON",
+        "SELECT_MENU"
+    ]
+
+    static fromInteraction(compInteraction, util, message) {
 
         if (!compInteraction) return undefined;
 
         let comp = compInteraction.component;
-        if (!comp && compInteraction.customId) compInteraction = {component:compInteraction};
+        if (!comp && compInteraction.customId) compInteraction = {component:compInteraction, componentType: compInteraction.type};
 
-        if (compInteraction.componentType == "SELECT_MENU") return new SelectUtility(compInteraction);
-        else if (compInteraction.componentType == "BUTTON") return new ButtonUtility(compInteraction);
+        if (compInteraction.componentType == "SELECT_MENU") return new SelectUtility(compInteraction, util, message);
+        else if (compInteraction.componentType == "BUTTON") return new ButtonUtility(compInteraction, util, message);
         return undefined;
     }
 
@@ -27,7 +36,7 @@ class ComponentUtility {
         var index = 0;
         var comp;
           
-        this._data.message.components.forEach(row => {
+        this.message.components.forEach(row => {
   
           var newcomp = row.components.findIndex(c => c.customId && c.customId == this._data.customId);
           
@@ -47,13 +56,13 @@ class ComponentUtility {
 
     get row() {
   
-        var rowindex = this._data.message.components.findIndex(row => {
+        var rowindex = this.message.components.findIndex(row => {
   
           return row.components.find(c => c.customId && c.customId == this._data.customId);
   
         });
         
-        return rowindex <= -1 ? false : rowindex + 1;
+        return rowindex <= -1 ? false : rowindex;
         
     }
     
@@ -62,9 +71,9 @@ class ComponentUtility {
     
         var row = this.row;
         
-        if (!row) return false;
+        if (row === false) return false;
         
-        var rowindex = this._data.message.components[row - 1].components.findIndex(c => c.customId && c.customId == this._data.customId);
+        var rowindex = this.message.components[row].components.findIndex(c => c.customId && c.customId == this._data.customId);
         
         return rowindex <= -1 ? false : rowindex;
     
@@ -77,10 +86,6 @@ class ComponentUtility {
 }
 
 class ButtonUtility extends ComponentUtility {
-
-    constructor(button) {
-        super(button);
-    }
 
     static get db() {
         let evg = require("../index").evg;
@@ -149,9 +154,12 @@ class ButtonUtility extends ComponentUtility {
         row = null
     }) {
         
+        let data = new MessageButton()
+
         if (url) {
             color = "url";
             id = undefined;
+            data = data.setURL(url);
         }
         else {
             if (!id) {
@@ -163,15 +171,16 @@ class ButtonUtility extends ComponentUtility {
         
         if (label.length > 80) label = "[Label too large]";
         if (!row) row = Math.floor(ButtonUtility.prevRow += 0.2);
+
+        data = data
+        .setStyle(ButtonUtility.convertColor(color))
+        .setLabel(label)
+        .setEmoji(emoji)
+        .setCustomId(id)
+        .setDisabled(disabled);
         
         var component = {
-            data: new MessageButton()
-                .setStyle(ButtonUtility.convertColor(color))
-                .setLabel(label)
-                .setURL(url)
-                .setEmoji(emoji)
-                .setCustomId(id)
-                .setDisabled(disabled),
+            data,
             row: row - 1
         };
         
@@ -179,11 +188,61 @@ class ButtonUtility extends ComponentUtility {
     
     }
 
+    get manager() {
+        return this.util.Message(this.message).buttons;
+    }
+
+    get disabled() {
+        return this._data.disabled;
+    }
+
+    get label() {
+        return this._data.label;
+    }
+
+    get customId() {
+        return this._data.customId;
+    }
+
     get color() {
         var comp = this._data;
         if (!comp) return undefined;
         
         return ButtonUtility.deconvertColor(comp.style);
+    }
+
+    enable() {
+        var { row, rowIndex, manager } = this;
+        return manager.enable(row, rowIndex);
+    }
+
+    disable() {
+        var { row, rowIndex, manager } = this;
+        return manager.disable(row, rowIndex);
+    }
+
+    permDisable() {
+        var { row, rowIndex, manager } = this;
+        return manager.permDisable(row, rowIndex);
+    }
+
+    toggleDisabled(timeout = undefined) {
+        var { row, rowIndex, manager } = this;
+        return manager.toggleDisabled(row, rowIndex, timeout);
+    }
+
+    setColor(color) {
+
+        var { row, rowIndex, manager } = this;
+        return manager.setColor(row, rowIndex, color);
+
+    }
+
+    setLabel(label) {
+
+        var { row, rowIndex, manager } = this;
+        return manager.setLabel(row, rowIndex, label);
+
     }
 
 };
@@ -247,6 +306,14 @@ class SelectUtility extends ComponentUtility {
     //Index within row, relative to the start of the row; always 0 for select menus
     get rowIndex() { return 0 };
 
+    get manager() {
+        return this.util.Message(this.message).menus;
+    }
+
+    get customId() {
+        return this._data.customId;
+    }
+
     get max() {
         return this._data.maxValues;
     }
@@ -265,6 +332,55 @@ class SelectUtility extends ComponentUtility {
 
     get selected() {
         return this._int.values;
+    }
+
+    setPlaceholder(placeholder) {
+        var { row, manager } = this;
+        return manager.setPlaceholder(row, placeholder);
+    }
+
+    setMin(min) {
+        var { row, manager } = this;
+        return manager.setMin(row, min);
+    }
+
+    setMax(max) {
+        var { row, manager } = this;
+        return manager.setMax(row, max);
+    }
+
+    options = {
+        menu: this,
+        /**
+         * Adds an option to the specified select menu.
+         * @param {Object} option - A single option to add to the select menu.
+         * @param {String} option.label - Label for this selectable option.
+         * @param {String} [option.value] - Optional hidden value for this selectable option, for your dev purposes. Defaults to the label.
+         * @param {String} [option.description] - Optional description for this selectable option. No description by default.
+         * @param {String} [option.emoji] - Optional emoji for this selectable option. No emoji by default.
+         * @param {String} [option.default] - Whether or not this selectable option is selected by default.
+         */
+        add(option) {
+            //@ts-ignore
+            var { row, manager } = this.menu;
+            return manager.options.add(row, option);
+        },
+
+        /**
+         * Removes an option from the specified select menu.
+         * @param {String} value - The value property, of the option to be removed.
+         */
+        remove(value) {
+            //@ts-ignore
+            var { row, manager } = this.menu;
+            return manager.options.remove(row, value);
+
+        },
+
+        get(value) {
+            var { row, manager } = this.menu;
+            return manager.options.get(row, value);
+        }
     }
 
 }

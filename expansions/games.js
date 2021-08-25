@@ -2,7 +2,7 @@
 
 
 const fetch = require("node-fetch");
-const { Command, getClient, util } = require("../index");
+const { ExpansionCommand, util } = require("../index");
 const rainbowLine = "https://cdn.discordapp.com/attachments/728320173009797190/861743129241976852/rainbow_line.gif";
 
 function givePoints(client, userID, points) {
@@ -47,7 +47,7 @@ class Game {
         this.player = player;
         this.opponent = opponent ? opponent : false;
         this.channel = channel;
-        this.client = getClient(channel.client.user.id);
+        this.client = channel.client;
 
         var gameName = this.constructor.name;
 
@@ -116,7 +116,7 @@ class Game {
      * @returns A Promise containing the URL of a random cat image.
      */
     placeholderImage() {
-        return fetch("https://aws.random.cat/meow").then(res => res.json()).then(res => res.file);
+        return fetch("https://cataas.com/cat?json=true").then(res => res.json()).then(res => "https://cataas.com" + res.url);
     }
 
     /**
@@ -136,7 +136,7 @@ class Game {
      */
     render(embed) {
         if(this.#render_calls++ == 0) {
-            return util.channel(this.channel)?.embed(embed);
+            return util.Channel(this.channel, this.message)?.embed(embed);
         }
     }
 
@@ -167,7 +167,7 @@ class Trivia extends Game {
 
     get difficulty() {
 
-        var setting = util.message(this.message).getGlobalSetting("games.trivia.difficulty");
+        var setting = util.Message(this.message).getGlobalSetting("games.trivia.difficulty");
 
         var difficulties = {
             easy: "easy",
@@ -191,7 +191,7 @@ class Trivia extends Game {
 
     get uri() {
         var uri = this.#uri + this.difficulty;
-        var alwaysTrueFalse = util.message(this.message).getGlobalSetting("games.trivia.only_tf");
+        var alwaysTrueFalse = util.Message(this.message).getGlobalSetting("games.trivia.only_tf");
 
         if (alwaysTrueFalse) uri += "&type=boolean";
         return uri;
@@ -282,7 +282,7 @@ class Trivia extends Game {
         var current_data = this.questions.shift();
         var catImage = await this.placeholderImage();
 
-        if (util.message(this.message).getGlobalSetting("debug_mode") || util.message(this.message).getGlobalSetting("games.cheat_mode")) console.log(`Answer to Trivia #${this.score + 1}: ${current_data.answer}`);
+        if (this.client.debug() || this.client.setting("games.trivia.cheat_mode")) console.log(`Answer to Trivia #${this.score + 1}: ${current_data.answer}`);
 
         var embed = {
             title: `Question ${this.score + 1}/${this.target}`,
@@ -313,7 +313,7 @@ class Trivia extends Game {
             //Double check that the game is still running
             if (!this.isRunning) return;
 
-            var m = await util.channel(this.channel).selectMenu(embed, {
+            var m = await util.Channel(this.channel, this.message).selectMenu(embed, {
                 placeholder: "Select an answer...",
                 options: current_data.options
             });
@@ -321,8 +321,8 @@ class Trivia extends Game {
             m.startMenuCollector(async menu => {
 
                 if (menu.user.id != this.player.id) {
-                    var full_command = util.message(this.message).prefix + util.message(this.message).label;
-                    menu.reply("Please start your own game using `" + full_command + "` to play Dynamic Trivia!", true);
+                    var full_command = util.Message(this.message).prefix + util.Message(this.message).label;
+                    menu.reply({content:"Please start your own game using `" + full_command + "` to play Dynamic Trivia!", ephemeral: true});
                     return;
                 }
 
@@ -331,7 +331,7 @@ class Trivia extends Game {
 
                 m.endMenuCollector();
 
-                var choice = menu.selected;
+                var choice = util.Component(menu).selected[0];
                 var answer = current_data.answer;
 
                 //Correct answer
@@ -345,7 +345,7 @@ class Trivia extends Game {
                         var reward = this.reward(this.target);
                         menu.deferReply();
                         setTimeout(() => {
-                            menu.reply(util.message(this.message).interface.genEmbeds({
+                            menu.editReply(util.Message(this.message).interface.genEmbeds({
                                 title: "Dynamic Trivia - Victory!",
                                 color: "50E3C2", //Cyan
                                 desc: `✅ You answered correctly!\n\n**🎉 You won the game!**${reward}\n** **`,
@@ -361,7 +361,7 @@ class Trivia extends Game {
                                 ],
                                 footer: [this.player.username, `Completed ${this.score}/${this.target}`]
                             }, this.message));
-                        }, 4000);
+                        }, 3000);
                         return;
 
                     }
@@ -370,7 +370,7 @@ class Trivia extends Game {
 
                         menu.deferReply();
                         setTimeout(() => {
-                            menu.reply(util.message(this.message).interface.genEmbeds({
+                            menu.editReply(util.Message(this.message).interface.genEmbeds({
                                 title: "Dynamic Trivia - Correct!",
                                 color: "769332", //Green
                                 desc: `✅ You answered correctly!\n*Loading next question...*\n** **`,
@@ -386,7 +386,7 @@ class Trivia extends Game {
                                 ],
                                 footer: [this.player.username, `Completed ${this.score}/${this.target}`]
                             }, this.message));
-                        }, 4000);
+                        }, 2500);
                         return this.render();
 
                     }
@@ -397,7 +397,7 @@ class Trivia extends Game {
 
                     menu.deferReply();
                     setTimeout(() => {
-                        menu.reply(util.message(this.message).interface.genEmbeds({
+                        menu.editReply(util.Message(this.message).interface.genEmbeds({
                             title: "Dynamic Trivia - Game Over...",
                             color: "D0021B", //Red
                             desc: `<:no:669928674119778304> You answered incorrectly...\n\n**😿 Game over!**\nYou correctly answered ${this.score} questions in a row.\n** **`,
@@ -413,7 +413,7 @@ class Trivia extends Game {
                             ],
                             footer: [this.player.username, `Completed ${this.score}/${this.target}`]
                         }, this.message));
-                    }, 4000);
+                    }, 2500);
                     this.endGame();
                     return;
 
@@ -435,53 +435,56 @@ class Trivia extends Game {
 
 module.exports = {
     commands: [
-        new Command({
+        new ExpansionCommand("games", (client, settings) => ({
             expansion: true,
             name: "dynamictrivia",
             desc: "Answer multiple increasingly challenging questions in a row to win this trivia game!",
             cooldown: 60,
             aliases: ["trivia", "dtrivia"],
+            initialize() {
+
+                if (settings.trivia?.cheat) client.setting("games.trivia.cheat_mode", true);
+                else client.setting("games.trivia.cheat_mode", false);
+
+                if (!client.expansions.has("points")) return;
+        
+                //Point reward on winning trivia
+                client.expansions.get("points").Config.leveling.addDefault("game_trivia", {
+                    points: Trivia.SCORE_TARGET,
+                    dailyCap: 1,
+                    type: "message"
+                });
+        
+            },
             async execute(message) {
 
-            let game = new Trivia(message);
+                let game = new Trivia(message);
 
-            if (game.alreadyRunning) {
-                var m = await message.channel.button("You are already running a Dynamic Trivia game(s). To avoid bugs or confusion caused by duplicate games, you must end your earlier game to start a new one.", {
-                    color: "red",
-                    label: "End Previous Game"
-                });
-                
-                m.startButtonCollector(async (button) => {
+                if (game.alreadyRunning) {
+                    var m = await message.channel.button("You are already running a Dynamic Trivia game(s). To avoid bugs or confusion caused by duplicate games, you must end your earlier game to start a new one.", {
+                        color: "red",
+                        label: "End Previous Game"
+                    });
+                    
+                    m.startButtonCollector(async (button) => {
 
-                    if (button.user.id != message.author.id) return;
+                        if (button.user.id != message.author.id) return;
 
-                    m.endButtonCollector();
-                    m.buttons.permDisable(button);
+                        m.endButtonCollector();
+                        m.buttons.permDisable(button);
 
-                    game.endGame();
+                        game.endGame();
 
-                    button.reply("Your previous Dynamic Trivia game(s) has been ended. You can now start a new game!", true);
+                        button.reply({content: "Your previous Dynamic Trivia game(s) has been ended. You can now start a new game!", ephemeral: true});
 
-                });
+                    });
 
-                return;
+                    return;
+                }
+
+                game.render();
+
             }
-
-            game.render();
-
-        }})
-    ],
-
-    initialize(client) {
-
-        if (!client.expansions.has("points")) return;
-
-        //Point reward on winning trivia
-        client.expansions.get("points").Config.leveling.addDefault("game_trivia", {
-            points: Trivia.SCORE_TARGET,
-            dailyCap: 1,
-            type: "message"
-        });
-
-    }
+        }))
+    ]
 }

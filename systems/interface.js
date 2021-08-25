@@ -1,6 +1,6 @@
-//@ts-check
+// @ts-check
 
-const { ContentSupplier, ElisifSet, MRPromise } = require('../util/Utility');
+const { ContentSupplier, ElisifSet, MRPromise, util } = require('../util/Utility');
 class Interface {
 
     /**
@@ -348,8 +348,76 @@ class Interface {
 
             setTimeout(() => {
 
+                if (m.channel.type != "DM") m.reactions.removeAll();
+
                 if (collected) return;
                 reject(`User did not react within ${time} minutes.`);
+
+            }, time * 60 * 1000);
+
+        });
+    }
+
+    /**
+     * Creates and sends a new button menu, a button collector to perform actions on user button click.
+     * 
+     * Note: `Interface.buttonMenu()` returns an MRPromise. Unlike regular Promises, the output of an MRPromise can only be retrieved with `MRPromise.manyThen((buttonInteraction) => void)`.
+     * Errors can also only be received using `MRPromise.manyCatch(reason => void)`. If multiple promise rejection errors occur, the method defined by `.manyCatch()` will execute for each error.
+     * The MRPromise is used instead of a regular Promise because it can resolve multiple times. This means the method defined by `.manyThen()` will execute every time a valid reaction is received.
+     * 
+     * Example use: `Interface.buttonMenu({...}).manyThen((m, r) => ...).manyCatch(reason => ...)`
+     * 
+     * @param {Object} options - The options for the button menu
+     * @param {import("discord.js").Message} options.message - The Message or CommandInteraction to respond to with this button menu
+     * @param {String} options.question - Message or embed to send and collect button clicks from
+     * @param {Object[]|Set} options.buttons - Array or Set of button objects to send and collect clicks from with this button menu
+     * @param {Number} [options.time] - Optional time in minutes to wait before closing the button menu. Defaults to 2 minutes.
+     * @param {boolean} [options.allUsers] - Whether to collect the clicks of all users, or just the author of the message. Defaults to false (just the author).
+     * @param {boolean} [options.disableOnEnd] - Whether to disable the provided buttons in the button menu when the menu closes. Defaults to true.
+     * @returns {MRPromise} - A multi-resolve promise that resolves with the clicked button.
+     */
+     static buttonMenu({
+        message,
+        question,
+        buttons = new Set(),
+        time = 2,
+        allUsers = false,
+        disableOnEnd = true
+    }) {
+
+        var collected = false;
+
+        util.Message(message);
+        // @ts-ignore
+        message.util.Channel();
+
+        const set = ElisifSet.from(buttons);
+        // @ts-ignore
+        const author = message.util.author;
+
+        // @ts-ignore
+        return new MRPromise(async () => {
+            // @ts-ignore
+            return message.channel.util.button(question, set.toArray());
+        }, (m, resolve, reject) => {
+
+            m.startButtonCollector(button => {
+
+                if (!allUsers && button.user.id != author.id) return;
+
+                collected = true;
+                util.Component(button);
+                resolve(button);
+
+            });
+
+            setTimeout(() => {
+
+                m.endButtonCollector();
+                if (disableOnEnd) set.toArray().forEach((_v, index) => m.buttons.get(index).disable());
+
+                if (collected) return;
+                reject(`User did not click a button within ${time} minutes.`);
 
             }, time * 60 * 1000);
 
@@ -366,13 +434,15 @@ class Interface {
      * @param {String} options.elements[].value - Field content
      * @param {Number} options.perPage - Number of elements per page. Defaults to 2.
      * @param {boolean} [options.allUsers] - Whether all users can interact with the pagination menu, or just the author of the provided message. It is recommended to keep this false for the best experience. Defaults to false.
+     * @param {Number} [options.time] - The amount of time in minutes to run the pagination menu for.
      */
     static async reactionPaginator({
         message,
         embed,
         elements = [],
         perPage = 2,
-        allUsers = false
+        allUsers = false,
+        time = 10
     }) {
 
         if (!(embed instanceof ContentSupplier) || embed.origin != "embedContext") embed = Interface.createEmbed(embed, message);
@@ -403,7 +473,7 @@ class Interface {
             message,
             question: embed,
             reactions: ['⬅️', '➡️'],
-            time: 60,
+            time,
             allUsers
         });
 
@@ -435,6 +505,133 @@ class Interface {
                     embed.footer.text = embed.footer.text.substring(0, embed.footer.text.lastIndexOf("•")) + "• " + (pageIndex + 1) + "/" + pages.length;
                     m.edit({embeds: [embed]});
                 }
+            }
+
+        });
+
+    }
+
+    /**
+     * Creates and sends a new button pagination menu, a button menu that cycles through pages of an embed on button click
+     * @param {Object} options - The options for the button pagination menu
+     * @param {import("discord.js").Message} options.message - Discord Message or CommandInteraction object
+     * @param {ContentSupplier|Object} options.embed - The embed to send and paginate 
+     * @param {Object[]} options.elements - Array of fields to cycle through when paginating
+     * @param {String} options.elements[].name - Field title
+     * @param {String} options.elements[].value - Field content
+     * @param {Number} options.perPage - Number of elements per page. Defaults to 2.
+     * @param {boolean} [options.allUsers] - Whether all users can interact with the pagination menu, or just the author of the provided message. It is recommended to keep this false for the best experience. Defaults to false.
+     * @param {boolean} [options.disableOnEnd] - Whether to disable the provided buttons in the button menu when the menu closes. Defaults to true.
+     * @param {String} [options.prevEmote] - The emote to use for the "previous" button. None by default.
+     * @param {String} [options.nextEmote] - The emote to use for the "next" button. None by default.
+     * @param {String} [options.prevColor] - The color to use for the "previous" button. Blue by default.
+     * @param {String} [options.nextColor] - The color to use for the "next" button. Blue by default.
+     * @param {Number} [options.time] - The amount of time in minutes to run the pagination menu for.
+     */
+     static async buttonPaginator({
+        message,
+        embed,
+        elements = [],
+        perPage = 2,
+        allUsers = false,
+        disableOnEnd = true,
+        prevEmote = null,
+        nextEmote = null,
+        prevColor = "blue",
+        nextColor = "blue",
+        time = 10
+    }) {
+
+        if (!(embed instanceof ContentSupplier) || embed.origin != "embedContext") embed = Interface.createEmbed(embed, message);
+
+        var insertions = 0;
+        var pages = [];
+        var page = [];
+        var pageIndex = 0;
+        
+        elements.forEach((elem) => {
+            insertions++;
+
+            page.push(elem);
+            if (insertions == perPage) {
+                pages.push(page);
+                page = [];
+                insertions = 0;
+            }
+        });
+
+        if (pages[pages.length - 1] != page && page.length != 0) pages.push(page);
+        embed.fields = pages[pageIndex];
+
+        embed.footer = embed.footer ?? {text: ""};
+        embed.footer.text += " • " + (pages.length == 0 ? 0 : pageIndex + 1) + "/" + pages.length;
+
+        const menu = Interface.buttonMenu({
+            message,
+            question: embed,
+            buttons: [{
+                color: prevColor,
+                emoji: prevEmote,
+                label: "Previous",
+                disabled: true
+            }, {
+                color: nextColor,
+                emoji: nextEmote,
+                label: "Next",
+                disabled: pages.length <= 1
+            }],
+            time,
+            allUsers,
+            disableOnEnd
+        });
+
+        // @ts-ignore
+        menu.manyThen(button => {
+
+            button.deferUpdate();
+            let m = button.message;
+            util.Component(button);
+
+
+            if (button.util.label == 'Previous') {
+                //Back
+                pageIndex--;
+                let components = m.components;
+
+                if (pageIndex == 0) {
+                    components[0].components[0].setDisabled(true);
+                    // m.client.debug("Disabling Previous button");
+                }
+                if (pageIndex < pages.length - 1) {
+                    let nextBtn = button.util.manager.get(1);
+                    if (nextBtn.disabled) {
+                        components[0].components[1].setDisabled(false);
+                        // m.client.debug("Enabling Next button");
+                    }
+                }
+
+                embed.fields = pages[pageIndex];
+                embed.footer.text = embed.footer.text.substring(0, embed.footer.text.lastIndexOf("•")) + "• " + (pageIndex + 1) + "/" + pages.length;
+                m.edit({embeds: [embed], components});
+            }
+            else if (button.util.label == 'Next') {
+                //Forward
+                pageIndex++;
+                let components = m.components;
+
+                if (pageIndex == pages.length - 1) {
+                    components[0].components[1].setDisabled(true);
+                    // m.client.debug("Disabling Next button");
+                }
+                if (pageIndex > 0) {
+                    let prevBtn = button.util.manager.get(0);
+                    if (prevBtn.disabled) components[0].components[0].setDisabled(false);
+                    // m.client.debug("Enabling Previous button");
+                }
+
+                embed.fields = pages[pageIndex];
+                embed.footer.text = embed.footer.text.substring(0, embed.footer.text.lastIndexOf("•")) + "• " + (pageIndex + 1) + "/" + pages.length;
+                m.edit({embeds: [embed], components});
             }
 
         });

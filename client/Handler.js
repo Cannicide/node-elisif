@@ -21,7 +21,7 @@ const bot_intents = Utility.getIntentEnums();
 const priv_intents = Utility.getPrivilegedIntentEnums();
 
 //Discord.js extension
-const DiscordExtender = require("../systems/extendables");
+const DiscordExtender = require("../systems/events");
 
 //Interpreter
 const Interpreter = require("../systems/interpreter");
@@ -96,6 +96,8 @@ class ExtendedClient extends Discord.Client {
       //Initialize Discord.js extension before client construction
       new DiscordExtender();
       djsOptions.intents = privilegedIntents ? intents.concat(priv_intents) : intents;
+      if (!djsOptions.partials) djsOptions.partials = [];
+      if (!djsOptions.partials.includes("CHANNEL")) djsOptions.partials.push("CHANNEL"); //Allows receiving DMs
       return djsOptions;
     })());
 
@@ -105,7 +107,7 @@ class ExtendedClient extends Discord.Client {
 
       //Setup express server
       listener = app.listen(port, function() {
-        console.log(`${name} listening on port ${listener.address().port}`);
+        console.log(`\n\n${name} listening on port ${listener.address().port}`);
       });
     }
     
@@ -124,25 +126,31 @@ class ExtendedClient extends Discord.Client {
     //Setup expansion methods
     this.expansions = new ExpansionManager(expansions);
 
-    //Assign this object to the ID-client map
-    clients.set(this.user?.id, this);
+    //Setup prefix methods
+    this.prefix = new PrefixHandler(this);
+    this.prefix.set(prefix);
+
+    //Setup presence cycler method
+    presences = presences ?? [`${this.prefix.get()}help`];
+    this.PresenceCycler = new PresenceCycler(presences, presenceDuration, this);
+
+    //Add debugging utility
+    this.debug = (...loggings) => {
+      if (arguments.length == 0) return this.settings.Global().get("debug_mode");
+      if (this.settings.Global().get("debug_mode")) return console.log(...loggings);
+    }
 
     //Assign this object to the name-client map
     nclients.set(name, this);
 
     //Setup ready event handler
     this.once("ready", () => {
-      console.log(`${name} is up and running!`);
+      console.log(`${name} is up and running!\n\n`);
 
-      //Setup prefix methods
-      this.prefix = new PrefixHandler(this);
-      this.prefix.set(prefix);
+      //Assign this object to the ID-client map
+      clients.set(this.user?.id, this);
 
-      //Setup presence cycler method
-      presences = presences ?? [`${this.prefix.get()}help`];
-      this.PresenceCycler = new PresenceCycler(presences, presenceDuration, this);
-
-      if (Settings.Global().get("presence_cycler")) this.PresenceCycler.cycle(this.twitch);
+      if (this.settings.Global().get("presence_cycler")) this.PresenceCycler.cycle(this.twitch);
       else this.user.setActivity(`${this.prefix.get()}help`, {type: 'STREAMING', url: this.twitch});
 
       const logGuild = logs ? this.guilds.cache.get(logs.guildID) : false;
@@ -165,7 +173,7 @@ class ExtendedClient extends Discord.Client {
         this.commands.initialize(autoInitialize.path);
 
         //Auto initialize message event
-        this.on("message", (message) => {
+        this.on("messageCreate", (message) => {
 
           try {
 
@@ -205,6 +213,8 @@ class ExtendedClient extends Discord.Client {
           Interpreter.reactions.handle(r, user, false);
         });
 
+        this.debug("Successfully auto-initialized command and interpreter handlers.");
+
       }
 
       this.refreshCache();
@@ -212,7 +222,8 @@ class ExtendedClient extends Discord.Client {
     });
 
     //Setup custom event handlers
-    DiscordExtender.extendEvents(client);
+    DiscordExtender.extendEvents(this);
+    this.debug("Successfully extended discord.js events.");
 
   }
 
@@ -226,8 +237,26 @@ class ExtendedClient extends Discord.Client {
     return clients.get(identifier);
   }
 
+  get util() {
+    return Utility;
+  }
+
   get settings() {
     return new Settings(this);
+  }
+
+  setting(sett, val) {
+    if (arguments.length == 0) return this.settings.Global();
+    if (arguments.length == 1) return this.settings.Global().get(sett);
+    if (arguments.length == 2) return this.settings.Global().set(sett, val);
+  }
+
+  authorNames() {
+    return this.authors.map(author => author.username);
+  }
+
+  authorIds() {
+    return this.authors.map(author => author.id);
   }
 
   async refreshCache() {

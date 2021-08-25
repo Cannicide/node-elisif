@@ -41,7 +41,22 @@
 - Converted ButtonManager to UtilButtonManager, now uses discord.js 13.x.x and structure utility classes
 - Converted SelectMenuManager to UtilSelectManager, now uses discord.js 13.x.x and structure utility classes
 - Added NamespacedCommand and NamespacedSlashCommand; these allow command options to access the client that initialized the command.
+- Added expansion settings, allowing for MUCH easier configuration of expansion features
 - Added ExpansionCommand and ExpansionSlashCommand extending namespaced commands; allow accessing expansion settings in command options
 - All expansion commands now use the new utility methods, and those that access the client now use ExpansionCommand
 - Added SlashUtility class
-- Client.prefix and Client.PresenceCycler are now only available after ready event is emitted
+- Added contextMenu, slashCommand, buttonClick, and menuSelect utility events
+- Renamed extendables.js to events.js to better reflect its new functionality
+- The ID-client map used by the multi-client system is now only accessible after the ready event has been emitted
+- Fixed being unable to receive DMs due to changes in Discord API v9 and discord.js 13.x.x
+- Made help command (Help expansion) work in both guilds and DMs by default
+- Added much better output for Eval expansion, ability to use `await` within eval, and support for Promise and object literal output
+- Altered source of placeholder images in Games expansion
+- Fixed trivia command in Games expansion, cut down time of responses for answer validation and game victory responses
+- Added utility methods to Client for debugging and retrieving global settings more easily
+- Added listMenu(), buttonMenu(), and buttonPaginator() methods to Interface
+- Commands shown by the help command are now finally in alphabetical order!
+- The help command now primarily uses button pagination! Reactions can be used instead by enabling the expansion setting `useReactions`
+- Fixed VCA, updated to use discord.js 13.x.x and discord API v9 invite generation
+- Fixed issues in all expansions, improved all expansions
+- Fixed and improved slash command setup and handling systems

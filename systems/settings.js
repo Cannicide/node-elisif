@@ -13,6 +13,7 @@ class LocalSettings {
 
     #id;
     #table;
+    #client;
 
     /**
      * Local, guild-dependent settings
@@ -24,7 +25,8 @@ class LocalSettings {
         if (isNaN(locale) && locale != "global") throw new Error("Invalid locale passed to LocalSettings constructor.");
 
         this.#id = locale;
-        this.#table = evg.table(client.user.id).table(locale);
+        this.#table = evg.table(client.name).table(locale);
+        this.#client = client;
 
     }
 
@@ -44,7 +46,7 @@ class LocalSettings {
     }
 
     exists() {
-        return evg.has(this.getLocale()) && evg.get(this.getLocale()) != null && Object.keys(evg.get(this.getLocale())).length > 0;
+        return evg.table(this.#client.name).has(this.getLocale()) && evg.table(this.#client.name).get(this.getLocale()) != null && Object.keys(evg.table(this.#client.name).get(this.getLocale())).length > 0;
     }
 
     getLocale() {
@@ -52,14 +54,16 @@ class LocalSettings {
     }
 
     set(setting, value) {
+        if (this.get(setting) == value) return;
         this.#table.set(setting, value);
+        if (setting != "settings_default" && this.get("settings_default")) this.set("settings_default", false);
     }
 
     setLocalDefaults() {
         this.set("channelfx", []);
         this.set("nickname", false);
-        this.set("settings_default", true);
         this.set("local_prefix", false);
+        this.set("settings_default", true);
     }
 
     isLocal() {
@@ -97,9 +101,9 @@ class GlobalSettings extends LocalSettings {
     setGlobalDefaults() {
         this.set("presence_cycler", true);
         this.set("debug_mode", false);
-        this.set("settings_default", true);
         this.set("global_prefix", "/");
         this.set("refresh_cache_on_boot", false);
+        this.set("settings_default", true);
     }
 
     setLocalDefaults() {

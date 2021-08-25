@@ -150,6 +150,7 @@ class SlashCommand {
     static setupEvent(client) {
 
         client.on("slashCommand", (slash) => {
+            client.debug("Received slash command interaction...");
             SlashCommand.execute(slash);
         });
 
@@ -184,38 +185,9 @@ class SlashCommand {
         let appManager = new SlashManager(client);
         appManager.setAll(appCommands);
 
-
-
-        /*
-            OLD WAY OF SETTING UP COMMANDS
-            Uses SlashCommand.setup() on all slash commands.
-        */
-
-        // //Setup all slash commands
-        // for (let command of SlashCommand.COMMANDS.values()) {
-        //     command.setup(client);
-        // }
-
-        // SlashCommand.setupEvent(client);
-        // SlashCommand.isPostSetup = true;
-
-        // //Remove all unused guild slash commands
-        // var guildCommands = [...SlashCommand.COMMANDS.values()].filter(cmd => cmd.guilds);
-        // var usedGuilds = [];
-
-        // guildCommands.forEach(cmd => {
-        //     cmd.guilds.forEach(guild => {
-        //         if (usedGuilds.includes(guild)) return;
-
-        //         let manager = new SlashManager(guild, client, client.token, client.public_key);
-        //         let matchingCommands = guildCommands.filter(command => command.guilds.includes(guild));
-        //         let names = matchingCommands.map(command => command.name);
-
-        //         usedGuilds.push(guild);
-
-        //         manager.deleteAllExcept(names);
-        //     });
-        // });
+        //Setup slash command event
+        SlashCommand.setupEvent(client);
+        SlashCommand.isPostSetup = true;
 
     }
 
@@ -244,11 +216,15 @@ class SlashCommand {
         let command = SlashCommand.getCommand(slash.command);
         let failsFilter = SlashCommand.failsFilter(command, slash);
 
+        slash.client.debug("Handling slash interaction...");
+
         if (!failsFilter) {
-            const slashInteraction = SlashManager.generateFromInteraction(Utility.slash(slash));
+            slash.client.debug(`Interaction contains valid command that passed filters. Handling command "${command.name}"...`);
+            const slashInteraction = SlashManager.generateFromInteraction(Utility.Slash(slash));
             return command.method(slashInteraction);
         }
         else {
+            slash.client.debug("Interaction failed filters or contains invalid command.");
             return slash.reply({
                 content: "An error occurred:\n\n" + failsFilter,
                 ephemeral: true
@@ -284,6 +260,7 @@ class SlashCommand {
 
     /**
      * A class representing a builder utility for Slash Command Subgroups.
+     * @returns {SubGroupBuilder}
      */
     static SubGroupBuilder = class SubGroupBuilder {
 
@@ -331,6 +308,7 @@ class SlashCommand {
 
     /**
      * A class representing a builder utility for Slash Command Subcommands.
+     * @returns {SubCommandBuilder}
      */
     static SubCommandBuilder = class SubCommandBuilder {
 
@@ -442,6 +420,7 @@ class SlashCommand {
 
     /**
      * A class representing a builder utility for Slash Command Arguments.
+     * @returns {ArgumentBuilder}
      */
     static ArgumentBuilder = class ArgumentBuilder {
 
@@ -452,6 +431,7 @@ class SlashCommand {
          * @param {String} [options.type] - The type of the argument.
          * @param {String} [options.choices] - Optional static, defined choices/values of the argument for the user to choose from.
          * @param {boolean} [options.optional] - Whether the argument is optional or not.
+         * @constructor
          */
         constructor(options) {
             this.type = options?.type ?? "string";
@@ -520,6 +500,7 @@ class SlashCommand {
 
     /**
      * A class representing a builder utility for Slash Commands.
+     * @returns {SlashCommandBuilder}
      */
     static SlashCommandBuilder = class SlashCommandBuilder {
    
@@ -563,43 +544,66 @@ class SlashCommand {
            this.options.args = this.options.args ?? [];
        }
 
+       /**
+        * @returns {this}
+       */
        setName(name) {
            this.options.name = name;
            return this;
        }
 
+       /**
+        * @returns {this}
+       */
        setDescription(desc) {
            this.options.desc = desc;
            return this;
        }
 
        /**
-        * @param {(slash:CommandInteraction) => void} method - The method to execute when this slash command is used.
+        * @param {(slash:import("../util/SlashUtility")) => void} method - The method to execute when this slash command is used.
+        * @returns {this}
        */
        setMethod(method) {
             this.options.execute = method;
+            return this;
        }
 
+       /**
+        * @returns {this}
+       */
        setPerms(perms) {
            this.options.perms = perms;
            return this;
        }
 
+       /**
+        * @returns {this}
+       */
        setRoles(roles) {
            this.options.roles = roles;
            return this;
        }
 
+       /**
+        * @returns {this}
+       */
        setChannels(channels) {
            this.options.channels = channels;
            return this;
        }
 
+       /**
+        * @returns {this}
+       */
        setGuilds(guilds) {
            this.options.guilds = guilds;
            return this;
        }
 
+       /**
+        * @returns {this} SlashCommandBuilder
+       */
        setDataOptions(options) {
            this.options = options;
            return this;
@@ -608,7 +612,7 @@ class SlashCommand {
        /**
         * Sets all arguments of this slash command. Overrides any existing arguments that were previously added by this builder.
         * @param {Object[]|SlashCommand.SubGroupBuilder[]|SlashCommand.SubCommandBuilder[]|SlashCommand.ArgumentBuilder[]} args - A list of the possible arguments/groups/subcommands of this slash command.
-        * @returns {SlashCommand.SlashCommandBuilder} SlashCommandBuilder
+        * @returns {this} SlashCommandBuilder
         */
        setArguments(args) {
            this.options.args = args;
@@ -619,7 +623,7 @@ class SlashCommand {
         * Adds a subgroup to this slash command.
         * Either a plain object literal or a SubGroupBuilder can be provided as output of the parameter function.
         * @param {(subGroup:SlashCommand.SubGroupBuilder)=>SlashCommand.SubGroupBuilder} group - A subgroup argument to add to this slash command.
-        * @returns {SlashCommand.SlashCommandBuilder} SlashCommandBuilder
+        * @returns {this} SlashCommandBuilder
         */
        addSubGroup(group) {
            this.options.args.push(group(new SlashCommand.SubGroupBuilder()));
@@ -630,7 +634,7 @@ class SlashCommand {
         * Adds a subcommand to this slash command.
         * Either a plain object literal or a SubCommandBuilder can be provided as output of the parameter function.
         * @param {(subCommand:SlashCommand.SubCommandBuilder)=>SlashCommand.SubCommandBuilder} cmd - A subcommand argument to add to this slash command.
-        * @returns {SlashCommand.SlashCommandBuilder} SlashCommandBuilder
+        * @returns {this} SlashCommandBuilder
         */
        addSubCommand(cmd) {
            this.options.args.push(cmd(new SlashCommand.SubCommandBuilder()));
@@ -641,7 +645,7 @@ class SlashCommand {
         * Adds an argument to this slash command. The argument can only be a regular argument, and not a subgroup or subcommand.
         * Either a plain object literal or an ArgumentBuilder can be provided as output of the parameter function.
         * @param {(arg:SlashCommand.ArgumentBuilder)=>SlashCommand.ArgumentBuilder} arg - An argument to add to this slash command.
-        * @returns {SlashCommand.SlashCommandBuilder} SlashCommandBuilder
+        * @returns {this} SlashCommandBuilder
         */
        addArgument(arg, type) {
             this.options.args.push(arg(new SlashCommand.ArgumentBuilder({type: type ?? "string"})));
@@ -650,7 +654,7 @@ class SlashCommand {
 
        /**
          * @param {(arg:SlashCommand.ArgumentBuilder)=>SlashCommand.ArgumentBuilder} arg - A String subargument to add to this command.
-         * @returns {SlashCommand.SlashCommandBuilder} This SlashCommandBuilder
+         * @returns {this} SlashCommandBuilder
          * */
         addStringArg(arg) {
             return this.addArgument(arg, "string");
@@ -658,7 +662,7 @@ class SlashCommand {
 
         /**
          * @param {(arg:SlashCommand.ArgumentBuilder)=>SlashCommand.ArgumentBuilder} arg - An Integer subargument to add to this command.
-         * @returns {SlashCommand.SlashCommandBuilder} This SlashCommandBuilder
+         * @returns {this} SlashCommandBuilder
          * */
          addIntegerArg(arg) {
             return this.addArgument(arg, "integer");
@@ -666,7 +670,7 @@ class SlashCommand {
 
         /**
          * @param {(arg:SlashCommand.ArgumentBuilder)=>SlashCommand.ArgumentBuilder} arg - A Boolean subargument to add to this command.
-         * @returns {SlashCommand.SlashCommandBuilder} This SlashCommandBuilder
+         * @returns {this} SlashCommandBuilder
          * */
          addBooleanArg(arg) {
             return this.addArgument(arg, "boolean");
@@ -674,7 +678,7 @@ class SlashCommand {
 
         /**
          * @param {(arg:SlashCommand.ArgumentBuilder)=>SlashCommand.ArgumentBuilder} arg - A User subargument to add to this command.
-         * @returns {SlashCommand.SlashCommandBuilder} This SlashCommandBuilder
+         * @returns {this} SlashCommandBuilder
          * */
          addUserArg(arg) {
             return this.addArgument(arg, "user");
@@ -682,7 +686,7 @@ class SlashCommand {
 
         /**
          * @param {(arg:SlashCommand.ArgumentBuilder)=>SlashCommand.ArgumentBuilder} arg - A Channel subargument to add to this command.
-         * @returns {SlashCommand.SlashCommandBuilder} This SlashCommandBuilder
+         * @returns {this} SlashCommandBuilder
          * */
          addChannelArg(arg) {
             return this.addArgument(arg, "channel");
@@ -690,7 +694,7 @@ class SlashCommand {
 
         /**
          * @param {(arg:SlashCommand.ArgumentBuilder)=>SlashCommand.ArgumentBuilder} arg - A Role subargument to add to this command.
-         * @returns {SlashCommand.SlashCommandBuilder} This SlashCommandBuilder
+         * @returns {this} SlashCommandBuilder
          * */
          addRoleArg(arg) {
             return this.addArgument(arg, "role");
@@ -698,7 +702,7 @@ class SlashCommand {
 
         /**
          * @param {(arg:SlashCommand.ArgumentBuilder)=>SlashCommand.ArgumentBuilder} arg - A Mention subargument to add to this command.
-         * @returns {SlashCommand.SlashCommandBuilder} This SlashCommandBuilder
+         * @returns {this} SlashCommandBuilder
          * */
          addMentionArg(arg) {
             return this.addArgument(arg, "mention");
@@ -706,7 +710,7 @@ class SlashCommand {
 
         /**
          * @param {(arg:SlashCommand.ArgumentBuilder)=>SlashCommand.ArgumentBuilder} arg - A Float subargument to add to this command.
-         * @returns {SlashCommand.SlashCommandBuilder} This SlashCommandBuilder
+         * @returns {this} SlashCommandBuilder
          * */
          addFloatArg(arg) {
             return this.addArgument(arg, "float");

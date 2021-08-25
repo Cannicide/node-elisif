@@ -2,34 +2,18 @@
 
 const { ExpansionCommand: Command, util } = require("../index");
 
-module.exports = new Command((client, settings) => ({
-  expansion: true,
-  name: "help",
-  desc: settings?.desc ?? "Gets a list of all commands, parameters, and their descriptions.\nFormat: [optional] parameters, <required> parameters, optional (flag) parameters.",
-  args: [
-    {
-      name: "command",
-      optional: true
-    },
-    {
-      name: "nf",
-      flag: "Displays only basic command info."
-    }
-  ],
-  aliases: ["bothelp", client.name ? client.name.toLowerCase().replace(/[^a-z0-9]/g, "") : "elisifhelp"],
-  
-  execute(message) {
+function helpCommand(client, message, useReactions) {
 
-    var cmds, thumb;
-    var args = util.message(message).args;
-    var prefix = util.message(message).prefix;
+  var cmds, thumb;
+    var args = util.Message(message).args;
+    var prefix = util.Message(message).prefix;
 
     if (message.guild) {
-      cmds = client.commands.all().filter(cmd => cmd.guilds.length == 0 || cmd.guilds.includes(message.guild.id) || cmd.guilds.includes(message.guild.name));
+      cmds = client.commands.all().filter(cmd => cmd.guilds.length == 0 || cmd.guilds.includes(message.guild.id) || cmd.guilds.includes(message.guild.name)).sort((a,b) => a.name.localeCompare(b.name));
       thumb = message.guild.iconURL({dynamic: true});
     }
     else {
-      cmds = client.commands.all();
+      cmds = client.commands.all().sort((a,b) => a.name.localeCompare(b.name));
       thumb = client.user.displayAvatarURL({dynamic: true});
     }
 
@@ -77,11 +61,11 @@ module.exports = new Command((client, settings) => ({
       var fields = false;
 
       //Add more information for this single command, if flag unspecified
-      if (!message.hasFlag("-nf")) {
+      if (!util.Message(message).hasFlag("-nf")) {
         fields = [
           {
-            name: "DM-Only Command",
-            value: cmd.dm_only ? "Only works in DMs." : (cmd.guild_only ? "Only works in guilds." : "Works in both DMs and guilds."),
+            name: "Usage Area",
+            value: cmd.dm_only ? "Only works in **DMs**." : (cmd.guild_only ? "Only works in **guilds**." : "Works in both **DMs and guilds**."),
             inline: true
           },
           {
@@ -90,8 +74,8 @@ module.exports = new Command((client, settings) => ({
             inline: true
           },
           {
-            name: "Whitelisted Channels",
-            value: cmd.channels.length > 0 ? cmd.channels.join(", ") : "Command works in all channels",
+            name: "Whitelist",
+            value: "**Channels:** " + (cmd.channels.length > 0 ? cmd.channels.join(", ") : "ALL") + "\n**Guilds:** " + (cmd.guilds.length > 0 ? cmd.guilds.join(", ") : "ALL"),
             inline: true
           },
           {
@@ -101,20 +85,20 @@ module.exports = new Command((client, settings) => ({
           },
           {
             name: "Special Properties",
-            value: (cmd.invisible ? "**Visible in Help:** No" : "**Visible in Help:** Yes") + "\n" + (cmd.flags ? "**Flags:** " + cmd.flags.map(flag => `${flag.name} (${flag.desc})`).join(", ") : ""),
+            value: "**Visible in Help:** " + (cmd.invisible ? "No" : "Yes") + "\n" + (cmd.flags ? "**Flags:** " + cmd.flags.map(flag => `${flag.name} (${flag.desc})`).join(", ") : ""),
             inline: true
           },
           {
             name: "Use Requirements",
-            value: cmd.perms || cmd.roles ? ((cmd.perms ? "**Perms:** " + cmd.perms.join(", ") + "\n" : "") + (cmd.roles ? "**Roles:** " + cmd.roles.join(", ") : "")) : "None",
+            value: cmd.perms.length > 0 || cmd.roles.length > 0 ? ((cmd.perms.length > 0 ? "**Perms:** " + cmd.perms.join(", ") + "\n" : "") + (cmd.roles.length > 0 ? "**Roles:** " + cmd.roles.join(", ") : "")) : "None",
             inline: true
           }
         ];
       }
 
-      if (res.name == "Eval Command" && fields) fields.find(field => field.name == "Use Requirements").value = "**Users:** Bot developers only";
+      if (cmd.devs_only && fields) fields.find(field => field.name == "Use Requirements").value = "**Users:** " + (client.authorNames().length > 0 ? client.authorNames().join(", ") : "Bot Developers");
 
-      util.channel(message.channel, message).embed({
+      util.Channel(message.channel, message).embed({
         title: res.name,
         desc: res.value,
         thumbnail: thumb,
@@ -133,14 +117,43 @@ module.exports = new Command((client, settings) => ({
         }
       });
 
-      util.channel(message.channel, message).paginate({
+      message.util.Channel().paginate({
         title: "**Commands**",
         desc: client.description ?? "Now viewing the commands for this discord bot.",
         fields: pages.slice(0, 2),
         thumbnail: thumb
-      }, pages, 2);
+      }, pages, 2, 1, useReactions);
 
     }
 
-  }
-}));
+}
+
+function helpOptions(name, client, settings) {
+
+  return {
+    expansion: true,
+    name: name,
+    guild_only: false,
+    desc: settings?.desc ?? "Gets a list of all commands, parameters, and their descriptions.\nFormat: [optional] parameters, <required> parameters, optional (flag) parameters.",
+    args: [
+      {
+        name: "command",
+        optional: true
+      },
+      {
+        name: "nf",
+        flag: "Displays only basic command info."
+      }
+    ],
+    aliases: ["bothelp", client.name ? client.name.toLowerCase().replace(/[^a-z0-9]/g, "") : "elisifhelp"],
+    execute(message) {
+      helpCommand(client, message, settings.useReactions);
+    }
+  };
+}
+
+module.exports = {
+  commands: [
+    new Command("help", (client, settings) => helpOptions("help", client, settings))
+  ]
+};

@@ -14,6 +14,7 @@ class NamespacedCommand {
     }
 
     build(client) {
+        client.debug("Building " + (this.name ? `ExpansionCommand for expansion "${this.name}"...` : "NamespacedCommand..."));
         return new Command(this.optionsFunction(client));
     }
 
@@ -22,6 +23,7 @@ class NamespacedCommand {
 class NamespacedSlashCommand extends NamespacedCommand {
 
     build(client) {
+        client.debug("Building " + (this.name ? `ExpansionSlashCommand for expansion "${this.name}"...` : "NamespacedSlashCommand..."));
         return new SlashCommand(this.optionsFunction(client));
     }
 

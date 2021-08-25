@@ -2,12 +2,17 @@
 const MessageUtility = require('./MessageUtility');
 const TextChannelUtility = require('./TextChannelUtility');
 const GuildMemberUtility = require('./GuildMemberUtility');
+const GuildUtility = require('./GuildUtility');
 const { ButtonUtility, SelectUtility, ComponentUtility } = require('./ComponentUtility');
 const SlashUtility = require('./SlashUtility');
 const StructureUtility = require('./StructureUtility');
 const { Intents, Permissions } = require('discord.js');
 
 class Utility {
+    
+    get util() {
+        return this;
+    }
 
     /**
      * @param {string} str
@@ -75,6 +80,16 @@ class Utility {
         };
     }
 
+    /** 
+     * Makes an existing Message object sendable, for example to make it possible to edit a message with a modified version of itself.
+    */
+    makeSendable(message) {
+        if (message.content == "") message.content = undefined;
+        return message;
+    }
+
+    //Custom utility classes:
+
     ContentSupplier = class MessageContentSupplier {
         constructor(origin, contentData = {}) {
 
@@ -96,7 +111,7 @@ class Utility {
         }
 
         static is(supplier) {
-            return "isContentSupplier" in supplier && supplier.isContentSupplier();
+            return typeof supplier != "string" && "isContentSupplier" in supplier && supplier.isContentSupplier();
         }
 
         static asEmbedsIfSupplier(supplier) {
@@ -111,7 +126,7 @@ class Utility {
     }
 
     ElisifSet = class ElisifSet extends Set {
-        constructor(values) {
+        constructor(...values) {
             super();
             values.forEach(val => this.add(val));
         }
@@ -126,6 +141,14 @@ class Utility {
 
         get(index) {
             return this.toArray()[index];
+        }
+
+        static from(set) {
+            var result;
+            if (set instanceof Set) result = new ElisifSet([...set.values()]);
+            else result = new ElisifSet(...set);
+
+            return result;
         }
     }
 
@@ -142,14 +165,18 @@ class Utility {
          * @param {(value: any, resolve: (...args) => void, reject: (...args) => void) => void} resRejMethod - A method that contains the resolved output of the `promise` function, a function to resolve the MRPromise, and a function to reject the MRPromise.
          */
         constructor(promise, resRejMethod) {
-            var resolve = () => false, reject = () => false;
+            var resolve = () => false, reject = () => false, promiseResolve = () => false;
             this.manyThen = (res) => {
                 resolve = res;
                 return this;
             };
             this.manyCatch = (rej) => reject = rej;
+            this.promiseResolve = (prRes) => promiseResolve = prRes;
 
-            promise().then((value) => setTimeout(() => resRejMethod(value, resolve, reject), 500));
+            promise().then((value) => {
+                promiseResolve(value);
+                setTimeout(() => resRejMethod(value, resolve, reject), 500)
+            });
         }
     }
 
@@ -159,24 +186,44 @@ class Utility {
     Button = ButtonUtility;
     SelectMenu = SelectUtility;
 
-    message(message) {
-        return this.Structure.get(message.id) ?? new MessageUtility(message, this);
+    Message(message) {
+
+        if (!(message instanceof require("discord.js").Message)) return this.Slash(message);
+
+        message.util = new MessageUtility(message, this);
+        return message.util;
     }
 
-    member(member) {
-        return this.Structure.get(member.id) ?? new GuildMemberUtility(member, this);
+    Member(member) {
+        member.util = new GuildMemberUtility(member, this);
+        return member.util;
     }
 
-    channel(channel, message = null) {
-        return this.Structure.get(channel.id) ?? new TextChannelUtility(channel, this, message);
+    Channel(channel, message = null) {
+        channel.util = new TextChannelUtility(channel, this, message);
+        return channel.util;
     }
 
-    component(component) {
-        return ComponentUtility.fromInteraction(component);
+    Guild(guild) {
+        guild.util = new GuildUtility(guild, this);
+        return guild.util;
     }
 
-    slash(interaction) {
-        return this.Structure.get(interaction.id) ?? new SlashUtility(interaction, this);
+    Component(component, message = null) {
+        component.util = ComponentUtility.fromInteraction(component, this, message);
+        return component.util;
+    }
+
+    Slash(interaction) {
+        interaction.util = new SlashUtility(interaction, this);
+        return interaction.util;
+    }
+
+    /**
+     * Gets a StructureUtility from the StructureUtility cache by ID.
+    */
+    cache(id) {
+        return this.Structure.get(id);
     }
 
 }

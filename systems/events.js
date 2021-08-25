@@ -1,7 +1,5 @@
 //Contains various extensions of discord.js events.
 
-const Discord = require('discord.js');
-
 module.exports = class DiscordExtender {
 
     static extendEvents(client) {

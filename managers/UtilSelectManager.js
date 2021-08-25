@@ -13,7 +13,7 @@ class SelectManager {
     }
 
     /**
-     * 
+     * Get a select menu using index; all indexes are zero-based (they start at zero).
      * @param {Number|{customId:String}} [row] - Represents one of: sel index, or object with sel id specified. If unspecified, gets all sels in the message.
      * @returns SelectUtility | SelectUtility[] | false
      */
@@ -39,19 +39,19 @@ class SelectManager {
 
             //@ts-ignore
             var seldata = this.message.components.flatMap(rowset => rowset.components)[row];
-            return this.util.component(seldata);
+            return this.util.Component(seldata, this.message);
 
         }
         else if (mode == 2) {
 
             //@ts-ignore
             var seldata = this.message.components.flatMap(rowset => rowset.components).find(c => c.customId == row.customId);
-            return this.util.component(seldata);
+            return this.util.Component(seldata, this.message);
 
         }
         else {
 
-            var menus = this.message.components.flatMap(rowset => rowset.components).filter(c => c.type == "SELECT_MENU").map(sel => this.util.component(sel));
+            var menus = this.message.components.flatMap(rowset => rowset.components).filter(c => c.type == "SELECT_MENU").map(sel => this.util.Component(sel, this.message));
             return menus;
 
         }
@@ -85,9 +85,7 @@ class SelectManager {
         });
         
         components = components.filter(co => co);
-        this.message.components = components;
-
-        return this.message.edit(this.message);
+        return this.message.edit({ components });
 
     }
 
@@ -100,9 +98,7 @@ class SelectManager {
         if (components[menu.row - 1].components.length <= 1) components.splice(menu.row - 1, 1);
         else components[menu.row - 1].components.splice(menu.rowIndex, 1);
 
-        this.message.components = components;
-
-        return this.message.edit(this.message);
+        return this.message.edit({ components });
 
     }
 
@@ -112,10 +108,9 @@ class SelectManager {
 
         var components = this.message.components;
 
-        Object.assign(components[menu.row - 1].components[menu.rowIndex], newProperties);
-        this.message.components = components;
+        Object.assign(components[menu.row].components[menu.rowIndex], newProperties);
 
-        return this.message.edit(this.message);
+        return this.message.edit({ components });
     }
 
     setPlaceholder(index, placeholder) {

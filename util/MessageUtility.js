@@ -165,7 +165,7 @@ class MessageUtility extends StructureUtility {
      get cmdFlags() {
         //Find message flags
 
-        var foundFlags = false;
+        var foundFlags = undefined;
 
         if (this.#userArgs && this.#setFlags) {
             //Find flags in message, remove them from args
@@ -196,7 +196,7 @@ class MessageUtility extends StructureUtility {
         if (!flag.match("-")) flag = "-" + flag;
 
         var flags = this.cmdFlags;
-        return flags.includes(flag);
+        return flags?.includes(flag);
     }
 
     /**
@@ -351,6 +351,10 @@ class MessageUtility extends StructureUtility {
         }, seconds * 1000);
     }
 
+    get author() {
+        return this.message.author;
+    }
+
     //Message Components:
 
     get buttons() {
@@ -363,12 +367,16 @@ class MessageUtility extends StructureUtility {
 
     //Structure Utility Methods:
 
-    member() {
-        return this.util.member(this.message.member);
+    Member() {
+        return this.util.Member(this.message.member);
     }
 
-    channel() {
-        return this.util.channel(this.message.channel, this.message);
+    Channel() {
+        return this.util.Channel(this.message.channel, this.message);
+    }
+
+    Guild() {
+        return this.util.Guild(this.message.guild);
     }
 
 }

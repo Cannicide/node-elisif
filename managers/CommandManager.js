@@ -33,20 +33,22 @@ class CommandManager {
 
     add(command) {
         if (command instanceof Command) {
-            command.initialize(this.client);
+            this.client.debug(`Added command: ${command.name}`);
+
             this.#commands.set(command.name, command);
+            command.initialize(this.client);
             return command;
         }
         else return false;
     }
 
-    importCommands(files) {
+    importCommands(files, directory) {
         files.forEach(item => {
             var file = typeof item === 'string' ? require(`${directory}/${item.substring(0, item.length - 3)}`) : item;
 
             if (file instanceof NamespacedCommand) file = file.build(this.client);
             if (file instanceof Command && !this.has(file.name)) this.add(file);
-            else if ("commands" in file) {
+            else if (file && "commands" in file) {
                 file.commands = file.commands.map(cmd => cmd instanceof NamespacedCommand ? cmd.build(this.client) : cmd);
                 file.commands.filter(alias => alias instanceof Command && !this.has(alias.name)).forEach(alias => this.add(alias));
                 if (typeof file.initialize === 'function') file.initialize(this.client);
@@ -61,10 +63,14 @@ class CommandManager {
 
     handle(message) {
 
-        const msgutil = require("../index").util.message(message);
+        message.client.debug("Handling message...");
+
+        const msgutil = require("../index").util.Message(message);
         var command = this.get(msgutil.label);
 
         if (command && msgutil.startsWithPrefix) {
+
+            message.client.debug(`Message contains command. Handling command "${msgutil.label}"...`);
 
             if (command.guild_only && message.channel.type == "DM") {
                 //Only allow guild-only commands in guilds
@@ -114,14 +120,14 @@ class CommandManager {
         });
 
         //Import commands:
-        this.importCommands(files);
+        this.importCommands(files, directory);
 
         //Import aliases:
-        this.importCommands([this.aliases]);
+        this.importCommands([this.aliases], directory);
 
         SlashCommand.setupAll(this.client);
 
-        if (this.client.settings.Global().get("debug_mode")) console.log("Loaded commands:", this.all().map(v => v.name));
+        this.client.debug("\nLoaded commands:\n[", this.all().map(v => v.name).join(", "), "]\n");
 
         return this.all();
 

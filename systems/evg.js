@@ -19,6 +19,7 @@ try {
 }
 catch (e) {
   dbUsable = false;
+  console.log(e);
 }
 
 /**

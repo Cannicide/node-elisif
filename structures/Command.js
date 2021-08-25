@@ -10,7 +10,7 @@
     issues being identified in the error message (instead of just the first issue).
 */
 
-const { util } = require("../index");
+const util = require("../util/Utility");
 
 /**
  * @deprecated Text message commands are deprecated, use SlashCommand instead
@@ -62,9 +62,6 @@ class Command {
         // const client = require("../index").getClient();
         // this.initialize(client);
 
-        if (this.devs_only && (!client.authors || client.authors.length < 1))
-            throw new Error(`node-elisif error: The developers of this bot and their IDs MUST be specified during the client's creation in order to create dev-only commands such as '${this.name}'.`);
-
     }
 
     execute(message) {
@@ -72,7 +69,10 @@ class Command {
         if (!message) throw new Error("No message was detected by Command execution; this is an impossible occurrence and has resulted in a fatal error.");
 
         //Get MessageUtility for this message
-        const msgutil = util.message(message);
+        const msgutil = util.Message(message);
+        msgutil.Channel();
+        if (message.guild) msgutil.Member();
+        if (message.guild) msgutil.Guild();
 
         //Set valid flags, if any, on the message
         if (this.flags) {
@@ -144,7 +144,7 @@ class Command {
 
         constructor(msgutil, command) {
             this.msgutil = msgutil;
-            this.message = message;
+            this.message = msgutil.message;
             this.command = command;
 
             //Establish mandatory arg properties
@@ -175,8 +175,8 @@ class Command {
 
         checkPerms() {
             //Member must have ALL required permissions
-            var hasPerms = !this.message.guild || this.msgutil.member().hasPerms(this.command.perms.map(item => item.toUpperCase()));
-            if (!hasPerms) this.missingPerms = this.missingPerms.concat(this.command.perms.filter(item => !this.msgutil.member().hasPerms(item.toUpperCase())).map(perm => "Perm: " + perm));
+            var hasPerms = !this.message.guild || this.msgutil.Member().hasPerms(this.command.perms.map(item => item.toUpperCase()));
+            if (!hasPerms) this.missingPerms = this.missingPerms.concat(this.command.perms.filter(item => !this.msgutil.Member().hasPerms(item.toUpperCase())).map(perm => "Perm: " + perm));
             return hasPerms;
         }
 
@@ -218,6 +218,10 @@ class Command {
     }
 
     async initialize(client) {
+
+        if (this.devs_only && (!client.authors || client.authors.length < 1))
+            throw new Error(`node-elisif error: The developers of this bot and their IDs MUST be specified during the client's creation in order to create dev-only commands such as '${this.name}'.`);
+
         this.initializeMethod(client);
 
         this.addDefaultAlias(client)

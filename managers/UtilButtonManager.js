@@ -13,7 +13,7 @@ class ButtonManager {
     }
 
     /**
-     * 
+     * Get a button using row and rowIndex (index within row); all indexes are zero-based (they start at zero).
      * @param {Number|{customId:String}} [row] - Represents one of: row number, button index, or object with button id specified. If unspecified, gets all buttons in the message.
      * @param {Number} [rowIndex] - The index, within and relative to the specified row, of the button to get.
      * @returns ButtonUtility | ButtonUtility[] | false
@@ -32,7 +32,7 @@ class ButtonManager {
         */
         var mode = 4;
 
-        if (row && rowIndex) mode = 1;
+        if (row != undefined && rowIndex != undefined) mode = 1;
         else if (row != undefined && typeof row === "number") mode = 2;
         else if (row && typeof row === "object" && row.customId) mode = 3;
 
@@ -41,26 +41,27 @@ class ButtonManager {
             var rowset = this.getRow(row);
             if (!rowset) return false;
 
-            return this.util.component(rowset[rowIndex]);
+            return this.util.Component(rowset[rowIndex], this.message);
 
         }
         else if (mode == 2) {
 
             // @ts-ignore
             var buttondata = this.message.components.flatMap(rowset => rowset.components)[row];
-            return this.util.component(buttondata);
+
+            return this.util.Component(buttondata, this.message);
 
         }
         else if (mode == 3) {
 
             // @ts-ignore
             var buttondata = this.message.components.flatMap(rowset => rowset.components).find(c => c.customId == row.customId);
-            return this.util.component(buttondata);
+            return this.util.Component(buttondata, this.message);
 
         }
         else {
 
-            var buttons = this.message.components.flatMap(rowset => rowset.components).filter(c => c.type == "BUTTON").map(btn => this.util.component(btn));
+            var buttons = this.message.components.flatMap(rowset => rowset.components).filter(c => c.type == "BUTTON").map(btn => this.util.Component(btn, this.message));
             return buttons;
 
         }
@@ -69,7 +70,7 @@ class ButtonManager {
 
     getRow(row) {
 
-        var rowset = this.message.components[row - 1];
+        var rowset = this.message.components[row]; //row - 1
         return rowset?.components ?? false;
 
     }
@@ -103,9 +104,7 @@ class ButtonManager {
         });
         
         components = components.filter(co => co);
-        this.message.components = components;
-
-        return this.message.edit(this.message);
+        return this.message.edit({ components });
 
     }
 
@@ -117,9 +116,7 @@ class ButtonManager {
         components[button.row - 1].components.splice(button.rowIndex, 1);
 
         if (components[button.row - 1].components.length <= 0) components.splice(button.row - 1, 1);
-        this.message.components = components;
-
-        return this.message.edit(this.message);
+        return this.message.edit({ components });
     }
 
     edit(row, rowIndex, newProperties) {
@@ -127,10 +124,9 @@ class ButtonManager {
         if (!button) return false;
 
         var components = this.message.components;
-        Object.assign(components[button.row - 1].components[button.rowIndex], newProperties);
-        this.message.components = components;
+        Object.assign(components[button.row].components[button.rowIndex], newProperties);
 
-        return this.message.edit(this.message);
+        return this.message.edit({ components });
     }
 
     enable(row, rowIndex) {
