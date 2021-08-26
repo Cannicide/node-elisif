@@ -45,4 +45,5 @@ client.setting("debug_mode", true);
 //Print version of node-elisif
 console.log("Started node-elisif v" + version);
 
-client.login(require("./token.json").token);
+//Only login when actually testing
+if (false) client.login(require("./token.json").token);
