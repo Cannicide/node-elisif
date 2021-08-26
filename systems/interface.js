@@ -106,7 +106,8 @@ class Interface {
 
         let client = require("../index").getClient(message?.client.user.id);
         let userID = message?.author?.id ?? client?.user.id;
-        var tuser = client?.users.cache.find(m => m.id == userID);
+        //@ts-ignore
+        var tuser = client?.users.cache.get(userID);
 
         color = color ?? message?.member?.displayHexColor ?? tuser?.toString().substring(2, 8) ?? "#000000";
 
