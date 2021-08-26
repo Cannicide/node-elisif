@@ -47,3 +47,4 @@ console.log("Started node-elisif v" + version);
 
 //Only login when actually testing
 if (false) client.login(require("./token.json").token);
+else process.exit();
