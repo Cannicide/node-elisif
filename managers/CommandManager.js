@@ -43,7 +43,7 @@ class CommandManager {
     }
 
     importCommands(files, directory) {
-        files.forEach(item => {
+        files.filter(item => typeof item != 'string' || item.endsWith('.js')).forEach(item => {
             var file = typeof item === 'string' ? require(`${directory}/${item.substring(0, item.length - 3)}`) : item;
 
             if (file instanceof NamespacedCommand) file = file.build(this.client);
