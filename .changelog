@@ -60,3 +60,8 @@
 - Fixed VCA, updated to use discord.js 13.x.x and discord API v9 invite generation
 - Fixed issues in all expansions, improved all expansions
 - Fixed and improved slash command setup and handling systems
+- Added ElisifMap utility to make it easier to work with Maps, currently used by SlashUtility
+- Added Generator utility to make it easier to work with generator functions
+- Fixed issues with npm testing
+- Fixed SlashManager resolved object issues, fully updated SlashManager to work with discord.js 13.x.x
+- Added interaction reply methods to SlashUtility, plus an additional `defaultReply` method with a fun little twist

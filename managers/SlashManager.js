@@ -126,18 +126,18 @@ class SlashManager {
     if (SlashManager.intFromEnum(group.type) == 6) {
       //User
       let id = group.value;
-      group.value = main.resolved.users?.[id];
-      group.value.asMember = () => main.resolved.members?.[id];
+      group.value = main.resolved.users?.get(id);
+      group.value.asMember = () => main.resolved.members?.get(id);
     }
     else if (SlashManager.intFromEnum(group.type) == 7) {
       //Channel
       let id = group.value;
-      group.value = main.resolved.channels?.[id];
+      group.value = main.resolved.channels?.get(id);
     }
     else if (group.type == 8) {
       //Role
       let id = group.value;
-      group.value = main.resolved.roles?.[id];
+      group.value = main.resolved.roles?.get(id);
     }
 
     //Add argument values to classic and object forms of args

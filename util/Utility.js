@@ -90,6 +90,9 @@ class Utility {
 
     //Custom utility classes:
 
+    /**
+     * Used to provide message content and embed data, mostly used internally by interfaces.
+    */
     ContentSupplier = class MessageContentSupplier {
         constructor(origin, contentData = {}) {
 
@@ -125,6 +128,10 @@ class Utility {
 
     }
 
+    /**
+     * An extended set with additional utility methods.
+     * Can also be directly constructed from several values, an array of values, or a Set object.
+    */
     ElisifSet = class ElisifSet extends Set {
         constructor(...values) {
             super();
@@ -147,6 +154,88 @@ class Utility {
             var result;
             if (set instanceof Set) result = new ElisifSet([...set.values()]);
             else result = new ElisifSet(...set);
+
+            return result;
+        }
+    }
+
+    /**
+     * An extended map with additional utility methods.
+     * Can also be directly constructed from one or more object literals.
+    */
+    ElisifMap = class ElisifMap extends Map {
+        constructor(...objs) {
+            super();
+            objs.forEach(obj => Object.keys(obj).forEach(key => this.set(key, obj[key])));
+        }
+
+        /**
+         * Returns a new Object literal constructed from this ElisifMap.
+        */
+        toObject() {
+            return Object.fromEntries(this.entries());
+        }
+
+        /**
+         * Returns a new JSON string constructed from this ElisifMap.
+        */
+        toJSON() {
+            return JSON.stringify(this.toObject());
+        }
+
+        forEach(callback, thisArg) {
+            //(value, key, map) => void
+            return super.forEach((value, key) => {
+                return callback(value, key, this).bind(thisArg);
+            });
+        }
+
+        /**
+         * Returns a new ElisifMap containing only items that satsify the provided filter function.
+        */
+        filter(func) {
+            //(value, key, map) => boolean
+            
+            let newMap = new ElisifMap();
+
+            this.forEach((value, key, map) => {
+                if (func(value, key, map)) newMap.set(key, value);
+            });
+
+            return newMap;
+        }
+
+        /**
+         * Returns a new ElisifMap containing only items that do NOT satsify the provided filter function.
+        */
+        sweep(func) {
+            //(value, key, map) => boolean
+        
+            let newMap = new ElisifMap();
+
+            this.forEach((value, key, map) => {
+                if (!func(value, key, map)) newMap.set(key, value);
+            });
+
+            return newMap;
+        }
+
+        /**
+         * Partitions and returns an array of two new ElisifMaps.
+         * The first contains items that passed the filter, and the second contains items that failed the filter.
+        */
+        partition(func) {
+            //(value, key, map) => boolean
+            let trueMap = this.filter(func);
+            let falseMap = this.sweep(func);
+
+            return [new ElisifMap(trueMap), new ElisifMap(falseMap)];
+        }
+
+        static from(map) {
+            var result;
+            if (map instanceof Map) result = new ElisifMap(Object.fromEntries(map.entries()));
+            else if (typeof map === 'object') result = new ElisifMap(map);
 
             return result;
         }
@@ -178,6 +267,38 @@ class Utility {
                 setTimeout(() => resRejMethod(value, resolve, reject), 500)
             });
         }
+    }
+
+    /**
+     * An iterable Generator class that simplifies and extends the functionality of (function*) generator functions.
+     * Can be properly iterated by `for-of` loops, just like generator functions.
+    */
+    Generator = class Generator {
+
+        iterator;
+        prev = null;
+        
+        constructor(iterator, ...vals) {
+            this.iterator = iterator(...vals);
+        }
+        
+        next() {
+            this.prev = this.iterator.next().value;
+            return this.prev;
+        }
+
+        hasNext() {
+            return !this.prev?.done;
+        }
+
+        current() {
+            return this.prev;
+        }
+        
+        *[Symbol.iterator]() {
+            yield* this.iterator;
+        }
+        
     }
 
     //Structure Utility Methods:

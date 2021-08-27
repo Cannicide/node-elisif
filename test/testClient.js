@@ -46,5 +46,5 @@ client.setting("debug_mode", true);
 console.log("Started node-elisif v" + version);
 
 //Only login when actually testing
-if (false) client.login(require("./token.json").token);
+if (require("fs").existsSync(__dirname + "/token.json")) client.login(require("./token.json").token);
 else process.exit();

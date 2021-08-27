@@ -3,6 +3,12 @@ const StructureUtility = require("./StructureUtility");
 
 class SlashUtility extends StructureUtility {
 
+    #reply = {
+        deleted: false,
+        deferred: false,
+        sent: false
+    }
+
     /**
      * @param {import("./Utility")} util
     */
@@ -29,11 +35,6 @@ class SlashUtility extends StructureUtility {
         this.getLocalSetting = (sett) => this.client.settings.Local(this.guild?.id).get(sett);
         this.setGlobalSetting = (sett, val) => this.client.settings.Global().set(sett, val);
         this.setLocalSetting = (sett, val) => this.client.settings.Local(this.guild?.id).set(sett, val);
-
-        //Sends a default reply to the slash interaction
-        this.defaultReply = () => {
-            return interaction.reply(`You used the [\`/${this.name}\`](https://cannicideapi.glitch.me/news/discord-elisif/cannicide-library-added-slash-commands-feature/01) slash command.`);
-        }
 
         //Add this utility object to the map, mapped with the message ID
         this.set();
@@ -109,9 +110,51 @@ class SlashUtility extends StructureUtility {
     }
 
     get mappedArgs() {
-        let map = new Map()
-        Object.keys(this.args_object).forEach(key => map.set(key, this.args_object[key]));
+        let map = new this.util.ElisifMap(this.args_object)
         return map;
+    }
+
+    //Interaction reply methods:
+
+    defaultReply() {
+        return this.reply(`You used the [\`/${this.name}\`](https://cannicideapi.glitch.me/news/discord-elisif/cannicide-library-added-slash-commands-feature/01) slash command.`);
+    }
+
+    deleteReply(timeoutSecs = 0) {
+        if (this.#reply.deleted) return;
+        this.#reply.deleted = true;
+        return setTimeout(() => this.interaction.deleteReply(), timeoutSecs * 1000);
+    }
+
+    editReply(options, timeoutSecs = 0) {
+        if (this.#reply.sent || this.#reply.deleted || !this.#reply.deferred) return this.reply(options);
+        this.#reply.sent = true;
+        return setTimeout(() => this.interaction.editReply(options), timeoutSecs * 1000);
+    }
+
+    followUp(options) {
+        if (!this.#reply.sent) return this.reply(options);
+        return this.interaction.followUp(options);
+    }
+
+    reply(options) {
+
+        if (this.#reply.sent || this.#reply.deleted) return this.followUp(options);
+        if (this.#reply.deferred) return this.editReply(options);
+
+        this.#reply.sent = true;
+        return this.interaction.reply(options);
+    }
+
+    deferReply(options) {
+
+        if (this.#reply.sent || this.#reply.deleted || this.#reply.deferred) return {fulfill: () => false};
+
+        this.interaction.deferReply(options);
+        this.#reply.deferred = true;
+        return {
+            fulfill: (resp, timeoutSecs) => this.editReply(resp, timeoutSecs)
+        };
     }
 
     //Structure Utility Methods:
