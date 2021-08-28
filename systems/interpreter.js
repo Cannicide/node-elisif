@@ -24,7 +24,7 @@ class ReactionInterpreter {
        * @param {String[]} emotes - An array of emotes for the Reaction Interpreter to interpret
        * @param {Object} [customProperties] - Custom properties for the Reaction Interpreter in the format: {"property": "value"}
        */
-      add: (message, user, emotes, customProperties) => {
+      add: (message, user, emotes, customProperties = {}) => {
 
         var item = {
             name: [],
@@ -124,7 +124,7 @@ class ButtonInterpreter {
        * @param {Object} user - The user that created the Button Interpreter
        * @param {Object} [customProperties] - Custom properties for the Button Interpreter in the format: {"property": "value"}
        */
-      add: (message, user, customProperties) => {
+      add: (message, user, customProperties = {}) => {
 
         var item = {
             id: message.buttons.get().map(v => v.id),
