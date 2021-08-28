@@ -246,7 +246,7 @@ class SlashCommand {
         if (!validChannel) return `Sorry, that command cannot be used in this channel.`;
 
         //Check perms
-        let hasPerms = command.perms ? command.perms.every(perm => slash.member.hasPermission(perm.toUpperCase())) : true;
+        let hasPerms = command.perms ? command.perms.every(perm => slash.member.permissions.has(perm.toUpperCase())) : true;
 
         //Check roles
         let hasRoles = command.roles ? command.roles.some(role => slash.member.roles.cache.find(r => r.name == role)) : true;
