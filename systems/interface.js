@@ -104,7 +104,7 @@ class Interface {
         color
     }, message = null) {
 
-        let client = require("../index").getClient(message?.client.user.id);
+        let client = message?.client;
         let userID = message?.author?.id ?? client?.user.id;
         //@ts-ignore
         var tuser = client?.users.cache.get(userID);
@@ -185,11 +185,13 @@ class Interface {
 
         if (!message && !channel) throw new Error("Neither message nor channel was provided; cannot retrieve channel to send the embed(s) to.");
         
+        //@ts-ignore
         channel = channel ?? message.channel;
 
         //Construct and send the message
 
         let supplier = Interface.genEmbeds(embeds, message);
+        if (content) supplier.content = content;
         return channel.send(supplier);
 
     }

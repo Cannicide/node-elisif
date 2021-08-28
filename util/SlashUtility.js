@@ -21,6 +21,10 @@ class SlashUtility extends StructureUtility {
         this.args = interaction.options.data.slice() ?? false;
         this.resolved = interaction.options.resolved;
         this.options = this.args;
+        this.channel = interaction.channel;
+        this.guild = interaction.guild;
+        this.member = interaction.member;
+        this.user = interaction.user;
         
         //Define custom args properties with modified structures
         this.args_classic = [];
@@ -45,7 +49,7 @@ class SlashUtility extends StructureUtility {
     }
 
     get author() {
-        return this.interaction.user;
+        return this.user;
     }
 
     isCommand() {
@@ -160,11 +164,11 @@ class SlashUtility extends StructureUtility {
     //Structure Utility Methods:
 
     Member() {
-        return this.util.Member(this.interaction.member);
+        return this.util.Member(this.member);
     }
 
     Channel() {
-        return this.util.Channel(this.interaction.channel, this.interaction);
+        return this.util.Channel(this.channel, this);
     }
 
 }

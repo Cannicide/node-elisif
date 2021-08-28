@@ -61,7 +61,7 @@ class SlashCommand {
         // this.cooldown = options.cooldown; //Not implemented atm
         this.channels = options.channels;
         this.guilds = options.guilds;
-        this.args = options.args;
+        this.args = options.args ?? [];
 
         //Add this command to the command list
         SlashCommand.COMMANDS.set(this.name, this);
