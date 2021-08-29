@@ -367,7 +367,7 @@ class DeprecatedInterpreter {
      * @param {String} [options.category] - The category of the reaction/button interpreter. Not applicable for messages or DMs.
      * @param {boolean} [options.adding] - For reaction interpreters, defines whether to handle the reaction being added or removed.
      */
-    this.register = ({ type, filter, response, category, adding }) => {
+    this.register = ({ type, filter, response, category, adding = true }) => {
 
       var intp = {
         filter: filter,
@@ -379,7 +379,7 @@ class DeprecatedInterpreter {
         type = type.slice(0, type.length - 1);
 
       if ((type == "reaction" || type == "button") && category) intp.category = category;
-      if (type == "reaction" && adding) intp.adding = adding; 
+      if (type == "reaction") intp.adding = adding; 
 
       if ((type == "message" || type == "dm") && (category || adding)) throw new Error("The 'category' and 'adding' interpreter settings are not applicable for Message or DM Interpreters.");
 
