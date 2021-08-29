@@ -171,6 +171,7 @@ class ExtendedClient extends Discord.Client {
 
       if (autoInitialize && autoInitialize.enabled && autoInitialize.path) {
         this.commands.initialize(autoInitialize.path);
+        Interpreter.initialize(this);
 
         //Auto initialize message event
         this.on("messageCreate", (message) => {
