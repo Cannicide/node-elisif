@@ -196,9 +196,9 @@ class SlashCommand {
      * @param {CommandInteraction} slash - A raw SlashInteraction object.
      */
     static getCommand(slash) {
-        if (SlashCommand.COMMANDS.has(slash.name)) {
+        if (SlashCommand.COMMANDS.has(slash.commandName)) {
             //Return the Guild/Global Slash Command
-            return SlashCommand.COMMANDS.get(slash.name);
+            return SlashCommand.COMMANDS.get(slash.commandName);
         }
         else {
             //Slash Command not found, return nonfunctional object with just an execute method
@@ -213,7 +213,7 @@ class SlashCommand {
      * @param {CommandInteraction} slash - A raw CommandInteraction object.
      */
     static execute(slash) {
-        let command = SlashCommand.getCommand(slash.command);
+        let command = SlashCommand.getCommand(slash);
         let failsFilter = SlashCommand.failsFilter(command, slash);
 
         slash.client.debug("Handling slash interaction...");
