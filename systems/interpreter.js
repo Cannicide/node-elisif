@@ -381,8 +381,6 @@ class DeprecatedInterpreter {
       if ((type == "reaction" || type == "button") && category) intp.category = category;
       if (type == "reaction") intp.adding = adding; 
 
-      if ((type == "message" || type == "dm") && (category || adding)) throw new Error("The 'category' and 'adding' interpreter settings are not applicable for Message or DM Interpreters.");
-
       interpreters[type].push(intp);
 
       return this;
