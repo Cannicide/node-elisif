@@ -156,6 +156,7 @@ class SlashUtility extends StructureUtility {
 
         this.interaction.deferReply(options);
         this.#reply.deferred = true;
+        this.interaction.deferred = true;
         return {
             fulfill: (resp, timeoutSecs) => this.editReply(resp, timeoutSecs)
         };
