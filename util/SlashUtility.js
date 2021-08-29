@@ -18,7 +18,7 @@ class SlashUtility extends StructureUtility {
         
         //Define all base properties
         this.interaction = interaction;
-        this.args = interaction.options.data.slice() ?? false;
+        this.args = interaction.options.data?.slice() ?? false;
         this.resolved = interaction.options.resolved;
         this.options = this.args;
         this.channel = interaction.channel;
