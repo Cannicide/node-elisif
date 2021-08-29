@@ -620,11 +620,11 @@ class Interpreter {
        * @param {String} options.category - The category of the reaction interpreter.
        * @param {boolean} [options.adding] - Whether to interpret when the reaction is added or removed. True by default.
        */
-      register: ({filter, response, category, adding}) => {
+      register: ({filter, response, category, adding = true}) => {
         var reactInterpreter = new ReactionLode(category);
         
         reactInterpreter.register({
-          filter, response, adding: adding || true
+          filter, response, adding: adding
         });
 
         return reactInterpreter;
