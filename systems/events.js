@@ -10,6 +10,7 @@ module.exports = class DiscordExtender {
         Events.MENU_SELECT = 'menuSelect';
         Events.SLASH_COMMAND = 'slashCommand';
         Events.CONTEXT_MENU = 'contextMenu';
+        Events.SERVER_BOOST = 'serverBoost';
 
         // Emit interaction events
         client.on('interactionCreate', (interaction) => {
@@ -39,6 +40,11 @@ module.exports = class DiscordExtender {
                 client.emit('menuSelect', interaction);
                 return;
             }
+        });
+
+        // Emit server boost events
+        client.on("guildMemberUpdate", (oldMember, newMember) => {
+            if (oldMember.premiumSinceTimestamp !== newMember.premiumSinceTimestamp) client.emit('serverBoost', newMember);
         });
 
     }
