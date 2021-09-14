@@ -33,12 +33,14 @@ class PointsConfig {
       },
       //On /daily command
       "daily_command": {
+        // NOT SETUP
         points: 5,
         dailyCap: 1,
         type: "message"
       },
       //On being in voice channel for an hour
       "voice_channel": {
+        // NOT SETUP
         points: 10,
         dailyCap: 1,
         type: "voice"
@@ -83,7 +85,8 @@ class PointsConfig {
         "Custom Discord Role": 15000,
         "Receive 'Regular Role'": {
           price: 1500,
-          limit: 1
+          limit: 1,
+          role: "Regular"
         },
         "Daily Points Boost": {
           price: 5000,
@@ -906,7 +909,7 @@ class NativePointsCommands {
 class NativeLevelingHandlers {
 
     static initialize(client) {
-        NativeLevelingHandlers.Message(client);
+        Object.values(NativeLevelingHandlers).forEach(handler => handler(client));
     }
 
     static message_timestamps = [];
@@ -926,9 +929,10 @@ class NativeLevelingHandlers {
             if (message.author.bot) return false;
             if (message.guild == null) return false;
 
-            //Daily boost points, if applicable
+            //Daily and weekly boost points, if applicable
             var system = new PointsSystem(message.guild.id, client);
             system.autoAward(message.author.id, "daily_boost");
+            if (message.guild.util.settings.get("points.weekly_boost")) system.autoAward(message.author.id, "weekly_boost");
 
             //No points for commands
             if (message.util.isCommand()) return false;
@@ -954,6 +958,69 @@ class NativeLevelingHandlers {
             return true;
 
         });
+
+    }
+
+    //Setup giving points for server boosts
+    static Boost(client) {
+      
+      client.on("serverBoost", booster => {
+
+        //Check if points system enabled in this guild
+        if (!util.Guild(booster?.guild)?.util.settings.get("points.enabled")) return false;
+
+        //No points for bots
+        if (booster.user.bot) return false;
+
+        //Get points system for guild
+        const system = new PointsSystem(message.guild.id, client);
+
+        //Award for boosting
+        system.autoAward(message.author.id, "nitro_boost");
+
+      });
+
+    }
+
+    //Setup giving points when a guild member joins the guild
+    static MemberAdd(client) {
+
+      client.on("guildMemberAdd", member => {
+
+          //Check if points system enabled in this guild
+          if (!util.Guild(member?.guild)?.util.settings.get("points.enabled")) return false;
+
+          //No points for bots
+          if (member.user.bot) return false;
+
+          //Get points system for guild
+          const system = new PointsSystem(member.guild.id, client);
+
+          //Award for joining
+          system.autoAward(message.author.id, "member_join");
+
+      });
+
+    }
+
+    //Setup giving points when a guild member leaves the guild
+    static MemberRemove(client) {
+
+      client.on("guildMemberRemove", member => {
+
+          //Check if points system enabled in this guild
+          if (!util.Guild(member?.guild)?.util.settings.get("points.enabled")) return false;
+
+          //No points for bots
+          if (member.user.bot) return false;
+
+          //Get points system for guild
+          const system = new PointsSystem(member.guild.id, client);
+
+          //Negative award for leaving
+          system.autoAward(message.author.id, "member_leave");
+
+      });
 
     }
 

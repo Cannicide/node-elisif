@@ -6,7 +6,7 @@ const GuildUtility = require('./GuildUtility');
 const { ButtonUtility, SelectUtility, ComponentUtility } = require('./ComponentUtility');
 const SlashUtility = require('./SlashUtility');
 const StructureUtility = require('./StructureUtility');
-const SyntaxUtility = require('./CommandSyntaxUtility');
+// const SyntaxUtility = require('./CommandSyntaxUtility');
 const { Intents, Permissions } = require('discord.js');
 const { ElisifSet, ElisifMap } = require("./CollectionUtility");
 const Random = require("./RandomUtility");
@@ -195,7 +195,7 @@ class Utility {
         
     }
 
-    Syntax = SyntaxUtility;
+    // Syntax = SyntaxUtility;
 
     //Structure Utility Methods:
 
