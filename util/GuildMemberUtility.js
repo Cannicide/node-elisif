@@ -18,8 +18,8 @@ class GuildMemberUtility extends StructureUtility {
     }
 
     hasPerms(...perms) {
-        perms = perms.filter(perm => perm && typeof perm === 'string' && perm !== "");
-        if (!perms || !Array.isArray(perms) || perms.length == 0) return true;
+        perms = perms.flat();
+        if (!perms || perms.length == 0) return true;
 
         const enums = this.util.permsToEnums(perms);
         return this.member.permissions.has(enums);
