@@ -45,14 +45,6 @@ client.setting("debug_mode", false);
 //Print version of node-elisif
 console.log("Started node-elisif v" + version);
 
-//Syntax testing
-// let syntax = "acommand subcmd [optional arg] <mandatory option; A mandatory option> (-f flag name; Flag desc) [variadic option...]";
-// let argSyntax = "<mandatory option; A mandatory option> [variadic option...]"
-// let cmd = 'acommand subcmd "optional value" mandatory -f "flag value" variadic values over here yeehaw'
-// console.log(`Values: ${util.Syntax.parser.parse(syntax, cmd).values.args.map(val => JSON.stringify(val))}`);
-// console.log(`Comps:`, util.Syntax.parser.components(syntax).map(val => JSON.stringify(val)));
-// console.log(`Args:`, util.Syntax.parser.components(argSyntax).map(val => JSON.stringify(val)));
-
 //Only login when actually testing
 if (require("fs").existsSync(__dirname + "/token.json")) client.login(require("./token.json").token);
 else process.exit();

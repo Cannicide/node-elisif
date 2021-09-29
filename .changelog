@@ -65,3 +65,4 @@
 - Fixed issues with npm testing
 - Fixed SlashManager resolved object issues, fully updated SlashManager to work with discord.js 13.x.x
 - Added interaction reply methods to SlashUtility, plus an additional `defaultReply` method with a fun little twist
+- Added "Youtube 2.0", Letter Tile, Word Snack, and Doodle crew VCA activities

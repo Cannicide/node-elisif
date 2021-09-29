@@ -8,7 +8,11 @@ const applications = {
     'poker': '755827207812677713',
     'betrayal': '773336526917861400',
     'fishing': '814288819477020702',
-    'chess': '832012586023256104'
+    'chess': '832012586023256104',
+    'youtubeNew': '880218394199220334',
+    'doodleCrew': '878067389634314250',
+    'letterTile': '879863686565621790',
+    'wordSnack': '879863976006127627'
 };
 
 class VCActivity {
@@ -98,6 +102,30 @@ module.exports = {
                   description: "Play chess online or with a VC member.",
                   value: "chess",
                   emoji: message.client.setting("vca.emotes.chess")
+              },
+              {
+                label: "Youtube 2.0",
+                description: "An all-new Youtube interface!",
+                value: "youtubeNew",
+                emoji: message.client.setting("vca.emotes.youtube")
+              },
+              {
+                label: "Letter Tile",
+                description: "Craft words from sets of tiles!",
+                value: "letterTile",
+                emoji: "🔡"
+              },
+              {
+                label: "Word Snack",
+                description: "Whip up letter combos in this game for intellectuals!",
+                value: "wordSnack",
+                emoji: "🥞"
+              },
+              {
+                label: "Doodle Crew",
+                description: "Battle it out in this competitive doodling game!",
+                value: "doodleCrew",
+                emoji: "✏️"
               }
           ]
         });
