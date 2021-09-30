@@ -141,7 +141,7 @@ module.exports = {
           var emoji = menu.getOptionByValue(sel).emoji;
           
           message.channel.util.embed({
-              desc: `Click [here](${code}) to start or join a group *${sel}* activity in your VC!\n\nActivity: ${emoji ? "<:"+emoji.name+":"+emoji.id+"> " : ""}**[${menu.getOptionByValue(sel).label}](${code})**`,
+              desc: `Click [here](${code}) to start or join a group *${sel}* activity in your VC!\n\nActivity: ${emoji ? (emoji.id ? "<:"+emoji.name+":"+emoji.id+"> " : emoji.name + " ") : ""}**[${menu.getOptionByValue(sel).label}](${code})**`,
               footer: [message.author.username, "Cannicide's VC Activity System"],
               title: `VCA Invite - ${message.member.voice.channel.name}`,
               color: "9b59b6"
