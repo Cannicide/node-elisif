@@ -9,10 +9,10 @@ const applications = {
     'betrayal': '773336526917861400',
     'fishing': '814288819477020702',
     'chess': '832012586023256104',
-    'youtubeNew': '880218394199220334',
-    'doodleCrew': '878067389634314250',
-    'letterTile': '879863686565621790',
-    'wordSnack': '879863976006127627'
+    'youtube2': '880218394199220334',
+    'doodlecrew': '878067389634314250',
+    'lettertile': '879863686565621790',
+    'wordsnack': '879863976006127627'
 };
 
 class VCActivity {
@@ -106,25 +106,25 @@ module.exports = {
               {
                 label: "Youtube 2.0",
                 description: "An all-new Youtube interface!",
-                value: "youtubeNew",
+                value: "youtube2",
                 emoji: message.client.setting("vca.emotes.youtube")
               },
               {
                 label: "Letter Tile",
                 description: "Craft words from sets of tiles!",
-                value: "letterTile",
+                value: "lettertile",
                 emoji: "🔡"
               },
               {
                 label: "Word Snack",
                 description: "Whip up letter combos in this game for intellectuals!",
-                value: "wordSnack",
+                value: "wordsnack",
                 emoji: "🥞"
               },
               {
                 label: "Doodle Crew",
                 description: "Battle it out in this competitive doodling game!",
-                value: "doodleCrew",
+                value: "doodlecrew",
                 emoji: "✏️"
               }
           ]
