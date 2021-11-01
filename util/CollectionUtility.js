@@ -72,7 +72,7 @@ module.exports = {
 
         static from(set) {
             var result;
-            if (set instanceof Set) result = new ElisifSet([...set.values()]);
+            if (set instanceof Set) result = new ElisifSet(...set.values());
             else result = new ElisifSet(...set);
 
             return result;
