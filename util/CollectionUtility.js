@@ -24,7 +24,7 @@ module.exports = {
         forEach(callback, thisArg) {
             //(value, key, map) => void
             return super.forEach((value, key) => {
-                return callback(value, key, this).bind(thisArg);
+                return callback.apply(thisArg, [value, key, this]);
             });
         }
 
@@ -106,7 +106,7 @@ module.exports = {
         forEach(callback, thisArg) {
             //(value, key, map) => void
             return super.forEach((value, key) => {
-                return callback(value, key, this).bind(thisArg);
+                return callback.apply(thisArg, [value, key, this]);
             });
         }
 
