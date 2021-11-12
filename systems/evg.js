@@ -1,4 +1,4 @@
-//The Evergreen (EvG) 4.1 data storage system
+//The Evergreen (EvG) 4.2 data storage system
 
 //Fourth-generation, vastly improved utility for easily storing, accessing, and manipulating data in a JS Object structure.
 //Now equipped with more powerful methods of interacting with EvG 2.0-type JSON storage and EvG 3.0-type SQLITE3 storage, replacing the highly limited EvG 2.0 legacy methods.
@@ -15,14 +15,6 @@ const fs = require("fs");
 var dbUsable = true;
 var db = false;
 var useJSON = false;
-
-try {
-  db = require("quick.db");
-}
-catch (e) {
-  dbUsable = false;
-  console.log(e);
-}
 
 /**
  * The legacy EvG 2.0-based storage system.
@@ -237,7 +229,7 @@ function LegacyEvg(filename, tabledPath) {
 
       if (!getTable(newPath)) {
         this.set(key, {});
-        return null;
+        // return null;
       }
 
       return new LegacyEvg(filename, newPath);
@@ -674,6 +666,19 @@ module.exports = {
       useJSON = false;
     }
     else useJSON = true;
+
+    if (!useJSON) {
+      dbUsable = true;
+      try {
+        db = require("quick.db");
+      }
+      catch (e) {
+        dbUsable = false;
+        console.log(e);
+      }
+    }
+    else dbUsable = false
+
   },
 
   dynamic(filename) {

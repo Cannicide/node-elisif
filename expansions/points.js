@@ -909,7 +909,7 @@ class NativePointsCommands {
 class NativeLevelingHandlers {
 
     static initialize(client) {
-        Object.values(NativeLevelingHandlers).forEach(handler => handler(client));
+      Object.getOwnPropertyNames(NativeLevelingHandlers).filter(name => name != "initialize" && typeof NativeLevelingHandlers[name] === "function").forEach(handler => NativeLevelingHandlers[handler](client));
     }
 
     static message_timestamps = [];

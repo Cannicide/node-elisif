@@ -1,5 +1,8 @@
 
-const { Client, util, version } = require("../index");
+const { Client, util, version, evg } = require("../index");
+
+evg.use("db");
+
 const client = new Client({
     intents: util.getAllIntentEnums(),
     name: "Test Bot",

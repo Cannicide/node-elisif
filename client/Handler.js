@@ -4,9 +4,6 @@
 //CommandManager class
 const CommandManager = require("../managers/CommandManager");
 
-//Global settings
-const Settings = require("../systems/settings");
-
 //Express app initialized
 const express = require('express');
 const app = express();
@@ -120,7 +117,7 @@ class ExtendedClient extends Discord.Client {
     this.intents = intents;
     this.name = name;
     this.twitch = twitch;
-    this.port = listener.address().port;
+    this.port = port;//listener.address().port;
     expansions.enable = expansions.enable ?? [];
 
     //Setup expansion methods
@@ -243,6 +240,9 @@ class ExtendedClient extends Discord.Client {
   }
 
   get settings() {
+    //Global settings
+    const Settings = require("../systems/settings");
+    
     return new Settings(this);
   }
 

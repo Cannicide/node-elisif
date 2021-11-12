@@ -245,9 +245,6 @@ class DeprecatedInterpreter {
 
   constructor() {
 
-    var Reactions = evg.dynamic("reactions");
-    var Buttons = evg.dynamic("buttons");
-
     const interpreters = {
       message: [],
       dm: [],
@@ -303,6 +300,8 @@ class DeprecatedInterpreter {
       if (user.bot)
         return;
 
+      var Reactions = evg.dynamic("reactions");
+
       var message = reaction.message;
       var emote = reaction.emoji.name;
       var emoteID = reaction.emoji.id;
@@ -333,6 +332,8 @@ class DeprecatedInterpreter {
      * Inteprets button clicks.
      */
      this.handleButton = (button) => {
+
+      var Buttons = evg.dynamic("buttons");
 
       var message = button.message;
       var id = button.id;
@@ -397,6 +398,8 @@ class DeprecatedInterpreter {
      */
     this.addButton = (button, obj) => {
 
+      var Buttons = evg.dynamic("buttons");
+
       if (!button) {
         //Catch case in which no buttons provided
       }
@@ -432,6 +435,8 @@ class DeprecatedInterpreter {
      * @param {String|String[]} [obj.id] - The IDs of the emojis to interpret, for custom and animated emotes.
      */
     this.addReaction = (emojis, obj) => {
+
+      var Reactions = evg.dynamic("reactions");
 
       if (!emojis) {
         //Catch case in which no emojis provided
@@ -487,6 +492,9 @@ class DeprecatedInterpreter {
      */
     this.initialize = (client) => {
       //Initialize Reaction/Button Interpreters
+
+      var Reactions = evg.dynamic("reactions");
+      var Buttons = evg.dynamic("buttons");
 
       var cache = Reactions.values();
       var buttonCache = Buttons.values();
