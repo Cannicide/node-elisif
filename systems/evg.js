@@ -1,4 +1,4 @@
-//The Evergreen (EvG) 4.2 data storage system
+//The Evergreen (EvG) 4.3 data storage system
 
 //Fourth-generation, vastly improved utility for easily storing, accessing, and manipulating data in a JS Object structure.
 //Now equipped with more powerful methods of interacting with EvG 2.0-type JSON storage and EvG 3.0-type SQLITE3 storage, replacing the highly limited EvG 2.0 legacy methods.
@@ -32,6 +32,8 @@ function LegacyEvg(filename, tabledPath) {
 
         if (!fs.existsSync(storageSrc)) {
           // return false;
+          if (!fs.existsSync(__dirname + "/storage")) fs.mkdirSync(__dirname + "/storage");
+
           fs.writeFileSync(storageSrc, JSON.stringify({}));
         }
 

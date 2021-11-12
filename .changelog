@@ -67,3 +67,4 @@
 - Added interaction reply methods to SlashUtility, plus an additional `defaultReply` method with a fun little twist
 - Added "Youtube 2.0", Letter Tile, Word Snack, and Doodle crew VCA activities
 - Made EvG storage vastly more dynamic throughout the package, allowing configuration of whether to use JSON or DB storage
+- EvG JSON storage now creates the `storage` folder if it is not found
