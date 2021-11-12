@@ -1,6 +1,6 @@
 // An expansion implementing a configurable Points System to allow guild members to gain rewards for doing certain actions.
 
-const db = require("../index").evg.remodel("points");
+const db = require("../index").evg.dynamic("points");
 var Settings;
 const fs = require("fs");
 

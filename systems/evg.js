@@ -1,7 +1,8 @@
-//The Evergreen (EvG) 4.0 data storage system
+//The Evergreen (EvG) 4.1 data storage system
 
 //Fourth-generation, vastly improved utility for easily storing, accessing, and manipulating data in a JS Object structure.
 //Now equipped with more powerful methods of interacting with EvG 2.0-type JSON storage and EvG 3.0-type SQLITE3 storage, replacing the highly limited EvG 2.0 legacy methods.
+//Additional new 'dynamic' method for configurable usage of JSON vs SQLITE3 storage.
 
 //   Created by Cannicide#2753
 
@@ -13,6 +14,7 @@
 const fs = require("fs");
 var dbUsable = true;
 var db = false;
+var useJSON = false;
 
 try {
   db = require("quick.db");
@@ -662,5 +664,20 @@ module.exports = {
     optionalJSONfilename = optionalJSONfilename || filename;
 
     return EvgDBCWrapper(filename, "remodel").importJSON(optionalJSONfilename, "delete");
+  },
+  /** 
+   * Determines whether dynamic Evg should use JSON or database storage.
+   * @param {"database"|"db"|"json"} storageSystem - Storage system to use for dynamic data imports.
+   */
+  use: (storageSystem) => {
+    if (storageSystem == "database" || storageSystem == "db") {
+      useJSON = false;
+    }
+    else useJSON = true;
+  },
+
+  dynamic: (filename) => {
+    if (useJSON) return this.cache(filename);
+    else return this.resolve(filename);
   }
 };

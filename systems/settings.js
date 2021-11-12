@@ -7,7 +7,7 @@
 // Pre-defined default Settings applicable to the bot or to all guilds.
 // Easily set and get Setting values, including default settings.
 
-const evg = require("./evg").resolve("settings");
+const evg = require("./evg").dynamic("settings");
 
 class LocalSettings {
 

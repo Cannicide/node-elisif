@@ -11,7 +11,7 @@ class ReactionInterpreter {
   */
   constructor(category) {
 
-    var Reactions = evg.resolve("reactions");
+    var Reactions = evg.dynamic("reactions");
 
     var utilities = {
 
@@ -112,7 +112,7 @@ class ButtonInterpreter {
   */
    constructor(category) {
 
-    var Buttons = evg.resolve("buttons");
+    var Buttons = evg.dynamic("buttons");
 
     var utilities = {
 
@@ -245,8 +245,8 @@ class DeprecatedInterpreter {
 
   constructor() {
 
-    var Reactions = evg.remodel("reactions");
-    var Buttons = evg.remodel("buttons");
+    var Reactions = evg.dynamic("reactions");
+    var Buttons = evg.dynamic("buttons");
 
     const interpreters = {
       message: [],

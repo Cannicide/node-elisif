@@ -89,7 +89,7 @@ class ButtonUtility extends ComponentUtility {
 
     static get db() {
         let evg = require("../index").evg;
-        return evg.resolve("utility");
+        return evg.dynamic("utility");
     }
 
     static get id() {
