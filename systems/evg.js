@@ -676,7 +676,7 @@ module.exports = {
     else useJSON = true;
   },
 
-  dynamic: (filename) => {
+  dynamic(filename) {
     if (useJSON) return this.cache(filename);
     else return this.resolve(filename);
   }
