@@ -39,7 +39,7 @@ const client = new Client({
     }
 });
 
-client.setting("debug_mode", false);
+client.setting("debug_mode", true);
 
 //Setup points system in test guild
 //This value can be set by guild owners via commands!

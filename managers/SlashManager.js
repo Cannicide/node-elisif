@@ -194,10 +194,15 @@ class SlashManager {
   }
 
   async setAll(commands) {
-    var slashData = commands.map(command => this.generate(command));
+    var slashData = commands.map(command => {
+      this.client.debug("Creating command: " + command.name);
+      return this.generate(command);
+    });
     let slash = await this.slash;
 
-    return await slash.set(slashData);
+    let results = await slash.set(slashData);
+    commands.forEach(command => this.client.emit("@slashCommandAdded", command));
+    return results;
   }
   
   async edit({id}, {name, desc, args}) {

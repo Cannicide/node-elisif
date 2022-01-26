@@ -114,6 +114,8 @@ class SlashCommand {
      */
     setup(client) {
 
+        client.debug("Building slash command '" + this.name + "' post-setup.");
+
         let isGuildBased = this.guilds && this.guilds.length > 0;
 
         if (isGuildBased) {

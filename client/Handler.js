@@ -211,6 +211,11 @@ class ExtendedClient extends Discord.Client {
           Interpreter.reactions.handle(r, user, false);
         });
 
+        //Elisif-simple compatible custom "slash command added" event
+        this.on("@slashCommandAdded", (command) => {
+          this.debug(`Slash command successfully loaded: ${command.name}`);
+        });
+
         this.debug("Successfully auto-initialized command and interpreter handlers.");
 
       }
