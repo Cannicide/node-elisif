@@ -187,7 +187,10 @@ class SlashManager {
     let slash = await this.slash;
     let command = this.generate({name, desc, args});
     
-    return await slash.create(command);
+    this.client.debug("Creating command: " + name);
+    let res = await slash.create(command);
+    this.client.emit("@slashCommandAdded", command);
+    return res;
   }
 
   async setAll(commands) {

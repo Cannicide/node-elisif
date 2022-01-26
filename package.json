@@ -1,10 +1,10 @@
 {
   "name": "elisif",
-  "version": "3.5.4-dev",
+  "version": "3.5.5-dev",
   "description": "A powerful Discord Bot system, command handler, slash command handler, and partial extension of discord.js.",
   "main": "index.js",
   "dependencies": {
-    "discord.js": "^13.1.0",
+    "discord.js": "^13.6.0",
     "express": "^4.17.1",
     "node-fetch": "^2.6.1",
     "quick.db": "^7.1.3"
