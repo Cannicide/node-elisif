@@ -363,7 +363,7 @@ class MessageUtility extends StructureUtility {
 
     //Message Component Shortcuts:
 
-    buttonHandler = ({authors = [this.baseInteraction?.user.id], allUsersCanClick = false, disableOnEnd = true, maxClicks = 0, time = 5, ids = this.buttons.get().map(btn => btn.asComponent().customId)}, resolve, reject) => {
+    buttonHandler = ({authors = [this.baseInteraction?.user.id], allUsersCanClick = false, disableOnEnd = true, maxClicks = 0, time = 5, ids = this.buttons.get().map(btn => btn.asComponent().customId)}, resolve = () => {}, reject = () => {}) => {
 
         let collected = false;
         let clicks = 0;
