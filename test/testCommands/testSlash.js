@@ -1,4 +1,5 @@
-const { SlashCommand, util } = require("../../index");
+const { SlashCommand, util, Discord } = require("../../index");
+const { ButtonUtility } = require("../../util/ComponentUtility");
 
 let command = new SlashCommand.SlashCommandBuilder()
 .setName("testslash")
@@ -23,7 +24,42 @@ let command = new SlashCommand.SlashCommandBuilder()
 )
 .setMethod(async slash => {
     console.log("Test slash command invoked.");
-    slash.reply("Channel ID: " + slash.getArg("arg1")?.id);
+
+    let msg = await slash.reply("Channel ID: " + slash.getArg("arg1")?.id);
+
+    let component = {
+        elisifComponentType: "button",
+        label: null,
+        customId: null,
+        style: null,
+        emoji: null,
+        url: null,
+        disabled: null
+    };
+
+    let text = "Test Label";
+    let color = "PRIMARY";
+    let id = "testid";
+
+    component.label = text;
+    component.customId = id;
+    component.style = ButtonUtility.convertColor(color);
+
+    let btn = new Discord.MessageButton(component);
+    let actionRow = new Discord.MessageActionRow();
+    actionRow.addComponents(btn);
+    msg.components.push(actionRow);
+
+    await slash.editReply(msg);
+
+    msg.util.buttonHandler({
+        allUsersCanClick: false,
+        disableOnEnd: true,
+        maxClicks: 1
+    }).then(button => {
+        button.update("Clicked: " + button.customId)
+    });
+
     // console.log("Flat (array) args:", slash.flatArgs);
     // console.log("Mapped (object) args:", slash.mappedArgs.toJSON());
     // console.log(util.inspect(slash.args, { depth: null }));

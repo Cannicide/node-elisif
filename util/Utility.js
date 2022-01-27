@@ -200,11 +200,11 @@ class Utility {
     Button = ButtonUtility;
     SelectMenu = SelectUtility;
 
-    Message(message) {
+    Message(message, optionalInteraction) {
 
         if (!(message instanceof require("discord.js").Message)) return this.Slash(message);
 
-        message.util = new MessageUtility(message, this);
+        message.util = new MessageUtility(message, this, optionalInteraction);
         return message.util;
     }
 

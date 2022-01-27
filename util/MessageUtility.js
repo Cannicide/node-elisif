@@ -17,13 +17,14 @@ class MessageUtility extends StructureUtility {
     /**
      * @param {import("./Utility")} util
     */
-    constructor(message, util) {
+    constructor(message, util, interaction) {
 
         super(message, util);
 
         this.message = message;
         this.guild = message.guild;
         this.channel = message.channel;
+        this.baseInteraction = interaction ?? null;
 
         //Determine args and command
 
@@ -353,6 +354,44 @@ class MessageUtility extends StructureUtility {
 
     get author() {
         return this.message.author;
+    }
+
+    //Message Component Shortcuts:
+
+    buttonHandler = ({author = this.baseInteraction?.user.id, allUsersCanClick = false, disableOnEnd = true, maxClicks = 0, time = 5, ids = this.buttons.get().map(btn => btn.asComponent().customId)}) => {
+
+        let collected = false;
+        let clicks = 0;
+        let ended = false;
+    
+        let endButtonHandler = (reject) => {
+            if (ended) return;
+            this.endButtonCollector();
+            ended = true;
+            if (disableOnEnd) ids.forEach(id => this.buttons.get({customId: id}).disable());
+    
+            if (collected) return;
+            reject(`User did not click a button within ${time} minutes.`);
+        }
+    
+        return new Promise((resolve, reject) => {
+            this.startButtonCollector(button => {
+    
+                if (ended) return;
+                if (maxClicks && clicks >= maxClicks) return;
+                if (!ids.includes(button.customId) || (!allUsersCanClick && button.user.id != author)) return;
+                if (this.message.id != button.message.id) return;
+    
+                collected = true;
+                this.util.Component(button);
+                resolve(button);
+    
+                if (++clicks >= maxClicks) endButtonHandler();
+    
+            });
+    
+            setTimeout(() => endButtonHandler(reject), time * 60 * 1000);
+        });
     }
 
     //Message Components:
