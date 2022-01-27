@@ -83,6 +83,10 @@ class ComponentUtility {
         return this._data;
     }
 
+    asInteraction() {
+        return this._int;
+    }
+
 }
 
 class ButtonUtility extends ComponentUtility {
