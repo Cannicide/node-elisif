@@ -9,7 +9,7 @@ class MessageUtility extends StructureUtility {
     #userArgs;
     #cooldownTimeLeft = 0;
     #cooldownLastUse = 0;
-    #buttonCollector;
+    #buttonCollectors = new Map();
     #menuCollector;
     #collecting = false;
     #menu_collecting = false;
@@ -285,32 +285,37 @@ class MessageUtility extends StructureUtility {
     }
 
     /**
-         * Starts a Button Collector that runs the given method when a button in this message is clicked. Only one Button Collector can run on a specific message at a time.
+         * Starts a Button Collector that runs the given method when a button in this message is clicked. Multiple Button Collectors can now run on a specific message at a time.
          * @param {(button:ButtonComponent) => Boolean} func - The method to run when a button is clicked. The button is passed as the first argument.
          * @returns 
          */
      startButtonCollector(func) {
-        if (this.message.components.find(row => row.components.find(c => c.type == "BUTTON")) && !this.#collecting) {
 
-            this.#buttonCollector = (button) => {                 
-                if (this.#collecting && button.message.id == this.message.id) func(button);
+        let uuid = Date.now();
+        while (this.#buttonCollectors.has(uuid)) uuid++;
+
+        if (this.message.components.find(row => row.components.find(c => c.type == "BUTTON")) && !this.#buttonCollectors.has(uuid)) {
+
+            let collector = (button) => {                 
+                if (this.#buttonCollectors.has(uuid) && button.message.id == this.message.id) func(button);
             };
 
-            this.#collecting = true;
-            return this.client.on("buttonClick", this.#buttonCollector);
+            this.client.on("buttonClick", collector);
+            this.#buttonCollectors.set(uuid, collector);
         }
-        else return false;
+
+        return uuid;
     }
 
     /**
      * Ends the currently active Button Collector on this message, if there is one.
      * @returns Boolean (whether or not button collection ended)
      */
-    endButtonCollector() {
-        if (!this.#collecting) return false;
+    endButtonCollector(uuid) {
+        if (!this.#buttonCollectors.has(uuid)) return false;
 
-        this.client.removeListener("buttonClick", this.#buttonCollector);
-        this.#collecting = false;
+        this.client.removeListener("buttonClick", this.#buttonCollectors.get(uuid));
+        this.#buttonCollectors.delete(uuid);
 
         return true;
     }
@@ -366,7 +371,7 @@ class MessageUtility extends StructureUtility {
     
         let endButtonHandler = (reject) => {
             if (ended) return;
-            this.endButtonCollector();
+            this.endButtonCollector(uuid);
             ended = true;
             if (disableOnEnd) ids.forEach(id => this.buttons.get({customId: id}).disable());
     
@@ -374,12 +379,11 @@ class MessageUtility extends StructureUtility {
             reject(`User did not click a button within ${time} minutes.`);
         }
 
-        this.startButtonCollector(button => {
+        let uuid = this.startButtonCollector(button => {
 
             if (ended) return;
             if (maxClicks && clicks >= maxClicks) return;
             if (!ids.includes(button.customId) || (!allUsersCanClick && !authors.includes(button.user.id))) return;
-            if (this.message.id != button.message.id) return;
 
             collected = true;
             this.util.Component(button);

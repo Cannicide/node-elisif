@@ -50,14 +50,47 @@ let command = new SlashCommand.SlashCommandBuilder()
     actionRow.addComponents(btn);
     msg.components.push(actionRow);
 
+    component = {
+        elisifComponentType: "button",
+        label: null,
+        customId: null,
+        style: null,
+        emoji: null,
+        url: null,
+        disabled: null
+    };
+
+    text = "Test Label 2";
+    color = "PRIMARY";
+    id = "testid2";
+
+    component.label = text;
+    component.customId = id;
+    component.style = ButtonUtility.convertColor(color);
+
+    btn = new Discord.MessageButton(component);
+    actionRow = new Discord.MessageActionRow();
+    actionRow.addComponents(btn);
+    msg.components.push(actionRow);
+
     await slash.editReply(msg);
 
     msg.util.buttonHandler({
         allUsersCanClick: false,
         disableOnEnd: true,
-        maxClicks: 1
-    }).then(button => {
-        button.update("Clicked: " + button.customId)
+        maxClicks: 2,
+        ids: ["testid"]
+    }, button => {
+        button.update("Clicked 1: " + button.customId)
+    });
+
+    msg.util.buttonHandler({
+        allUsersCanClick: false,
+        disableOnEnd: true,
+        maxClicks: 2,
+        ids: ["testid2"]
+    }, button => {
+        button.update("Clicked 2: " + button.customId)
     });
 
     // console.log("Flat (array) args:", slash.flatArgs);
