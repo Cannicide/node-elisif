@@ -358,7 +358,7 @@ class MessageUtility extends StructureUtility {
 
     //Message Component Shortcuts:
 
-    buttonHandler = ({authors = [this.baseInteraction?.user.id], allUsersCanClick = false, disableOnEnd = true, maxClicks = 0, time = 5, ids = this.buttons.get().map(btn => btn.asComponent().customId)}) => {
+    buttonHandler = ({authors = [this.baseInteraction?.user.id], allUsersCanClick = false, disableOnEnd = true, maxClicks = 0, time = 5, ids = this.buttons.get().map(btn => btn.asComponent().customId)}, resolve, reject) => {
 
         let collected = false;
         let clicks = 0;
@@ -373,25 +373,23 @@ class MessageUtility extends StructureUtility {
             if (collected) return;
             reject(`User did not click a button within ${time} minutes.`);
         }
-    
-        return new Promise((resolve, reject) => {
-            this.startButtonCollector(button => {
-    
-                if (ended) return;
-                if (maxClicks && clicks >= maxClicks) return;
-                if (!ids.includes(button.customId) || (!allUsersCanClick && !authors.includes(button.user.id))) return;
-                if (this.message.id != button.message.id) return;
-    
-                collected = true;
-                this.util.Component(button);
-                resolve(button);
-    
-                if (++clicks >= maxClicks) endButtonHandler();
-    
-            });
-    
-            setTimeout(() => endButtonHandler(reject), time * 60 * 1000);
+
+        this.startButtonCollector(button => {
+
+            if (ended) return;
+            if (maxClicks && clicks >= maxClicks) return;
+            if (!ids.includes(button.customId) || (!allUsersCanClick && !authors.includes(button.user.id))) return;
+            if (this.message.id != button.message.id) return;
+
+            collected = true;
+            this.util.Component(button);
+            resolve(button);
+
+            if (++clicks >= maxClicks) endButtonHandler();
+
         });
+
+        setTimeout(() => endButtonHandler(reject), time * 60 * 1000);
     }
 
     //Message Components:
