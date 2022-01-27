@@ -3,11 +3,11 @@ const StructureUtility = require("./StructureUtility");
 
 class SlashUtility extends StructureUtility {
 
-    #reply = {
-        deleted: false,
-        deferred: false,
-        sent: false
-    }
+    // #reply = {
+    //     deleted: false,
+    //     deferred: false,
+    //     sent: false
+    // }
 
     /**
      * @param {import("./Utility")} util
@@ -125,37 +125,55 @@ class SlashUtility extends StructureUtility {
     }
 
     deleteReply(timeoutSecs = 0) {
-        if (this.#reply.deleted) return;
-        this.#reply.deleted = true;
-        return setTimeout(() => this.interaction.deleteReply(), timeoutSecs * 1000);
+        // if (this.#reply.deleted) return;
+        // this.#reply.deleted = true;
+        
+        return new Promise((resolve, reject) => {
+            setTimeout(async () => {
+                await this.interaction.deleteReply();
+                resolve(null);
+            }, timeoutSecs * 1000);
+        });
     }
 
     editReply(options, timeoutSecs = 0) {
-        if (this.#reply.sent || this.#reply.deleted || !this.#reply.deferred) return this.reply(options);
-        this.#reply.sent = true;
-        return setTimeout(() => this.interaction.editReply(options), timeoutSecs * 1000);
+        // if (this.#reply.sent || this.#reply.deleted || !this.#reply.deferred) return this.reply(options);
+        // this.#reply.sent = true;
+
+        return new Promise((resolve, reject) => {
+            setTimeout(async () => {
+                await this.interaction.editReply(options);
+                let result = await this.interaction.fetchReply();
+                this.util.Message(result, this.interaction);
+                resolve(result);
+            }, timeoutSecs * 1000);
+        });
     }
 
     followUp(options) {
-        if (!this.#reply.sent) return this.reply(options);
+        // if (!this.#reply.sent) return this.reply(options);
         return this.interaction.followUp(options);
     }
 
-    reply(options) {
+    async reply(options) {
 
-        if (this.#reply.sent || this.#reply.deleted) return this.followUp(options);
-        if (this.#reply.deferred) return this.editReply(options);
+        // if (this.#reply.sent || this.#reply.deleted) return this.followUp(options);
+        // if (this.#reply.deferred) return this.editReply(options);
 
-        this.#reply.sent = true;
-        return this.interaction.reply(options);
+        // this.#reply.sent = true;
+        await this.interaction.reply(options);
+
+        let result = await this.interaction.fetchReply();
+        this.util.Message(result, this.interaction);
+        return result;
     }
 
     deferReply(options) {
 
-        if (this.#reply.sent || this.#reply.deleted || this.#reply.deferred) return {fulfill: () => false};
+        // if (this.#reply.sent || this.#reply.deleted || this.#reply.deferred) return {fulfill: () => false};
 
         this.interaction.deferReply(options);
-        this.#reply.deferred = true;
+        // this.#reply.deferred = true;
         this.interaction.deferred = true;
         return {
             fulfill: (resp, timeoutSecs) => this.editReply(resp, timeoutSecs)
