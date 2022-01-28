@@ -62,6 +62,9 @@ class SlashCommand {
         this.channels = options.channels;
         this.guilds = options.guilds;
         this.args = options.args ?? [];
+        this.type = options.type?.toUpperCase() ?? "CHAT_INPUT";
+
+        if (["USER", "MESSAGE"].includes(this.type) && (this.args.length > 0 || this.desc)) throw new Error("SlashCommand error: User/Message Context Menu commands cannot include a description or args.");
 
         //Add this command to the command list
         SlashCommand.COMMANDS.set(this.name, this);
@@ -126,7 +129,8 @@ class SlashCommand {
                 manager.add({
                     name: this.name,
                     desc: this.desc,
-                    args: this.args
+                    args: this.args,
+                    type: this.type
                 });
 
             });
@@ -138,7 +142,8 @@ class SlashCommand {
             manager.add({
                 name: this.name,
                 desc: this.desc,
-                args: this.args
+                args: this.args,
+                type: this.type
             });
 
         }
@@ -155,6 +160,11 @@ class SlashCommand {
             client.debug("Received slash command interaction...");
             SlashCommand.execute(slash);
         });
+
+        client.on("contextMenu", (contextMenu) => {
+            client.debug("Received context menu interaction...\nTreating as slash command interaction...");
+            SlashCommand.execute(contextMenu);
+        })
 
     }
 
@@ -544,6 +554,15 @@ class SlashCommand {
        constructor(options) {
            this.options = options ?? {};
            this.options.args = this.options.args ?? [];
+       }
+
+       /**
+        * @param {"CHAT_INPUT"|"USER"|"MESSAGE"} type
+        * @returns {this}
+        */
+       setType(type = "CHAT_INPUT") {
+            this.options.type = type;
+            return this;
        }
 
        /**

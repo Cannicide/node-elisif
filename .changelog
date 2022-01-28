@@ -68,3 +68,5 @@
 - Added "Youtube 2.0", Letter Tile, Word Snack, and Doodle crew VCA activities
 - Made EvG storage vastly more dynamic throughout the package, allowing configuration of whether to use JSON or DB storage
 - EvG JSON storage now creates the `storage` folder if it is not found
+- Added ability to easily handle button clicks, ability to run multiple buttonCollectors on a message
+- Added support for User and Message context menus, handled as Slash Commands

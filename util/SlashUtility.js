@@ -25,6 +25,19 @@ class SlashUtility extends StructureUtility {
         this.guild = interaction.guild;
         this.member = interaction.member;
         this.user = interaction.user;
+
+        //Define Context Menu interaction properties
+        if (interaction.targetType && ["MESSAGE", "USER"].includes(interaction.targetType)) {
+
+            let baseResolved = interaction.targetType == "MESSAGE" ? (this.channel.messages.cache.get(interaction.targetId)) : (this.guild.members.cache.get(interaction.targetId));
+
+            this.target = {
+                type: interaction.targetType,
+                id: interaction.targetId,
+                [interaction.targetType.toLowerCase()]: interaction.targetType == "MESSAGE" ? baseResolved : baseResolved?.user,
+                [interaction.targetType == "USER" ? "member" : null]: baseResolved
+            }
+        }
         
         //Define custom args properties with modified structures
         this.args_classic = [];

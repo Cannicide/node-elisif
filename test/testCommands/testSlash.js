@@ -24,6 +24,7 @@ let command = new SlashCommand.SlashCommandBuilder()
 )
 .setMethod(async slash => {
     console.log("Test slash command invoked.");
+    console.log(slash.target)
 
     let msg = await slash.reply("Channel ID: " + slash.getArg("arg1")?.id);
 
@@ -98,4 +99,18 @@ let command = new SlashCommand.SlashCommandBuilder()
     // console.log(util.inspect(slash.args, { depth: null }));
 });
 
-module.exports = command.build();
+let command2 = new SlashCommand.SlashCommandBuilder()
+.setType("user")
+.setName("Test Context 2")
+.setRoles(["Bot"])
+.setGuilds(["668485643487412234"])
+.setMethod(async slash => {
+    console.log("Test context menu command invoked.");
+    console.log(slash.target);
+
+    slash.reply("Worked");
+});
+
+module.exports = {
+    commands: [command.build(), command2.build()]
+}

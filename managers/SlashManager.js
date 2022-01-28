@@ -157,7 +157,7 @@ class SlashManager {
     return group;
   }
   
-  generate({name, desc, args}) {
+  generate({name, desc, args, type}) {
     let description = desc;
     args = args.map(top => {
       this.translateArg(top);
@@ -172,6 +172,7 @@ class SlashManager {
       name: name,
       description: description,
       options: args,
+      type
     };
     
     return command;
@@ -183,9 +184,9 @@ class SlashManager {
     return interaction;
   }
   
-  async add({name, desc, args}) {
+  async add({name, desc, args, type}) {
     let slash = await this.slash;
-    let command = this.generate({name, desc, args});
+    let command = this.generate({name, desc, args, type});
     
     this.client.debug("Creating command: " + name);
     let res = await slash.create(command);
