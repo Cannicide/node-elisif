@@ -57,6 +57,12 @@ class ReactionInterpreter {
           var index = utilities.findIndex(sorted_index);
           Reactions.splice(index, 1);
       },
+      removeByID: (messageID) => {
+        return utilities.remove(utilities.findSortedIndex(messageID));
+      },
+      flush: () => {
+        return Reactions.clear();
+      },
       array: () => {
           var list = Reactions.filter(item => item.category == category);
           return list;
@@ -88,7 +94,29 @@ class ReactionInterpreter {
           filter,
           response,
           adding,
-          category
+          category,
+          lode: {
+            type: "reactions",
+            filter,
+            response,
+            adding,
+            category,
+            passesFilter(reactionEntry, reaction, user) {
+              return filter(reactionEntry, reaction, user);
+            },
+          
+            simulateResponse(reaction, user) {
+              return response(reaction, user);
+            },
+
+            add: utilities.add,
+            remove: utilities.remove,
+            removeByID: utilities.removeByID,
+            array: utilities.array,
+            fetch: utilities.fetch,
+            findIndex: utilities.findIndex,
+            findSortedIndex: utilities.findSortedIndex
+          }
         });
 
       }
@@ -149,6 +177,12 @@ class ButtonInterpreter {
           var index = utilities.findIndex(sorted_index);
           Buttons.splice(index, 1);
       },
+      removeByID: (messageID) => {
+        return utilities.remove(utilities.findSortedIndex(messageID));
+      },
+      flush: () => {
+        return Buttons.clear();
+      },
       array: () => {
           var list = Buttons.filter(item => item.category == category);
           return list;
@@ -178,7 +212,28 @@ class ButtonInterpreter {
           type: "buttons",
           filter,
           response,
-          category
+          category,
+          lode: {
+            type: "buttons",
+            filter,
+            response,
+            category,
+            passesFilter(buttonEntry, button) {
+              return filter(buttonEntry, button);
+            },
+          
+            simulateResponse(button) {
+              return response(button);
+            },
+
+            add: utilities.add,
+            remove: utilities.remove,
+            removeByID: utilities.removeByID,
+            array: utilities.array,
+            fetch: utilities.fetch,
+            findIndex: utilities.findIndex,
+            findSortedIndex: utilities.findSortedIndex
+          }
         });
 
       }
@@ -208,16 +263,12 @@ class MessageInterpreter {
      */
   constructor({filter, response, DMs}) {
 
-    var type = DMs ? 'dms' : 'message';
-
-    __intp.register({
-      type: type,
-      filter: filter,
-      response: response
-    });
-
+    this.type = DMs ? 'dms' : 'message';
     this.#filter = filter;
     this.#response = response;
+    this.lode = this;
+
+    __intp.register(this);
 
   }
 
@@ -229,11 +280,11 @@ class MessageInterpreter {
     return this.#response(message, args);
   }
 
-  getFilter() {
+  get filter() {
     return this.#filter;
   }
 
-  getResponse() {
+  get response() {
     return this.#response;
   }
 
@@ -368,11 +419,12 @@ class DeprecatedInterpreter {
      * @param {String} [options.category] - The category of the reaction/button interpreter. Not applicable for messages or DMs.
      * @param {boolean} [options.adding] - For reaction interpreters, defines whether to handle the reaction being added or removed.
      */
-    this.register = ({ type, filter, response, category, adding = true }) => {
+    this.register = ({ type, filter, response, category, adding = true, lode }) => {
 
       var intp = {
-        filter: filter,
-        response: response
+        filter,
+        response,
+        lode
       };
 
       type = type.toLowerCase();
@@ -563,7 +615,7 @@ class Interpreter {
           filter, response, DMs: false
         });
 
-        if (identifier) this.#messages[identifier] = messageInterpreter;
+        if (identifier && isNaN(identifier)) this.#messages[identifier] = messageInterpreter;
 
         return messageInterpreter;
       },
@@ -573,6 +625,13 @@ class Interpreter {
        * @returns {MessageInterpreter} MessageInterpreter
        */
       get: (identifier) => this.#messages[identifier] || null, 
+      /**
+       * Returns an array of all currently active MessageInterpreters.
+       * @returns {MessageInterpreter[]} Array of MessageInterpreters
+       */
+      list: () => {
+        return this.interpreters.message.map(i => i.lode ? i.lode : i);
+      }
     }
   }
 
@@ -606,7 +665,14 @@ class Interpreter {
        * @param {String} identifier - The identifier of the DM interpreter.
        * @returns {MessageInterpreter} MessageInterpreter for DMs
        */
-      get: (identifier) => this.#messages[identifier] || null, 
+      get: (identifier) => this.#messages[identifier] || null,  
+      /**
+       * Returns an array of all currently active DMInterpreters.
+       * @returns {MessageInterpreter[]} Array of DMInterpreters
+       */
+      list: () => {
+        return this.interpreters.dm.map(i => i.lode ? i.lode : i);
+      }
     }
 
   }
@@ -643,6 +709,13 @@ class Interpreter {
        * @returns {ReactionInterpreter} ReactionInterpreter
        */
       get: (category) => new ReactionLode(category), 
+      /**
+       * Returns an array of all currently active ReactionInterpreters.
+       * @returns {ReactionInterpreter[]} Array of ReactionInterpreters
+       */
+      list: () => {
+        return this.interpreters.reaction.map(i => i.lode ? i.lode : i);
+      }
     }
 
   }
@@ -678,6 +751,13 @@ class Interpreter {
        * @returns {ButtonInterpreter} ButtonInterpreter
        */
       get: (category) => new ButtonLode(category), 
+      /**
+       * Returns an array of all currently active ButtonInterpreters.
+       * @returns {ButtonInterpreter[]} Array of ButtonInterpreters
+       */
+      list: () => {
+        return this.interpreters.button.map(i => i.lode ? i.lode : i);
+      }
     }
 
   }

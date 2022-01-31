@@ -38,6 +38,12 @@ class LocalSettings {
         return this.#table.get(setting);
     }
 
+    remove(setting) {
+        if (setting && this.#table.has(setting)) return this.#table.remove(setting);
+
+        return null;
+    }
+
     table(key, def) {
 
         if (!this.#table.has(key)) this.#table.set(key, def !== undefined ? def : {});

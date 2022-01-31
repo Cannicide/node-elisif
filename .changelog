@@ -70,3 +70,5 @@
 - EvG JSON storage now creates the `storage` folder if it is not found
 - Added ability to easily handle button clicks, ability to run multiple buttonCollectors on a message
 - Added support for User and Message context menus, handled as Slash Commands
+- Added previously overlooked ability to delete settings in Setting system
+- Improved handling and managing interpreters, especially button and reaction interpreters.
