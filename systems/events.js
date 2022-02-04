@@ -9,6 +9,7 @@ module.exports = class DiscordExtender {
         Events.BUTTON_CLICK = 'buttonClick';
         Events.MENU_SELECT = 'menuSelect';
         Events.SLASH_COMMAND = 'slashCommand';
+        Events.AUTO_COMPLETE = 'autoComplete';
         Events.CONTEXT_MENU = 'contextMenu';
         Events.SERVER_BOOST = 'serverBoost';
 
@@ -24,6 +25,12 @@ module.exports = class DiscordExtender {
             //Interaction Type = Slash Command
             if (interaction.isCommand()) {
                 client.emit('slashCommand', interaction);
+                return;
+            }
+
+            //Interaction Type = Autocomplete
+            if (interaction.isAutocomplete()) {
+                client.emit('autoComplete', interaction);
                 return;
             }
             
