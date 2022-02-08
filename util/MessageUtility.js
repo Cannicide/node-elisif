@@ -389,7 +389,7 @@ class MessageUtility extends StructureUtility {
             this.util.Component(button);
             resolve(button);
 
-            if (++clicks >= maxClicks) endButtonHandler();
+            if (maxClicks && ++clicks >= maxClicks) endButtonHandler();
 
         });
 
