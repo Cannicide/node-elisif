@@ -10,9 +10,7 @@ class MessageUtility extends StructureUtility {
     #cooldownTimeLeft = 0;
     #cooldownLastUse = 0;
     #buttonCollectors = new Map();
-    #menuCollector;
-    #collecting = false;
-    #menu_collecting = false;
+    #menuCollectors = new Map();
 
     /**
      * @param {import("./Utility")} util
@@ -285,10 +283,10 @@ class MessageUtility extends StructureUtility {
     }
 
     /**
-         * Starts a Button Collector that runs the given method when a button in this message is clicked. Multiple Button Collectors can now run on a specific message at a time.
-         * @param {(button:ButtonComponent) => Boolean} func - The method to run when a button is clicked. The button is passed as the first argument.
-         * @returns 
-         */
+     * Starts a Button Collector that runs the given method when a button in this message is clicked. Multiple Button Collectors can now run on a specific message at a time.
+     * @param {(button:ButtonComponent) => Boolean} func - The method to run when a button is clicked. The button is passed as the first argument.
+     * @returns 
+     */
      startButtonCollector(func) {
 
         let uuid = Date.now();
@@ -308,7 +306,7 @@ class MessageUtility extends StructureUtility {
     }
 
     /**
-     * Ends the currently active Button Collector on this message, if there is one.
+     * Ends the currently active Button Collector with the given uuid on this message, if it exists.
      * @returns Boolean (whether or not button collection ended)
      */
     endButtonCollector(uuid) {
@@ -321,32 +319,38 @@ class MessageUtility extends StructureUtility {
     }
 
     /**
-     * Starts a Menu Collector that runs the given method when a select menu is used. Only one Menu Collector can run on a specific message at a time.
+     * Starts a Menu Collector that runs the given method when a select menu is used. Multiple Menu Collectors can now run on a specific message at a time.
      * @param {(menu:SelectMenuComponent) => Boolean} func - The method to run when a select menu is used. The menu is passed as the first argument.
      * @returns 
      */
      startMenuCollector(func) {
-        if (this.message.components.find(row => row.components.find(c => c.type == "SELECT_MENU")) && !this.#menu_collecting) {
 
-            this.#menuCollector = (menu) => {                 
-                if (this.#menu_collecting && menu.message.id == this.message.id) func(menu);
+        let uuid = Date.now();
+        while (this.#menuCollectors.has(uuid)) uuid++;
+
+        if (this.message.components.find(row => row.components.find(c => c.type == "SELECT_MENU")) && !this.#menuCollectors.has(uuid)) {
+
+            let collector = (menu) => {                 
+                if (this.#menuCollectors.has(uuid) && menu.message.id == this.message.id) func(menu);
             };
 
-            this.#menu_collecting = true;
-            return this.client.on("menuSelect", this.#menuCollector);
+            this.client.on("menuSelect", collector);
+            this.#menuCollectors.set(uuid, collector);
         }
-        else return false;
+
+        return uuid;
     }
 
     /**
-     * Ends the currently active Menu Collector on this message, if there is one.
+     * Ends the currently active Menu Collector with the given uuid on this message, if it exists.
      * @returns Boolean (whether or not menu collection ended)
      */
-    endMenuCollector() {
-        if (!this.#menu_collecting) return false;
+    endMenuCollector(uuid) {
 
-        this.client.removeListener("menuSelect", this.#menuCollector);
-        this.#menu_collecting = false;
+        if (!this.#menuCollectors.has(uuid)) return false;
+
+        this.client.removeListener("menuSelect", this.#menuCollectors.get(uuid));
+        this.#menuCollectors.delete(uuid);
 
         return true;
     }
@@ -394,6 +398,34 @@ class MessageUtility extends StructureUtility {
         });
 
         setTimeout(() => endButtonHandler(reject), time * 60 * 1000);
+    }
+
+    menuHandler = ({authors = [this.baseInteraction?.user.id], allUsersCanSelect = false, time = 5, ids = this.menus.get().map(m => m.asComponent().customId)}, resolve = () => {}, reject = () => {}) => {
+
+        let collected = false;
+        let ended = false;
+    
+        let endMenuHandler = (reject) => {
+            if (ended) return;
+            this.endMenuCollector(uuid);
+            ended = true;
+    
+            if (collected) return;
+            reject(`User did not use the menu within ${time} minutes.`);
+        }
+
+        let uuid = this.startMenuCollector(menu => {
+
+            if (ended) return;
+            if (!ids.includes(menu.customId) || (!allUsersCanSelect && !authors.includes(menu.user.id))) return;
+
+            collected = true;
+            this.util.Component(menu);
+            resolve(menu);
+
+        });
+
+        setTimeout(() => endMenuHandler(reject), time * 60 * 1000);
     }
 
     //Message Components:
