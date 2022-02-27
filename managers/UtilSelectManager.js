@@ -125,6 +125,14 @@ class SelectManager {
         return this.edit(index, {max_values: max});
     }
 
+    enable(row) {
+        return this.edit(row, {disabled: false});
+    }
+
+    disable(row) {
+        return this.edit(row, {disabled: true});
+    }
+
     options = {
         menu: this,
         /**

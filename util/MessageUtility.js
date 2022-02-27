@@ -400,7 +400,7 @@ class MessageUtility extends StructureUtility {
         setTimeout(() => endButtonHandler(reject), time * 60 * 1000);
     }
 
-    menuHandler = ({authors = [this.baseInteraction?.user.id], allUsersCanSelect = false, time = 5, ids = this.menus.get().map(m => m.asComponent().customId)}, resolve = () => {}, reject = () => {}) => {
+    menuHandler = ({authors = [this.baseInteraction?.user.id], allUsersCanSelect = false, disableOnEnd = true, time = 5, ids = this.menus.get().map(m => m.asComponent().customId)}, resolve = () => {}, reject = () => {}) => {
 
         let collected = false;
         let ended = false;
@@ -409,6 +409,7 @@ class MessageUtility extends StructureUtility {
             if (ended) return;
             this.endMenuCollector(uuid);
             ended = true;
+            if (disableOnEnd) ids.forEach(id => this.menus.get({customId: id}).disable());
     
             if (collected) return;
             reject(`User did not use the menu within ${time} minutes.`);
@@ -422,6 +423,7 @@ class MessageUtility extends StructureUtility {
             collected = true;
             this.util.Component(menu);
             resolve(menu);
+            endButtonHandler();
 
         });
 

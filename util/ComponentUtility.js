@@ -343,6 +343,16 @@ class SelectUtility extends ComponentUtility {
         return manager.setPlaceholder(row, placeholder);
     }
 
+    enable() {
+        var { row, manager } = this;
+        return manager.enable(row);
+    }
+
+    disable() {
+        var { row, manager } = this;
+        return manager.disable(row);
+    }
+
     setMin(min) {
         var { row, manager } = this;
         return manager.setMin(row, min);
