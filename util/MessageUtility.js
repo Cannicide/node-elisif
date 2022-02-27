@@ -423,7 +423,7 @@ class MessageUtility extends StructureUtility {
             collected = true;
             this.util.Component(menu);
             resolve(menu);
-            endButtonHandler();
+            endMenuHandler();
 
         });
 
