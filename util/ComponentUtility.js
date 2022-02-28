@@ -339,28 +339,28 @@ class SelectUtility extends ComponentUtility {
     }
 
     setPlaceholder(placeholder) {
-        var { row, manager } = this;
-        return manager.setPlaceholder(row, placeholder);
+        var { customId, manager } = this;
+        return manager.setPlaceholder({customId}, placeholder);
     }
 
     enable() {
-        var { row, manager } = this;
-        return manager.enable(row);
+        var { customId, manager } = this;
+        return manager.enable({customId});
     }
 
     disable() {
-        var { row, manager } = this;
-        return manager.disable(row);
+        var { customId, manager } = this;
+        return manager.disable({customId});
     }
 
     setMin(min) {
-        var { row, manager } = this;
-        return manager.setMin(row, min);
+        var { customId, manager } = this;
+        return manager.setMin({customId}, min);
     }
 
     setMax(max) {
-        var { row, manager } = this;
-        return manager.setMax(row, max);
+        var { customId, manager } = this;
+        return manager.setMax({customId}, max);
     }
 
     options = {
@@ -376,8 +376,8 @@ class SelectUtility extends ComponentUtility {
          */
         add(option) {
             //@ts-ignore
-            var { row, manager } = this.menu;
-            return manager.options.add(row, option);
+            var { customId, manager } = this.menu;
+            return manager.options.add({customId}, option);
         },
 
         /**
@@ -386,14 +386,14 @@ class SelectUtility extends ComponentUtility {
          */
         remove(value) {
             //@ts-ignore
-            var { row, manager } = this.menu;
-            return manager.options.remove(row, value);
+            var { customId, manager } = this.menu;
+            return manager.options.remove({customId}, value);
 
         },
 
         get(value) {
-            var { row, manager } = this.menu;
-            return manager.options.get(row, value);
+            var { customId, manager } = this.menu;
+            return manager.options.get({customId}, value);
         }
     }
 
