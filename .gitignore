@@ -1,7 +1,4 @@
 # Ignored directories
 node_modules/
-.github/
-.github/workflows/
-json.sqlite
-json.sqlite-journal
-test/token.json
+#.github/
+#.github/workflows/
