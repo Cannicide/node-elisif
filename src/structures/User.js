@@ -1,4 +1,5 @@
 const ExtendedStructure = require('./ExtendedStructure');
+const Timestamp = require('./Timestamp');
 const { User: BaseUser } = require("discord.js");
 const getId = (userOrId) => ["string", "number"].includes(typeof userOrId) ? userOrId : userOrId.id;
 
@@ -30,7 +31,9 @@ module.exports = class User extends ExtendedStructure {
         return `<@${this.#u.id}>`;
     }
 
-    timestamp = "new TimestampManager(date, timestamp)";
+    get timestamp() {
+        return new Timestamp(this.#u.createdAt, this.#u.createdTimestamp);
+    }
 
     // settings = "new UserSettings()";
 

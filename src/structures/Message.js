@@ -1,11 +1,14 @@
 // TODO: Complete Message
 
 const ExtendedStructure = require('./ExtendedStructure');
+const User = require('./User');
+const Timestamp = require('./Timestamp');
 const { Emap, asMessageOptions } = require('../util');
 const { Message: BaseMessage } = require("discord.js");
 
 module.exports = class Message extends ExtendedStructure {
 
+    /** @type {BaseMessage} */
     #m;
     constructor(client, message) {
         super(client, message);
@@ -34,6 +37,10 @@ module.exports = class Message extends ExtendedStructure {
         return this.#m.guild;
     }
 
+    get author() {
+        return new User(this.client, this.#m.author);
+    }
+
     get command() {
         return {
             name: this.words[0],
@@ -44,6 +51,10 @@ module.exports = class Message extends ExtendedStructure {
     //get markup() {}
 
     // reactions = "new ReactionManager()";
+
+    get timestamp() {
+        return new Timestamp(this.#m.createdAt, this.#m.createdTimestamp);
+    }
 
     delete({ timeout, filter }) {
         //not implemented yet

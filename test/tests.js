@@ -28,13 +28,17 @@ client.on("ready", async () => {
 // });
 
 client.on("message", m => {
-    console.log("Message", m.content);
-    console.log("Words", m.words);
-    console.log("Sim", m.simulated);
+    // console.log("Message", m.content);
+    // console.log("Words", m.words);
+    // console.log("Sim", m.simulated);
 
-    m.client.debug(m);
-
-    if (!m.author.bot) m.reply("test reply");
+    if (!m.author.bot) {
+        m.reply(`
+            Test reply
+            M created: ${m.timestamp}
+            U created: ${m.author.timestamp}
+        `);
+    }
 });
 
 client.login(loadToken(__dirname + "/token.json"));
