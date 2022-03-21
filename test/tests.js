@@ -14,7 +14,8 @@ const client = new Client(config => {
 });
 
 client.on("ready", async () => {
-    console.log("Ready!");
+    client.debug("Ready!");
+    // client.debug(client);
     if (client.simulated) simulateMessage(client, "test this", {userId: "274639466294149122"});
 });
 
@@ -30,6 +31,8 @@ client.on("message", m => {
     console.log("Message", m.content);
     console.log("Words", m.words);
     console.log("Sim", m.simulated);
+
+    m.client.debug(m);
 
     if (!m.author.bot) m.reply("test reply");
 });

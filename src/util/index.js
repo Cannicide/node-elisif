@@ -1,5 +1,6 @@
 
 const { Collection } = require('discord.js');
+const Boa = require('./Boa');
 
 module.exports = {
 
@@ -52,6 +53,10 @@ module.exports = {
                 ...opts
             }));
         }.bind(module.exports);
+    },
+
+    get boa() {
+        return Boa();
     }
 
 }

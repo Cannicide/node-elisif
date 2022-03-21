@@ -2,7 +2,7 @@
 
 const { Client } = require('discord.js');
 const server = require('express')();
-const { parseBuilder, Emap } = require('../util');
+const { parseBuilder, Emap, boa } = require('../util');
 const ElisifConfig = require('./config/Config');
 const EventExtensionManager = require('../managers/EventExtensionManager');
 
@@ -174,7 +174,7 @@ class ElisifClient extends Client {
                 names.push(file + "/");
                 return this.loadFiles(path);
             } else if (path.endsWith(".js")) {
-                // this.debug("Loaded File:", file);
+                this.debug("Loaded File:", file);
                 let cmd = require(path);
                 if ("init" in cmd) cmd.init(this);
                 else if (typeof cmd === "function" && cmd?.name?.toLowerCase() === "init") cmd(this);
@@ -193,6 +193,22 @@ class ElisifClient extends Client {
     login(token) {
         if (!this.simulated) return super.login(token);
         else setTimeout(() => this.emit("ready"), 2000);
+    }
+
+    debug(...args) {
+        if (this.#config?.debug?.logs) {
+            args = args.map(arg => {
+                if (arg && boa.isObject(arg)) {
+                    arg = Object.assign(Array.isArray(arg) ? [] : {}, arg);
+                    if (Array.isArray(arg)) arg = arg.map(a => boa.stringify(a, 75) ?? a);
+                    else Object.keys(arg).forEach(key => arg[key] = boa.stringify(arg[key], 75) ?? arg[key]);
+                    return `\n${boa.table(arg)}\n`;
+                }
+                return arg;
+            });
+
+            console.log(...args);
+        }
     }
 
 }
