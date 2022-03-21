@@ -5,6 +5,7 @@ const server = require('express')();
 const { parseBuilder, Emap, boa } = require('../util');
 const ElisifConfig = require('./config/Config');
 const EventExtensionManager = require('../managers/EventExtensionManager');
+const ClientUser = require('../structures/ClientUser');
 
 class ElisifClient extends Client {
 
@@ -54,10 +55,9 @@ class ElisifClient extends Client {
             // SlashCommand.setupAll(this);
             // builder.initializeAutocomplete(this);
             console.log("READY")
-            if (this.simulated) this.user = { 
-                bot: true,
-                id: "000000000000000001"
-            }; // = ClientUser.from(client)
+
+            //Define simulated ClientUser:
+            if (this.simulated) this.user = ClientUser.from(client);
 
         });
     }
@@ -210,6 +210,11 @@ class ElisifClient extends Client {
             console.log(...args);
         }
     }
+
+    /**
+     * @type {ClientUser}
+     */
+    user; // Here for documentation purposes
 
 }
 

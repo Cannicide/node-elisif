@@ -17,13 +17,64 @@ module.exports = class User extends ExtendedStructure {
     }
 
     get profile() {
+        const u = this.#u;
         return {
-            banner: this.#u.bannerURL({ dynamic: true }),
-            bannerStatic: this.#u.bannerURL({ dynamic: false }),
-            bannerColor: this.#u.hexAccentColor,
-            avatar: this.#u.displayAvatarURL({ dynamic: true }),
-            avatarStatic: this.#u.displayAvatarURL({ dynamic: false }),
-            avatarDefault: this.#u.defaultAvatarURL
+            async hasBanner() {
+                let banner = await this.banner();
+                return !banner.startsWith("https://singlecolorimage.com/get/");
+            },
+            async banner() {
+                let banner;
+
+                try {
+                    banner = u.bannerURL({ dynamic: true });
+                }
+                catch {
+                    await u.fetch(true);
+                    try {
+                        banner = u.bannerURL({ dynamic: true });
+                    }
+                    catch {
+                        banner = null;
+                    }
+                }
+
+                return banner ?? `https://singlecolorimage.com/get/${(await this.bannerColor()).slice(1)}/400x191.png`;
+            },
+            async bannerStatic() {
+                let banner;
+
+                try {
+                    banner = u.bannerURL({ dynamic: false });
+                }
+                catch {
+                    await u.fetch(true);
+                    try {
+                        banner = u.bannerURL({ dynamic: false });
+                    }
+                    catch {
+                        banner = null;
+                    }
+                }
+
+                return banner ?? `https://singlecolorimage.com/get/${(await this.bannerColor()).slice(1)}/400x191.png`;
+            },
+            async bannerColor() {
+                if (!u.hexAccentColor) await u.fetch(true);
+                return u.hexAccentColor;
+            },
+            hasAvatar() {
+                return this.avatar() != this.avatarDefault();
+            },
+            avatar() {
+                return u.displayAvatarURL({ dynamic: true });
+            },
+            avatarStatic() {
+                return u.displayAvatarURL({ dynamic: false });
+            },
+            avatarDefault() {
+                return u.defaultAvatarURL;
+            }
         }
     }
 
@@ -46,6 +97,10 @@ module.exports = class User extends ExtendedStructure {
     }
 
     //memberOf(guild)
+
+    isClient() {
+        return false;
+    }
 
     [Symbol.toPrimitive](hint) {
         if (hint == "string") return this.mention;
