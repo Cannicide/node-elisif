@@ -39,7 +39,7 @@ module.exports = class User extends ExtendedStructure {
                     }
                 }
 
-                return banner ?? `https://singlecolorimage.com/get/${(await this.bannerColor()).slice(1)}/400x191.png`;
+                return banner ?? `https://singlecolorimage.com/get/${(await this.bannerColor())?.slice(1) ?? "000000"}/400x191.png`;
             },
             async bannerStatic() {
                 let banner;
@@ -82,11 +82,13 @@ module.exports = class User extends ExtendedStructure {
         return `<@${this.#u.id}>`;
     }
 
-    get timestamp() {
+    get created() {
         return new Timestamp(this.#u.createdAt, this.#u.createdTimestamp);
     }
 
-    // settings = "new UserSettings()";
+    // TODO: add custom presence manager
+
+    // TODO: add user settings manager
 
     is(otherUser) {
         return this.#u.id === getId(otherUser);
@@ -96,7 +98,7 @@ module.exports = class User extends ExtendedStructure {
         return this.is(messageOrInteraction.author ?? messageOrInteraction.user);
     }
 
-    //memberOf(guild)
+    // TODO: add memberOf(guild) method
 
     isClient() {
         return false;

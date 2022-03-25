@@ -1,12 +1,25 @@
 
 const { Emap } = require('../util');
 
+class NullType {
+    id = null;
+}
+
 module.exports = class CacheManager extends Emap {
 
-    constructor(cache, type, manager) {
+    constructor(cache, type = NullType, manager) {
         super(cache);
         Object.defineProperty(this, 'type', { value: type });
-        if (manager) for (const key in manager) if (!(key in this)) Object.defineProperty(this, key, { value: manager[key] });
+        if (manager) {
+            for (const key in manager) if (!(key in this)) Object.defineProperty(this, key, { value: manager[key] });
+            for (const key in Object.getOwnPropertyDescriptors(Object.getPrototypeOf(manager))) {
+                const descriptor = Object.getOwnPropertyDescriptors(Object.getPrototypeOf(manager))[key];
+                if (descriptor.value && typeof descriptor.value === 'function') descriptor.value = descriptor.value.bind(manager);
+                if (descriptor.get && typeof descriptor.get === 'function') descriptor.get = descriptor.get.bind(manager);
+                if (descriptor.set && typeof descriptor.set === 'function') descriptor.set = descriptor.set.bind(manager);
+                if (!(key in this)) Object.defineProperty(this, key, descriptor);
+            }
+        }
     }
 
     /**

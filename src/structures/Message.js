@@ -2,6 +2,7 @@
 
 const ExtendedStructure = require('./ExtendedStructure');
 const User = require('./User');
+const GuildMember = require('./GuildMember');
 const Timestamp = require('./Timestamp');
 const { Emap, asMessageOptions } = require('../util');
 const { Message: BaseMessage } = require("discord.js");
@@ -19,26 +20,30 @@ module.exports = class Message extends ExtendedStructure {
         return this.#m.content.trim().split(/\s+/);
     }
 
-    // buttons = "new ButtonManager()";
+    // TODO: add button manager
 
-    // menus = "new MenuManager()";
+    // TODO: add menu manager
 
-    // components = "new ComponentManager()";
+    // TODO: add component manager
 
-    // embeds = "new EmbedManager()";
+    // TODO: add embed manager
 
     get channel() {
-        // "new Channel(this.client, this.#m.channel)";
+        // TODO: implement custom channel
         return this.#m.channel;
     }
 
     get guild() {
-        // "new Guild(this.client, this.#m.guild)";
+        // TODO: implement custom guild
         return this.#m.guild;
     }
 
     get author() {
         return new User(this.client, this.#m.author);
+    }
+
+    get member() {
+        return new GuildMember(this.client, this.#m.member);
     }
 
     get command() {
@@ -48,21 +53,21 @@ module.exports = class Message extends ExtendedStructure {
         };
     }
 
-    //get markup() {}
+    // TODO: add markup property
 
-    // reactions = "new ReactionManager()";
+    // TODO: add reaction manager
 
-    get timestamp() {
+    get created() {
         return new Timestamp(this.#m.createdAt, this.#m.createdTimestamp);
     }
 
     delete({ timeout, filter }) {
-        //not implemented yet
+        // TODO: implement custom delete method
         return this.#m.delete();
     }
 
     reply(optsOrContent) {
-        //not implemented yet
+        // TODO: implement custom reply method
         return this.#m.reply(optsOrContent);
     }
 

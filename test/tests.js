@@ -42,8 +42,8 @@ client.on("message", /** @param {import("../src/structures/Message")} m */ async
 
         m.reply(`
             Test reply
-            M created: ${m.timestamp}
-            U created: ${m.author.timestamp}
+            M created: ${m.created}
+            U created: ${m.author.created}
             U banner: ${await m.author.profile.banner()}
             U has banner: ${await m.author.profile.hasBanner()}
             U avatar: ${m.author.profile.avatar()}
@@ -52,6 +52,11 @@ client.on("message", /** @param {import("../src/structures/Message")} m */ async
             C is client: ${m.client.user.isClient()}
             U is bot: ${m.author.bot}
             C is bot: ${m.client.user.bot}
+            U has FAKE perm: ${m.member.permissions.hasStrict("FAKE")}
+            U has Member and Bot Developer roles: ${m.member.roles.has("Member", "Bot Developer")}
+            U has Member and Fake roles: ${m.member.roles.has("Fake", "Member")}
+            U has Member or Fake roles: ${m.member.roles.any("Fake", "Member")}
+            U has none of Fake and Fake2 roles: ${m.member.roles.none("Fake", "Fake2")}
         `);
     }
 });
