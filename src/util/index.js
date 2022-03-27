@@ -55,6 +55,41 @@ module.exports = {
         }.bind(module.exports);
     },
 
+    /**
+     * Creates an extended function from a function and provided extra properties.
+     * @param {Function} f - The function to extend.
+     * @param {ExtendedFunction} properties - An object with static properties to extend the function with.
+     * @returns {ExtendedFunction} An extended function with additional specified static properties added to it.
+     */
+    extendedFunction(f, properties) {
+        for (const prop in properties) f[prop] = properties[prop];
+        return f;
+    },
+
+    /**
+     * Extends a target object using all properties and prototype properties of the source object.
+     * Any properties already on the target object will NOT be overrided by the source object.
+     * This method will navigate the full prototype chain of the source object, applying the properties of all parent classes to the target object.
+     * @param {*} target - The target object to extend.
+     * @param {*} source - The object to use to extend the target object.
+     */
+    deepExtendInstance(target, source) {
+        for (const key in source) if (!(key in target)) Object.defineProperty(target, key, { value: source[key] });
+
+        let proto = source;
+        const extendPrototype = () => {
+            for (const key in Object.getOwnPropertyDescriptors(proto)) {
+                const descriptor = Object.getOwnPropertyDescriptors(proto)[key];
+                if (descriptor.value && typeof descriptor.value === 'function') descriptor.value = descriptor.value.bind(source);
+                if (descriptor.get && typeof descriptor.get === 'function') descriptor.get = descriptor.get.bind(source);
+                if (descriptor.set && typeof descriptor.set === 'function') descriptor.set = descriptor.set.bind(source);
+                if (!(key in target)) Object.defineProperty(target, key, descriptor);
+            }
+        };
+
+        while (Object.getPrototypeOf(proto)) extendPrototype(proto = Object.getPrototypeOf(proto));
+    },
+
     get boa() {
         return Boa();
     }
