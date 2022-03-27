@@ -90,10 +90,6 @@ module.exports = class User extends ExtendedStructure {
 
     // TODO: add user settings manager
 
-    is(otherUser) {
-        return this.#u.id === getId(otherUser);
-    }
-
     authorOf(messageOrInteraction) {
         return this.is(messageOrInteraction.author ?? messageOrInteraction.user);
     }

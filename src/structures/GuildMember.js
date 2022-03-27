@@ -4,7 +4,6 @@ const User = require('./User');
 const PermissionManager = require('../managers/PermissionManager');
 const GuildMemberRoleManager = require('../managers/GuildMemberRoleManager');
 const { GuildMember: BaseMember } = require("discord.js");
-const getId = (userOrId) => ["string", "number"].includes(typeof userOrId) ? userOrId : userOrId.id;
 
 /**
  * @extends {ExtendedStructure}
@@ -82,10 +81,6 @@ module.exports = class GuildMember extends ExtendedStructure {
 
     get mention() {
         return `<@${this.#m.id}>`;
-    }
-
-    is(otherMember) {
-        return this.#m.id === getId(otherMember);
     }
 
     /**
