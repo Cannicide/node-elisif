@@ -1,7 +1,7 @@
 require("../src");
 const Client = require('../src/client/Client');
 const Intent = require('../src/structures/Intent');
-const { loadToken, simulateMessage } = require('../src/util');
+const { loadToken, simulateMessage, guilds } = require('../src/util');
 
 const client = new Client(config => {
     config.intents(Intent.ALL)
@@ -58,6 +58,13 @@ client.on("message", /** @param {import("../src/structures/Message")} m */ async
             U has Member or Fake roles: ${m.member.roles.any("Fake", "Member")}
             U has none of Fake and Fake2 roles: ${m.member.roles.none("Fake", "Fake2")}
         `);
+
+        // await client.guilds.fetch(m.guild.id, true);
+        const guild = guilds(client).get({id: m.guild.id})?.id;
+        console.log(guild);
+        console.log(guilds(client, m.guild.id)?.first()?.id);
+        console.log(guilds(client).size);
+        console.log(guilds(client).cache.size);
     }
 });
 

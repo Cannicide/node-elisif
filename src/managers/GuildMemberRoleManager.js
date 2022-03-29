@@ -6,7 +6,7 @@ module.exports = class GuildMemberRoleManager extends CacheManager {
     /** @type {BaseGuildMemberRoleManager} */
     #r;
     constructor(roleManager) {
-        super([...roleManager.cache.entries()], Role, roleManager);
+        super([...roleManager?.cache?.entries()], Role, roleManager);
         this.#r = roleManager;
 
         this.emapSet = super.set;

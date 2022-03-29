@@ -94,7 +94,9 @@ module.exports = class User extends ExtendedStructure {
         return this.is(messageOrInteraction.author ?? messageOrInteraction.user);
     }
 
-    // TODO: add memberOf(guild) method
+    memberOf(idOrGuild) {
+        return this.client.guilds.resolve(idOrGuild)?.members.has(this.id);
+    }
 
     isClient() {
         return false;

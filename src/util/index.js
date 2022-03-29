@@ -90,6 +90,20 @@ module.exports = {
         while (Object.getPrototypeOf(proto)) extendPrototype(proto = Object.getPrototypeOf(proto));
     },
 
+    guilds(structure, ...ids) {
+        const GuildManager = require('../managers/GuildManager');
+        const guilds = new GuildManager(structure.guilds);
+        if (ids.flat().length) return guilds.filter(g => ids.flat().includes(g.id));
+        return guilds;
+    },
+
+    channels(structure, ...ids) {
+        const ChannelManager = require('../managers/ChannelManager');
+        const channels = new ChannelManager(structure.channels);
+        if (ids.flat().length) return channels.filter(c => ids.flat().includes(c.id));
+        return channels;
+    },
+
     get boa() {
         return Boa();
     }
@@ -103,6 +117,9 @@ class Emap extends Collection {
     }
 
     static matches(item, cachedItem) {
+        // Skip all-prop check if IDs match
+        if (item && cachedItem && "id" in item && "id" in cachedItem && item.id === cachedItem.id) return true;
+
         for (const key in item) {
             if (!cachedItem.hasOwnProperty(key)) return false;
             if (typeof item[key] === 'object' && item[key]) return this.matches(item[key], cachedItem[key]);

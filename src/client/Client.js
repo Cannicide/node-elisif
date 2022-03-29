@@ -28,6 +28,7 @@ class ElisifClient extends Client {
         this.simulated = this.#config?.debug?.simulation;
         // this.constants = boa.dict(new Constants());
 
+        //Setup HTTP listener
         ElisifClient.listener = ElisifClient.listener ?? server.listen(this.#config.port, () => {
             console.log(`\n\n${this.#config.name} listening on port ${ElisifClient.listener.address().port}`);
         });
@@ -191,7 +192,13 @@ class ElisifClient extends Client {
     }
 
     login(token) {
-        if (!this.simulated) return super.login(token);
+        if (!this.simulated) {
+            //Set client token
+            this.token = token;
+
+            //Login with client
+            return super.login(token);
+        }
         else setTimeout(() => this.emit("ready"), 2000);
     }
 

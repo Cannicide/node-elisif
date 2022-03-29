@@ -1,6 +1,7 @@
 const ExtendedStructure = require('./ExtendedStructure');
 const Timestamp = require('./Timestamp');
 const User = require('./User');
+const Guild = require('./Guild');
 const PermissionManager = require('../managers/PermissionManager');
 const GuildMemberRoleManager = require('../managers/GuildMemberRoleManager');
 const { GuildMember: BaseMember } = require("discord.js");
@@ -18,7 +19,9 @@ module.exports = class GuildMember extends ExtendedStructure {
         this.#m = member;
     }
 
-    // TODO: add custom guild prop
+    get guild() {
+        return new Guild(this.client, this.#m.guild);
+    }
 
     get user() {
         return new User(this.client, this.#m.user);
@@ -102,6 +105,10 @@ module.exports = class GuildMember extends ExtendedStructure {
      */
     untimeout(reason = null) {
         return this.#m.timeout(null, reason);
+    }
+
+    memberOf(idOrGuild) {
+        return idOrGuild && this.client.guilds.resolveId(idOrGuild) == idOrGuild;
     }
 
     // TODO: add member settings manager

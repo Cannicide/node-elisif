@@ -4,6 +4,7 @@ const ExtendedStructure = require('./ExtendedStructure');
 const User = require('./User');
 const GuildMember = require('./GuildMember');
 const Timestamp = require('./Timestamp');
+const Guild = require('./Guild');
 const { Emap, asMessageOptions } = require('../util');
 const { Message: BaseMessage } = require("discord.js");
 
@@ -34,8 +35,7 @@ module.exports = class Message extends ExtendedStructure {
     }
 
     get guild() {
-        // TODO: implement custom guild
-        return this.#m.guild;
+        return new Guild(this.client, this.#m.guild);
     }
 
     get author() {
