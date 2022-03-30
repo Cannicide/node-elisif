@@ -1,8 +1,7 @@
-const ClientUser = require('./structures/ClientUser');
+const PacketManager = require('./managers/PacketManager');
 
-
-// ClientUser/ClientApplication ready packet handler override:
-require("discord.js/src/client/websocket/handlers")['READY'] = ClientUser.handleReadyPacket;
+// Override certain packet handlers:
+PacketManager.init();
 
 module.exports = {
 
