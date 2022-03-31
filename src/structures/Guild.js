@@ -1,7 +1,5 @@
 const ExtendedStructure = require('./ExtendedStructure');
 const CacheManager = require('../managers/CacheManager');
-const GuildMemberManager = require('../managers/GuildMemberManager');
-const ChannelManager = require('../managers/ChannelManager');
 const Timestamp = require('./Timestamp');
 const {
     Guild: BaseGuild,
@@ -27,10 +25,12 @@ module.exports = class Guild extends ExtendedStructure {
     // TODO: settings manager
 
     get members() {
+        const GuildMemberManager = require('../managers/GuildMemberManager');
         return new GuildMemberManager(this.#g.members);
     }
 
     get channels() {
+        const ChannelManager = require('../managers/ChannelManager');
         return new ChannelManager(this.#g.channels);
     }
 

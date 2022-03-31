@@ -1,11 +1,15 @@
 const CacheManager = require('./CacheManager');
+const TextChannel = require('../structures/TextChannel')
 const { Channel } = require('discord.js');
 
 module.exports = class ChannelManager extends CacheManager {
 
     #c;
     constructor(channels, customEntries = null) {
-        super(customEntries ?? [...channels?.cache?.entries()], Channel, channels);
+        super(customEntries ?? [...(channels?.cache?.entries() ?? [])].map(([id, channel]) => {
+            if (channel.type == "GUILD_TEXT" && !(channel instanceof TextChannel)) channel = new TextChannel(channels?.client, channel);
+            return [id, channel];
+        }), Channel, channels);
         this.#c = channels;
     }
 

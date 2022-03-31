@@ -117,24 +117,28 @@ class Emap extends Collection {
     }
 
     static matches(item, cachedItem) {
-        // Skip all-prop check if IDs match
-        if (item && cachedItem && "id" in item && "id" in cachedItem && item.id === cachedItem.id) return true;
+        if (item && cachedItem && Boa().isObject(item) && Boa().isObject(cachedItem) && item.id && cachedItem.id) {
+            // Skip all-prop check if IDs are present and do/don't match
+            if (item.id == cachedItem.id) return true;
+            else return false;
+        }
+        if (!item || !cachedItem) return false;
 
-        for (const key in item) {
-            if (!cachedItem.hasOwnProperty(key)) return false;
-            if (typeof item[key] === 'object' && item[key]) return this.matches(item[key], cachedItem[key]);
+        for (const key of Object.getOwnPropertyNames(item)) {
+            if (!Object.getOwnPropertyNames(cachedItem).includes(key)) return false;
+            if (typeof item[key] === 'object' && Boa().isObject(item[key]) && item[key]) return this.matches(item[key], cachedItem[key]);
             else if (item[key] !== cachedItem[key]) return false;
         }
         return true;
     }
 
     get(idOrObject) {
-        if (typeof idOrObject === 'string') {
-            //ID
-            return super.get(idOrObject);
+        if (typeof idOrObject === 'string' || typeof idOrObject === 'number') {
+            //ID:
+            return super.get("" + idOrObject);
         }
         else {
-            //Object
+            //Object:
             return super.find(o => Emap.matches(idOrObject, o));
         }
     }

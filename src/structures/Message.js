@@ -1,11 +1,6 @@
-// TODO: Complete Message
-
 const ExtendedStructure = require('./ExtendedStructure');
-const User = require('./User');
-const GuildMember = require('./GuildMember');
 const Timestamp = require('./Timestamp');
-const Guild = require('./Guild');
-const { Emap, asMessageOptions } = require('../util');
+const { Emap, asMessageOptions, boa } = require('../util');
 const { Message: BaseMessage } = require("discord.js");
 
 module.exports = class Message extends ExtendedStructure {
@@ -29,24 +24,33 @@ module.exports = class Message extends ExtendedStructure {
 
     // TODO: add embed manager
 
+    /**
+     * @returns {TextChannel}
+     */
     get channel() {
-        // TODO: implement custom channel
-        return this.#m.channel;
+        if (!this.#m.channel) return null;
+        const TextChannel = require('./TextChannel');
+        return new TextChannel(this.client, this.#m.channel);
     }
 
     get guild() {
+        if (!this.#m.guild) return null;
+        const Guild = require('./Guild');
         return new Guild(this.client, this.#m.guild);
     }
 
     get author() {
+        const User = require('./User');
         return new User(this.client, this.#m.author);
     }
 
     get member() {
+        if (!this.#m.member) return null;
+        const GuildMember = require('./GuildMember');
         return new GuildMember(this.client, this.#m.member);
     }
 
-    get command() {
+    get textCommand() {
         return {
             name: this.words[0],
             args: this.words.slice(1)
@@ -61,9 +65,12 @@ module.exports = class Message extends ExtendedStructure {
         return new Timestamp(this.#m.createdAt, this.#m.createdTimestamp);
     }
 
-    delete({ timeout, filter }) {
-        // TODO: implement custom delete method
-        return this.#m.delete();
+    async delete({ timeout = 0, filter = () => true } = {}) {
+        if (filter(this)) {
+            await boa.wait(timeout);
+            return this.#m.delete();
+        }
+        return null;
     }
 
     reply(optsOrContent) {

@@ -1,7 +1,6 @@
 const ExtendedStructure = require('./ExtendedStructure');
 const Timestamp = require('./Timestamp');
 const { User: BaseUser } = require("discord.js");
-const getId = (userOrId) => ["string", "number"].includes(typeof userOrId) ? userOrId : userOrId.id;
 
 /**
  * @extends {ExtendedStructure}
@@ -103,7 +102,7 @@ module.exports = class User extends ExtendedStructure {
     }
 
     [Symbol.toPrimitive](hint) {
-        if (hint == "string") return this.mention;
+        if (hint == "string" || hint == "default") return this.mention;
         return Number(this.#u.id);
     }
 

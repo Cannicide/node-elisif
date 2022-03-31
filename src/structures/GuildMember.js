@@ -1,9 +1,5 @@
 const ExtendedStructure = require('./ExtendedStructure');
 const Timestamp = require('./Timestamp');
-const User = require('./User');
-const Guild = require('./Guild');
-const PermissionManager = require('../managers/PermissionManager');
-const GuildMemberRoleManager = require('../managers/GuildMemberRoleManager');
 const { GuildMember: BaseMember } = require("discord.js");
 
 /**
@@ -20,18 +16,25 @@ module.exports = class GuildMember extends ExtendedStructure {
     }
 
     get guild() {
+        if (!this.#m.guild) return null;
+        const Guild = require('./Guild');
         return new Guild(this.client, this.#m.guild);
     }
 
     get user() {
+        const User = require('./User');
         return new User(this.client, this.#m.user);
     }
 
     get roles() {
+        if (!this.#m.roles) return null;
+        const GuildMemberRoleManager = require('../managers/GuildMemberRoleManager');
         return new GuildMemberRoleManager(this.#m.roles);
     }
 
     get permissions() {
+        if (!this.#m.permissions) return null;
+        const PermissionManager = require('../managers/PermissionManager');
         return new PermissionManager(this.#m.permissions);
     }
 
@@ -114,7 +117,7 @@ module.exports = class GuildMember extends ExtendedStructure {
     // TODO: add member settings manager
 
     [Symbol.toPrimitive](hint) {
-        if (hint == "string") return this.mention;
+        if (hint == "string" || hint == "default") return this.mention;
         return Number(this.#m.id);
     }
 

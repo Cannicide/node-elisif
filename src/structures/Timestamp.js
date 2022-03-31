@@ -27,9 +27,8 @@ module.exports = class Timestamp {
     }
 
     [Symbol.toPrimitive](hint) {
-        if (hint == "string") return this.asString();
         if (hint == "number") return this.asNumber();
-        return this.asDate();
+        return this.asString();
     }
 
     get [Symbol.toStringTag]() {

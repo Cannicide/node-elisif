@@ -1,7 +1,7 @@
 require("../src");
 const Client = require('../src/client/Client');
 const Intent = require('../src/structures/Intent');
-const { loadToken, simulateMessage, guilds } = require('../src/util');
+const { loadToken, simulateMessage } = require('../src/util');
 
 const client = new Client(config => {
     config.intents(Intent.ALL)
@@ -25,14 +25,6 @@ client.on("ready", async () => {
     }
 });
 
-// client.extend("messageCreate", m => {
-//     return [m.content];
-// });
-
-// client.extend("messageCreate", m => {
-//     return [m + "!"];
-// });
-
 client.on("message", /** @param {import("../src/structures/Message")} m */ async m => {
     // console.log("Message", m.content);
     // console.log("Words", m.words);
@@ -40,31 +32,27 @@ client.on("message", /** @param {import("../src/structures/Message")} m */ async
 
     if (!m.author.bot) {
 
-        m.reply(`
-            Test reply
-            M created: ${m.created}
-            U created: ${m.author.created}
-            U banner: ${await m.author.profile.banner()}
-            U has banner: ${await m.author.profile.hasBanner()}
-            U avatar: ${m.author.profile.avatar()}
-            U has avatar: ${m.author.profile.hasAvatar()}
-            U is client: ${m.author.isClient()}
-            C is client: ${m.client.user.isClient()}
-            U is bot: ${m.author.bot}
-            C is bot: ${m.client.user.bot}
-            U has FAKE perm: ${m.member.permissions.hasStrict("FAKE")}
-            U has Member and Bot Developer roles: ${m.member.roles.has("Member", "Bot Developer")}
-            U has Member and Fake roles: ${m.member.roles.has("Fake", "Member")}
-            U has Member or Fake roles: ${m.member.roles.any("Fake", "Member")}
-            U has none of Fake and Fake2 roles: ${m.member.roles.none("Fake", "Fake2")}
-        `);
+        // m.reply(`
+        //     Test reply
+        //     M created: ${m.created}
+        //     U created: ${m.author.created}
+        //     U banner: ${await m.author.profile.banner()}
+        //     U has banner: ${await m.author.profile.hasBanner()}
+        //     U avatar: ${m.author.profile.avatar()}
+        //     U has avatar: ${m.author.profile.hasAvatar()}
+        //     U is client: ${m.author.isClient()}
+        //     C is client: ${m.client.user.isClient()}
+        //     U is bot: ${m.author.bot}
+        //     C is bot: ${m.client.user.bot}
+        //     U has FAKE perm: ${m.member.permissions.hasStrict("FAKE")}
+        //     U has Member and Bot Developer roles: ${m.member.roles.has("Member", "Bot Developer")}
+        //     U has Member and Fake roles: ${m.member.roles.has("Fake", "Member")}
+        //     U has Member or Fake roles: ${m.member.roles.any("Fake", "Member")}
+        //     U has none of Fake and Fake2 roles: ${m.member.roles.none("Fake", "Fake2")}
+        // `);
 
-        // await client.guilds.fetch(m.guild.id, true);
-        const guild = guilds(client).get({id: m.guild.id})?.id;
-        console.log(guild);
-        console.log(guilds(client, m.guild.id)?.first()?.id);
-        console.log(guilds(client).size);
-        console.log(guilds(client).cache.size);
+        m.channel.send("Channel: " + m.channel.channelOf({ content: "fake" }));
+
     }
 });
 
