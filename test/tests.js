@@ -1,7 +1,7 @@
 require("../src");
 const Client = require('../src/client/Client');
 const Intent = require('../src/structures/Intent');
-const { loadToken, simulateMessage } = require('../src/util');
+const { loadToken, simulateMessage, embed, createMessage, CREATE_MESSAGE_CUSTOM_METHODS } = require('../src/util');
 
 const client = new Client(config => {
     config.intents(Intent.ALL)
@@ -52,6 +52,23 @@ client.on("message", /** @param {import("../src/structures/Message")} m */ async
         // `);
 
         m.channel.send("Channel: " + m.channel.channelOf({ content: "fake" }));
+
+        // CREATE_MESSAGE_CUSTOM_METHODS.blockQuote = function(str) {
+        //     this.messageData.content ??= "";
+        //     this.messageData.content += "\n> " + str;
+        //     return this;
+        // }
+
+        // const g = embed("Some content")
+        // .description("A desc")
+        // .title("A title")
+        // // .debug();
+        // .get();
+
+        // createMessage("A test content from builder")
+        // .embed(g)
+        // .blockQuote("A block quote")
+        // .send(m.channel);
 
     }
 });

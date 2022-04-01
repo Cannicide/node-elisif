@@ -69,6 +69,7 @@ module.exports = class TextBasedChannel extends ExtendedStructure {
      */
     async send(optsOrContent, opts = {}) {
         const Message = require('./Message'); // Defined here to avoid circular dependency
+        const MessageEmbed = require('./MessageEmbed');
         if (optsOrContent instanceof BaseMessage || optsOrContent instanceof APIMessage || optsOrContent instanceof Message) {
             for (const key in opts) optsOrContent[key] = opts[key];
             const m = await this.#c.send(optsOrContent);
@@ -83,6 +84,16 @@ module.exports = class TextBasedChannel extends ExtendedStructure {
         };
 
         if ("embed" in opts) opts.embeds = [...(opts.embeds ?? []), opts.embed];
+        if (opts.embeds) opts.embeds = opts.embeds.map(e => {
+            if (e instanceof MessageEmbed) {
+                const attachments = e.getBufferImageAttachments();
+                const content = e.content;
+                opts.files = [].concat(opts.files ?? []).concat(attachments);
+                opts.content ??= content;
+            };
+            return e;
+        });
+
         const m = await this.#c.send(opts);
         return m ? new Message(this.client, m) : null;
     }

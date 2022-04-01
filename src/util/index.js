@@ -104,6 +104,129 @@ module.exports = {
         return channels;
     },
 
+    /**
+     * @typedef {Object} EmbedFactory
+     * @property {(name, value, inline = false) => EmbedFactory} field - Adds a field to the embed
+     * @property {(...fields) => EmbedFactory} fields - Adds multiple fields to the embed
+     * @property {(name, url, iconURL) => EmbedFactory} author - Sets the author of the embed
+     * @property {(colorResolvable) => EmbedFactory} color - Sets the color of the embed
+     * @property {(desc) => EmbedFactory} description - Sets the description of the embed
+     * @property {(messageContent) => EmbedFactory} content - Sets the content of the embed's message
+     * @property {(text, iconURL) => EmbedFactory} footer - Sets the footer of the embed
+     * @property {(urlOrBuffer, filename) => EmbedFactory} image - Sets the image of the embed
+     * @property {(url) => EmbedFactory} thumbnail - Sets the thumbnail of the embed
+     * @property {(timestamp = null) => EmbedFactory} timestamp - Sets the timestamp of the embed
+     * @property {(title, url) => EmbedFactory} title - Sets the title of the embed
+     * @property {(channel) => Promise<Message>} send - Sends the embed to the specified channel
+     * @property {() => MessageEmbed} get - Returns the embed object
+     * @property {() => EmbedFactory} debug - Readably stringifies and logs the embed object to console
+     */
+
+    /**
+     * @param {String|MessageEmbedResolvable} [optsOrContent] - The options or message content of the embed to create
+     * @returns {EmbedFactory}
+     */
+    embed(optsOrContent = null) {
+        const MessageEmbed = require('../structures/MessageEmbed');
+        const embed = (() => new MessageEmbed(module.exports.asMessageOptions(optsOrContent)))();
+
+        return {
+            field(name, value, inline = false) {
+                embed.addField(name, value, inline);
+                return this;
+            },
+            fields(...fields) {
+                embed.addFields(...fields.flat());
+                return this;
+            },
+            author(name, url, iconURL) {
+                embed.setAuthor({
+                    name,
+                    url,
+                    iconURL
+                });
+                return this;
+            },
+            color(colorResolvable) {
+                embed.setColor(colorResolvable);
+                return this;
+            },
+            description(desc) {
+                embed.setDescription(desc);
+                return this;
+            },
+            content(messageContent) {
+                embed.setContent(messageContent);
+                return this;
+            },
+            footer(text, iconURL) {
+                embed.setFooter({
+                    text,
+                    iconURL
+                });
+                return this;
+            },
+            image(urlOrBuffer, filename) {
+                embed.setImage(urlOrBuffer, filename);
+                return this;
+            },
+            thumbnail(url) {
+                embed.setThumbnail(url);
+                return this;
+            },
+            timestamp(timestamp = null) {
+                embed.setTimestamp(timestamp);
+                return this;
+            },
+            title(title, url) {
+                embed.setTitle(title, url);
+                return this;
+            },
+            send(channel) {
+                return channel?.send({ embed });
+            },
+            // TODO: add reply method
+            get() {
+                return embed;
+            },
+            set(optsOrContent) {
+                embed.set(optsOrContent);
+                return this;
+            },
+            debug() {
+                console.log(JSON.stringify(this.get(), null, '\t'));
+                return this;
+            }
+        }
+    },
+
+    CREATE_MESSAGE_CUSTOM_METHODS: {},
+
+    createMessage(optsOrContent) {
+
+        return {
+            messageData: {
+                ...module.exports.asMessageOptions(optsOrContent)
+            },
+            ...module.exports.CREATE_MESSAGE_CUSTOM_METHODS,
+            embed(/** @type {EmbedResolvable|(e: EmbedFactory) => void} */ f) {
+                let embedData = module.exports.embed();
+                if (typeof f === 'function') embedData = f(embedData)?.get() ?? embedData.get();
+                else embedData = f;
+                this.messageData.embeds = [].concat(this.messageData.embeds ?? []).concat(embedData);
+                return this;
+            },
+            // TODO: add button builder
+            // TODO: add select menu builder
+            send(channel) {
+                return channel?.send(this.messageData);
+            },
+            get() {
+                return this.messageData;
+            }
+        }
+    },
+
     get boa() {
         return Boa();
     }
