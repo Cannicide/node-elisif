@@ -11,7 +11,7 @@ module.exports = class PermissionManager extends CacheManager {
      * @param {Role} [role]
      */
     constructor(permissions, role = null) {
-        super(permissions?.toArray()?.map(perm => [perm, true]), null, permissions);
+        super(permissions?.toArray()?.map(perm => [perm, true]) ?? [], null, permissions);
         this.#role = role;
         this.#p = permissions;
     }

@@ -1,7 +1,7 @@
 require("../src");
 const Client = require('../src/client/Client');
 const Intent = require('../src/structures/Intent');
-const { loadToken, simulateMessage } = require('../src/util');
+const { loadToken, simulateMessage, channels } = require('../src/util');
 
 const client = new Client(config => {
     config.intents(Intent.ALL)
@@ -22,6 +22,9 @@ client.on("ready", async () => {
             builder.name("Apex")
             .type.streaming("https://twitch.tv/cannicide")
         });
+
+        channels(client, "799791153310072922").first().createMutedChannel("muted-{name}");
+        
     }
 });
 

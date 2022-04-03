@@ -4,7 +4,7 @@ const GuildMember = require('../structures/GuildMember')
 module.exports = class GuildMemberManager extends CacheManager {
 
     constructor(members) {
-        super([...members?.cache?.entries()].map(
+        super([...(members?.cache?.entries() ?? [])].map(
             ([id, m]) => [id, new GuildMember(members?.client, m)]
         ), GuildMember, members);
     }

@@ -73,7 +73,7 @@ class ElisifClient extends Client {
      * 
      * Includes built-in custom "@error" event that triggers on error if config.uncaughtErrors is enabled.
      * 
-     * @param {"String"} eventName - The event to register the listener for.
+     * @param {String} eventName - The event to register the listener for.
      * @param {Function} listener - The listener function to handle the specified event.
      * @returns {this} ElisifClient
      */
@@ -102,6 +102,17 @@ class ElisifClient extends Client {
         }
 
         //Support regular event listeners:
+        return super.on(eventName, listener);
+    }
+
+    /**
+     * Registers a raw event listener for the given event name, without any event extensions or custom event prefixes.
+     * This method directly calls the default Discord.js on() method, without using any Elisif features or systems.
+     * @param {String} eventName - The event to register the listener for.
+     * @param {Function} listener - The listener function to handle the specified event.
+     * @returns {this} ElisifClient
+     */
+    onRaw(eventName, listener) {
         return super.on(eventName, listener);
     }
 

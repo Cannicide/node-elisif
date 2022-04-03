@@ -1,6 +1,8 @@
 const CacheManager = require('./CacheManager');
 const TextChannel = require('../structures/TextChannel');
 const TextBasedChannel = require('../structures/TextBasedChannel');
+const VoiceChannel = require('../structures/VoiceChannel');
+const VoiceBasedChannel = require('../structures/VoiceBasedChannel');
 const GuildChannelInterface = require('../structures/GuildChannelInterface');
 const { Channel } = require('discord.js');
 
@@ -64,14 +66,22 @@ module.exports = class ChannelManager extends CacheManager {
     static resolveFrom(client, baseChannel) {
         let channel = baseChannel;
         if (!baseChannel) return null;
-        else if (baseChannel.type == "GUILD_TEXT" && !(baseChannel instanceof TextChannel)) channel = new TextChannel(client, baseChannel);
-        else if (baseChannel.isText() && !(baseChannel instanceof TextBasedChannel)) {
+        else if (baseChannel instanceof TextBasedChannel || baseChannel instanceof VoiceBasedChannel) return baseChannel;
+        else if (baseChannel.isThread()) return baseChannel;
+        else if (baseChannel.type == "GUILD_TEXT") channel = new TextChannel(client, baseChannel);
+        else if (baseChannel.isText()) {
             class GuildTextBasedChannel extends TextBasedChannel { constructor(...args) { super(...args) } };
             if (baseChannel.guild) GuildChannelInterface.applyToClass(GuildTextBasedChannel);
 
             channel = new (baseChannel.guild ? GuildTextBasedChannel : TextBasedChannel)(client, baseChannel);
         }
-        // else if (baseChannel.type == "GUILD_VOICE" && !(baseChannel instanceof VoiceChannel)) channel = new VoiceChannel(client, baseChannel);
+        else if (baseChannel.type == "GUILD_VOICE") channel = new VoiceChannel(client, baseChannel);
+        else if (baseChannel.isVoice()) {
+            class GuildVoiceBasedChannel extends VoiceBasedChannel { constructor(...args) { super(...args) } };
+            if (baseChannel.guild) GuildChannelInterface.applyToClass(GuildVoiceBasedChannel);
+
+            channel = new (baseChannel.guild ? GuildVoiceBasedChannel : VoiceBasedChannel)(client, baseChannel);
+        }
 
         return channel;
     }
