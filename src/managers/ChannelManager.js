@@ -3,6 +3,7 @@ const TextChannel = require('../structures/TextChannel');
 const TextBasedChannel = require('../structures/TextBasedChannel');
 const VoiceChannel = require('../structures/VoiceChannel');
 const VoiceBasedChannel = require('../structures/VoiceBasedChannel');
+const DMChannel = require('../structures/DMChannel');
 const GuildChannelInterface = require('../structures/GuildChannelInterface');
 const { Channel } = require('discord.js');
 
@@ -69,6 +70,7 @@ module.exports = class ChannelManager extends CacheManager {
         else if (baseChannel instanceof TextBasedChannel || baseChannel instanceof VoiceBasedChannel) return baseChannel;
         else if (baseChannel.isThread()) return baseChannel;
         else if (baseChannel.type == "GUILD_TEXT") channel = new TextChannel(client, baseChannel);
+        else if (baseChannel.type.match("DM")) channel = new DMChannel(client, baseChannel);
         else if (baseChannel.isText()) {
             class GuildTextBasedChannel extends TextBasedChannel { constructor(...args) { super(...args) } };
             if (baseChannel.guild) GuildChannelInterface.applyToClass(GuildTextBasedChannel);
