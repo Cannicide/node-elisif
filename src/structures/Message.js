@@ -25,12 +25,12 @@ module.exports = class Message extends ExtendedStructure {
     // TODO: add embed manager
 
     /**
-     * @returns {TextChannel}
+     * @returns {import('./TextChannel')|import('./TextBasedChannel')}
      */
     get channel() {
         if (!this.#m.channel) return null;
-        const TextChannel = require('./TextChannel');
-        return new TextChannel(this.client, this.#m.channel);
+        const ChannelManager = require('../managers/ChannelManager');
+        return ChannelManager.resolveFrom(this.client, this.#m.channel);
     }
 
     get guild() {

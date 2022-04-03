@@ -90,6 +90,22 @@ module.exports = {
         while (Object.getPrototypeOf(proto)) extendPrototype(proto = Object.getPrototypeOf(proto));
     },
 
+    AppliableInterface: class AppliableInterface {
+
+        static applyToClass(target, ignore = []) {
+            ignore.push("constructor");
+            for (const prop of Object.getOwnPropertyNames(this.prototype)) {
+                if (ignore.includes(prop) || prop.startsWith("#") || prop.startsWith("_")) continue;
+                Object.defineProperty(
+                    target.prototype,
+                    prop,
+                    Object.getOwnPropertyDescriptor(this.prototype, prop)
+                );
+            }
+        }
+
+    },
+
     guilds(structure, ...ids) {
         const GuildManager = require('../managers/GuildManager');
         const guilds = new GuildManager(structure.guilds);

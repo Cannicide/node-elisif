@@ -1,7 +1,7 @@
 require("../src");
 const Client = require('../src/client/Client');
 const Intent = require('../src/structures/Intent');
-const { loadToken, simulateMessage, embed, createMessage, CREATE_MESSAGE_CUSTOM_METHODS } = require('../src/util');
+const { loadToken, simulateMessage } = require('../src/util');
 
 const client = new Client(config => {
     config.intents(Intent.ALL)
