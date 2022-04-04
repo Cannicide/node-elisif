@@ -120,6 +120,13 @@ module.exports = {
         return channels;
     },
 
+    users(structure, ...ids) {
+        const UserManager = require('../managers/UserManager');
+        const users = new UserManager(structure.users);
+        if (ids.flat().length) return users.filter(u => ids.flat().includes(u.id));
+        return users;
+    },
+
     /**
      * @typedef {Object} EmbedFactory
      * @property {(name, value, inline = false) => EmbedFactory} field - Adds a field to the embed

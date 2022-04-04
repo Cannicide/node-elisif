@@ -8,10 +8,11 @@ module.exports = class ExtendedStructure {
     __base;
     /** @private */
     __extended = true;
-    constructor(client, originalStructure) {
+    constructor(client, originalStructure, customProperties) {
         /** @type {import("../client/Client")} */
         this.client = client;
         if (originalStructure) deepExtendInstance(this, originalStructure);
+        if (customProperties) deepExtendInstance(this, customProperties);
         this.#originalStructure = originalStructure;
         this.__base = originalStructure;
     }
