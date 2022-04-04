@@ -57,6 +57,12 @@ module.exports = class Message extends ExtendedStructure {
         };
     }
 
+    get thread() {
+        if (!this.#m.thread) return null;
+        const ChannelManager = require('../managers/ChannelManager');
+        return ChannelManager.resolveFrom(this.client, this.#m.thread);
+    }
+
     // TODO: add markup property
 
     // TODO: add reaction manager

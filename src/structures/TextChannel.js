@@ -14,7 +14,10 @@ class TextChannel extends TextBasedChannel {
         return new GuildMemberManager(this.#t.members);
     }
 
-    // TODO: add threads manager
+    get threads() {
+        const ChannelManager = require('../managers/ChannelManager');
+        return new ChannelManager(this.#t.threads);
+    }
 
     inSlowmode() {
         return this.#t.rateLimitPerUser > 0;

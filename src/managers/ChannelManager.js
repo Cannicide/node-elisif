@@ -49,7 +49,9 @@ module.exports = class ChannelManager extends CacheManager {
         return this.#filter("GUILD_NEWS");
     }
 
-    // TODO: threads prop
+    get threads() {
+        return this.filter(c => c.isThread && c.isThread());
+    }
 
     get stage() {
         return this.#filter("GUILD_STAGE_VOICE");
