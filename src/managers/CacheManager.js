@@ -7,10 +7,11 @@ class NullType {
 
 module.exports = class CacheManager extends Emap {
 
-    constructor(cache, type = NullType, manager) {
+    constructor(cache, type = NullType, manager, customProperties) {
         super(cache);
         Object.defineProperty(this, 'cacheType', { value: type });
         if (manager) deepExtendInstance(this, manager);
+        if (customProperties) deepExtendInstance(this, customProperties);
     }
 
     /**

@@ -37,35 +37,51 @@ module.exports = class Guild extends ExtendedStructure {
     // TODO: custom commands prop
 
     get roles() {
-        return new CacheManager([...this.#g.roles.cache.entries()], BaseRole, this.#g.roles);
+        return new CacheManager([...this.#g.roles.cache.entries()], BaseRole, this.#g.roles, {
+            guild: this
+        });
     }
     
     get voiceStates() {
-        return new CacheManager([...this.#g.voiceStates.cache.entries()], BaseVoiceState, this.#g.voiceStates);
+        return new CacheManager([...this.#g.voiceStates.cache.entries()], BaseVoiceState, this.#g.voiceStates, {
+            guild: this
+        });
     }
 
     get stageInstances() {
-        return new CacheManager([...this.#g.stageInstances.cache.entries()], BaseStageInstance, this.#g.stageInstances);
+        return new CacheManager([...this.#g.stageInstances.cache.entries()], BaseStageInstance, this.#g.stageInstances, {
+            guild: this
+        });
     }
 
     get bans() {
-        return new CacheManager([...this.#g.bans.cache.entries()], BaseGuildBan, this.#g.bans);
+        return new CacheManager([...this.#g.bans.cache.entries()], BaseGuildBan, this.#g.bans, {
+            guild: this
+        });
     }
 
     get invites() {
-        return new CacheManager([...this.#g.invites.cache.entries()], BaseGuildInvite, this.#g.invites);
+        return new CacheManager([...this.#g.invites.cache.entries()], BaseGuildInvite, this.#g.invites, {
+            guild: this
+        });
     }
 
     get presences() {
-        return new CacheManager([...this.#g.presences.cache.entries()], BasePresence, this.#g.presences);
+        return new CacheManager([...this.#g.presences.cache.entries()], BasePresence, this.#g.presences, {
+            guild: this
+        });
     }
 
     get scheduledEvents() {
-        return new CacheManager([...this.#g.scheduledEvents.cache.entries()], BaseGuildEvent, this.#g.scheduledEvents);
+        return new CacheManager([...this.#g.scheduledEvents.cache.entries()], BaseGuildEvent, this.#g.scheduledEvents, {
+            guild: this
+        });
     }
 
     get stickers() {
-        return new CacheManager([...this.#g.stickers.cache.entries()], BaseSticker, this.#g.stickers);
+        return new CacheManager([...this.#g.stickers.cache.entries()], BaseSticker, this.#g.stickers, {
+            guild: this
+        });
     }
 
     get created() {
