@@ -3,6 +3,9 @@ const Timestamp = require('./Timestamp');
 const { Emap, asMessageOptions, boa } = require('../util');
 const { Message: BaseMessage } = require("discord.js");
 
+/**
+ * @extends BaseMessage
+ */
 module.exports = class Message extends ExtendedStructure {
 
     /** @type {BaseMessage} */
@@ -20,7 +23,10 @@ module.exports = class Message extends ExtendedStructure {
 
     // TODO: add menu manager
 
-    // TODO: add component manager
+    get components() {
+        const ComponentManager = require('../managers/ComponentManager');
+        return new ComponentManager(this.#m);
+    }
 
     // TODO: add embed manager
 

@@ -1,7 +1,7 @@
 require("../src");
 const Client = require('../src/client/Client');
 const Intent = require('../src/structures/Intent');
-const { loadToken, simulateMessage, channels } = require('../src/util');
+const { loadToken, simulateMessage, channels, button, createMessage, parseTime } = require('../src/util');
 
 const client = new Client(config => {
     config.intents(Intent.ALL)
@@ -62,18 +62,56 @@ client.on("message", /** @param {import("../src/structures/Message")} m */ async
         //     return this;
         // }
 
-        // const g = embed("Some content")
-        // .description("A desc")
-        // .title("A title")
-        // // .debug();
-        // .get();
 
-        // createMessage("A test content from builder")
-        // .embed(g)
-        // .blockQuote("A block quote")
-        // .send(m.channel);
-
+        await createMessage("Test")
+        // .button(b => 
+        //     b
+        //     .customId("button1")
+        //     .color(0xf2ff9b)
+        //     .label("Click Me")
+        //     .maxUses(2, b => b.setDisabled(true))
+        //     // .maxTime("2m", b => b.setDisabled(true))
+        //     .onClick(btn => {
+        //         btn.reply("You clicked me!");
+        //     })
+        // )
+        // .button({
+        //     customId: "button1",
+        //     color: 0xf2ff9b,
+        //     label: "Click Me 2",
+        //     maxTime: {
+        //         time: 15000,
+        //         callback: b => b.setColor(0x00ff00)
+        //     },
+        //     maxUses: {
+        //         uses: 2,
+        //         callback: b => b.setColor(0xff)
+        //     },
+        //     onClick: btn => {
+        //         btn.reply("You clicked me!");
+        //     },
+        //     onEnd: b => {
+        //         b.toggleDisabled();
+        //     }
+        // })
+        .button({
+            label: "URL",
+            url: "https://github.com/cannicide"
+        })
+        .send(m.channel);
+        
     }
 });
+
+// client.on("interactionCreate", i => {
+//     const Interaction = require('../src/structures/Interaction');
+//     const ComponentInteraction = require('../src/structures/ComponentInteraction');
+
+//     if (i.isMessageComponent()) i = ComponentInteraction.from(i);
+//     else i = Interaction.from(i);
+
+//     console.log("Worked ", i.customId);
+//     i.reply.delayed("Worked", 5000);
+// });
 
 client.login(loadToken(__dirname + "/token.json"));
