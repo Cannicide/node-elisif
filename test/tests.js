@@ -95,8 +95,30 @@ client.on("message", /** @param {import("../src/structures/Message")} m */ async
         //     }
         // })
         .button({
-            label: "URL",
-            url: "https://github.com/cannicide"
+            label: "Test Toggle",
+            customId: "maintoggle",
+            toggleRow: {
+                time: 0,
+                row: [
+                    {
+                        label: "Toggled 1",
+                        customId: "toggle1",
+                        color: 0x00ff00,
+                        onClick: btn => {
+                            btn.reply("Clicked Toggled 1");
+                        }
+                    },
+                    {
+                        label: "Toggled 2",
+                        customId: "toggle2",
+                        color: 0xff,
+                        onClick: btn => {
+                            btn.setDisabled();
+                            return "noreply";
+                        }
+                    }
+                ]
+            }
         })
         .send(m.channel);
         
