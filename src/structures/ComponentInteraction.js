@@ -26,8 +26,8 @@ module.exports = class ComponentInteraction extends Interaction {
         return extendedFunction((optsOrContent) => {
             return this.#c.update(asReplyOptions(optsOrContent));
         }, {
-            defer: (ephemeral) => {
-                return this.#c.deferUpdate(asReplyOptions(null, ephemeral));
+            defer: () => {
+                return this.#c.deferUpdate(asReplyOptions(null));
             },
             delete: (opts = { timeout: null, filter: null }) => {
                 return this.message.delete(opts);
@@ -36,6 +36,10 @@ module.exports = class ComponentInteraction extends Interaction {
                 return this.message.fetch();
             }
         });
+    }
+
+    noReply() {
+        return this.update.defer();
     }
 
     static getParts(baseInteraction) {

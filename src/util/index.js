@@ -360,6 +360,7 @@ module.exports = {
      * @property {(uses: number, callback: (button: import('../structures/SentMessageButton')) => void) => ButtonFactory} maxUses - Sets the maximum number of uses of the button, and the callback to be called once the button has been used that many times
      * @property {(ms: number, callback: (button: import('../structures/SentMessageButton')) => void) => ButtonFactory} maxTime - Sets the maximum time the button will work for, and the callback to be called once the time limit expires
      * @property {(usersOrRoles: string[]) => ButtonFactory} acceptsClicksFrom - Sets the IDs of users and roles that can click the button. Defaults to all users and roles
+     * @property {({time: number|string|bigint, row: MessageButtonResolvable[]|ButtonFactory[]}) => ButtonFactory} toggleRow - Toggles the visibility of the provided component row whenever the button is clicked. The row auto-hides after the provided time, if specified. Can be specified along with or in place of onClick.
      * @property {(row: number, col: number) => ButtonFactory} coords - Sets the row and column of the button. Defaults to the last available row and column
      * @property {(handler: (interaction: import('../structures/ComponentInteraction') & import('../structures/SentMessageButton')) => void) => ButtonFactory} onClick - Sets the handler to be called each time the button is clicked
      * @property {(handler: (interaction: import('../structures/SentMessageButton'), reason: "uses"|"time") => void) => ButtonFactory} onEnd - The handler to be called once the button-handling has ended (once max time or uses has been reached).
@@ -379,6 +380,7 @@ module.exports = {
      * @property {{uses: number, callback?: (button: import('../structures/SentMessageButton')) => void}} [maxUses] - The maximum number of uses of the button, and the callback to be called once the button has been used that many times
      * @property {{time: number|string|bigint, callback?: (button: import('../structures/SentMessageButton')) => void}} [maxTime] - The maximum time the button will work for, and the callback to be called once the time limit expires
      * @property {string[]} [acceptsClicksFrom] - The IDs of users and roles that can click the button. Defaults to all users and roles
+     * @property {{time: number|string|bigint, row: MessageButtonResolvable[]}} [toggleRow] - Toggles the visibility of the provided component row whenever the button is clicked. The row auto-hides after the provided time, if specified. Can be specified along with or in place of onClick.
      * @property {number} [row] - The row of the button. Defaults to the last available row. Required if col is provided
      * @property {number} [col] - The column of the button. Defaults to the last available column in the selected row
      * @property {(interaction: import('../structures/ComponentInteraction') & import('../structures/SentMessageButton')) => void} [onClick] - The handler to be called each time the button is clicked
@@ -397,7 +399,7 @@ module.exports = {
 
         const opts = { ...(typeof optsOrContent === "string" ? { label: optsOrContent } : optsOrContent) };
         const settings = new Map([ // All added custom button settings
-            ["handler", opts.onClick ?? (() => null)],
+            ["handler", opts.onClick ?? (() => "noreply")],
             ["endHandler", opts.onEnd ?? (() => null)],
             ["maxUses", opts.maxUses ?? {
                 uses: 0,
@@ -408,6 +410,10 @@ module.exports = {
                 callback: () => null
             }],
             ["canClick", opts.acceptsClicksFrom ?? []],
+            ["toggleableRow", opts.toggleRow ?? {
+                time: 0,
+                row: []
+            }],
             ["row", opts.row ?? null],
             ["col", opts.col ?? null]
         ]);
@@ -467,6 +473,14 @@ module.exports = {
                 settings.set("canClick", usersOrRoles);
                 return this;
             },
+            toggleRow(row = throws("At button(): No row specified."), ms = 0) {
+                ms = module.exports.parseTime(ms);
+                settings.set("toggleableRow", {
+                    row,
+                    ms
+                });
+                return this;
+            },
             coords(row = null, col = null) {
                 settings.set("row", row);
                 settings.set("col", col);
@@ -480,20 +494,28 @@ module.exports = {
                 settings.set("endHandler", handler);
                 return this;
             },
+            /**
+             * @private
+             */
             toJSON() {
                 return { ...btn.toJSON(), ...settings };
             },
-            /** @private */
+            /** 
+             * @private
+             * @param {import("../structures/Message")} message
+             */
             onSend(message) {
                 if (!message) return;
                 const client = /** @type {import('../client/Client')} */ (message.client);
                 const ComponentInteraction = require('../structures/ComponentInteraction');
                 const sentButton = new SentMessageButton(btn, message);
                 let calls = 0;
+                let toggleableRowTimeout = null;
 
                 const handler = settings.get("handler");
                 const endHandler = settings.get("endHandler");
                 const canClick = settings.get("canClick");
+                const toggleableRow = settings.get("toggleableRow");
                 const maxUses = settings.get("maxUses");
                 const maxTime = settings.get("maxTime");
 
@@ -505,16 +527,39 @@ module.exports = {
                     calls = -1;
                 }, maxTime.time);
 
+                const toggleRow = async (actionRow) => {
+                    if (message.components.has(actionRow[0].customId)) {
+                        const index = message.components.get(actionRow[0].customId).row;
+                        toggleableRow.row = [...message.components.getRow(index).values()];
+                        await message.components.delete(index);
+                    }
+                    else {
+                        const index = message.components.findMax(c => c.row).row + 1;
+                        await message.components.add(actionRow.map(c => {
+                            let b = module.exports.parseComponent(c);
+                            if (calls == 1) b.onSend(message);
+                            return b.toJSON()
+                        }), index);
+
+                        if (toggleableRowTimeout) clearTimeout(toggleableRowTimeout);
+                        if (toggleableRow.time) toggleableRowTimeout = setTimeout(toggleRow, toggleableRow.time);
+                    }
+                    
+                    return true;
+                }
+
                 if (handler || canClick.length || maxUses.uses) client?.onRaw("interactionCreate", i => {
-                    if (!i.isButton() || !i.customId == btn.customId) return;
+                    if (!i.isButton() || i.customId != btn.customId) return;
                     const buttonInteraction = ComponentInteraction.asButton(i);
 
                     if (calls < 0) return;
                     if (canClick.length && !canClick.some(id => buttonInteraction.user.id === id || buttonInteraction.member.roles.has(id))) return;
                     if (maxUses.uses && calls >= maxUses.uses) return;
                     calls++;
+
+                    if (Array.isArray(toggleableRow?.row) && toggleableRow.row.length) toggleRow(toggleableRow.row);
                     
-                    handler(buttonInteraction);
+                    if (handler(buttonInteraction) === "noreply"/* && Array.isArray(toggleableRow?.row) && toggleableRow.row.length*/) buttonInteraction.noReply();
                     if (maxUses.uses && calls == maxUses.uses) {
                         calls = -1;
                         maxUses.callback(buttonInteraction);
@@ -524,6 +569,9 @@ module.exports = {
             }
         };
 
+        // Default style
+        customMethods.color("PRIMARY");
+
         // Call custom methods that have modified behavior from the base or that use custom property names
         if (opts.label) customMethods.label(opts.label);
         else if (opts.labelIgnoreEmoteParsing) customMethods.label(opts.labelIgnoreEmoteParsing, true);
@@ -532,6 +580,50 @@ module.exports = {
         if (opts.url) customMethods.url(opts.url);
 
         return new SendableComponentFactory(customMethods);
+    },
+
+    /**
+     * Parses an elisif message component from a resolvable or builder function form, into a SendableComponentFactory instance.
+     * @param {MessageButtonResolvable | MessageSelectMenuResolvable | (c: ButtonFactory|SelectMenuFactory) => void} componentOrBuilder 
+     * @returns {SendableComponentFactory<ButtonFactory|SelectMenuFactory>}
+     */
+    parseComponent(componentOrBuilder) {
+        const identifiers = {
+            button: module.exports.button,
+            selectMenu: module.exports.selectMenu,
+
+            type: null,
+
+            builder: new Proxy({}, {
+                get(_target, prop) {
+                    identifiers.identify(prop);
+                    return () => this;
+                }
+            }),
+            identify: (prop) => {
+                if (prop == "label") identifiers.type = "button"; // Required for buttons
+                else if (prop == "options" || prop == "option") identifiers.type = "selectMenu"; // Required for select menus
+            }
+        };
+
+        let component;
+        if (typeof componentOrBuilder === 'function') {
+            // Identify component type:
+            componentOrBuilder(identifiers.builder);
+
+            // Create component:
+            let componentData = identifiers[identifiers.type]();
+            component = componentOrBuilder(componentData) ?? componentData;
+        }
+        else {
+            // Identify component type:
+            for (const key of Object.keys(componentOrBuilder)) identifiers.identify(key);
+
+            // Create component:
+            component = identifiers[identifiers.type](componentOrBuilder);
+        }
+
+        return component;
     },
 
     CREATE_MESSAGE_CUSTOM_METHODS: {},
@@ -566,6 +658,7 @@ module.exports = {
                 const ComponentManager = require('../managers/ComponentManager');
                 const componentManager = new ComponentManager(simulatedMessage);
 
+                if (!(component instanceof require("discord.js").BaseMessageComponent)) component = module.exports.parseComponent(component) ?? component;
                 if (component instanceof SendableComponentFactory) {
                     sendableComponentFactories.push(component);
                     [row, col] = [row ?? component.toJSON().row, col ?? component.toJSON().col];
@@ -654,6 +747,7 @@ class Emap extends Collection {
         let max = 0;
         let maxItem = null;
         this.each(x => max < (max = Math.max(max, f(x))) && (maxItem = x));
+        if (!maxItem) maxItem = this.find(x => f(x) == max);
         return maxItem;
     }
 
@@ -666,7 +760,14 @@ class Emap extends Collection {
         let min = 0;
         let minItem = null;
         this.each(x => min > (min = Math.min(min, f(x))) && (minItem = x));
+        if (!minItem) minItem = this.find(x => f(x) == min);
         return minItem;
+    }
+
+    filter(f) {
+        const result = new Emap();
+        this.each((x, key) => f(x, key, this) && result.set(key, x));
+        return result;
     }
 }
 

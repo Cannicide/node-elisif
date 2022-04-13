@@ -63,7 +63,13 @@ module.exports = class ComponentManager extends CacheManager {
      * @returns {Promise<import('discord.js').Message>} Discord.js Message
      */
     add(component, row = null) {
-        if (component.type == "ACTION_ROW") return this.#m.components.push(component); // Handle adding an action row
+        if (Array.isArray(component)) component = new MessageActionRow().addComponents(...component);
+        if (component instanceof MessageActionRow) {
+            // Handle adding an action row
+            this.#m.components.push(component);
+            if (component.components.length) return this.#m.edit({ components: this.#m.components });
+            return null;
+        }
 
         let initialRow = row ?? this.#m.components.length - 1;
         if (initialRow < 0) initialRow = 0;
@@ -135,6 +141,7 @@ module.exports = class ComponentManager extends CacheManager {
         if (col === null) {
             // Handle deleting component rows:
 
+            this.#m.components[idOrRow].components.forEach(c => super.delete(c.customId));
             this.#m.components.splice(idOrRow, 1);
             return this.#m.edit({ components: this.#m.components });
         }
