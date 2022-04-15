@@ -360,7 +360,7 @@ module.exports = {
      * @property {(uses: number, callback: (button: import('../structures/SentMessageButton')) => void) => ButtonFactory} maxUses - Sets the maximum number of uses of the button, and the callback to be called once the button has been used that many times
      * @property {(ms: number, callback: (button: import('../structures/SentMessageButton')) => void) => ButtonFactory} maxTime - Sets the maximum time the button will work for, and the callback to be called once the time limit expires
      * @property {(usersOrRoles: string[]) => ButtonFactory} acceptsClicksFrom - Sets the IDs of users and roles that can click the button. Defaults to all users and roles
-     * @property {({time: number|string|bigint, row: MessageButtonResolvable[]|ButtonFactory[]}) => ButtonFactory} toggleRow - Toggles the visibility of the provided component row whenever the button is clicked. The row auto-hides after the provided time, if specified. Can be specified along with or in place of onClick.
+     * @property {({time: number|string|bigint, row: MessageButtonResolvable[]}) => ButtonFactory} toggleRow - Toggles the visibility of the provided component row whenever the button is clicked. The row auto-hides after the provided time, if specified. Can be specified along with or in place of onClick.
      * @property {(row: number, col: number) => ButtonFactory} coords - Sets the row and column of the button. Defaults to the last available row and column
      * @property {(handler: (interaction: import('../structures/ComponentInteraction') & import('../structures/SentMessageButton')) => void) => ButtonFactory} onClick - Sets the handler to be called each time the button is clicked
      * @property {(handler: (interaction: import('../structures/SentMessageButton'), reason: "uses"|"time") => void) => ButtonFactory} onEnd - The handler to be called once the button-handling has ended (once max time or uses has been reached).
@@ -391,13 +391,13 @@ module.exports = {
      * @param {String|MessageButtonResolvable} [optsOrContent] - The options or label of the button to create
      * @returns {ButtonFactory}
      */
-    button(optsOrContent = {}) {
+    button(optsOrContent) {
         const { MessageButton } = require("discord.js");
         const SendableComponentFactory = require('../structures/SendableComponentFactory');
         const SentMessageButton = require('../structures/SentMessageButton');
         const throws = (err) => { throw new Error(err) };
 
-        const opts = { ...(typeof optsOrContent === "string" ? { label: optsOrContent } : optsOrContent) };
+        const opts = /** @type {MessageButtonResolvable} */ ({ ...(typeof optsOrContent === "string" ? { label: optsOrContent } : optsOrContent) });
         const settings = new Map([ // All added custom button settings
             ["handler", opts.onClick ?? (() => "noreply")],
             ["endHandler", opts.onEnd ?? (() => null)],
@@ -434,7 +434,7 @@ module.exports = {
                 return this;
             },
             label(label = throws("At button(): No label specified."), ignoreEmoteParsing = false) {
-                label = SentMessageButton.parseLabel(label, ignoreEmoteParsing);
+                label = SentMessageButton.parseLabel(label, ignoreEmoteParsing, btn);
 
                 btn.setLabel(label);
                 return this;
@@ -498,7 +498,7 @@ module.exports = {
              * @private
              */
             toJSON() {
-                return { ...btn.toJSON(), ...settings };
+                return { ...btn, ...settings, toJSON: btn.toJSON.bind(btn) };
             },
             /** 
              * @private
@@ -553,7 +553,7 @@ module.exports = {
                     const buttonInteraction = ComponentInteraction.asButton(i);
 
                     if (calls < 0) return;
-                    if (canClick.length && !canClick.some(id => buttonInteraction.user.id === id || buttonInteraction.member.roles.has(id))) return;
+                    if (canClick.length && !canClick.some(id => buttonInteraction.user.id === id || buttonInteraction.member?.roles.has(id))) return buttonInteraction.reply("> **You do not have permission to use this button.**", true);
                     if (maxUses.uses && calls >= maxUses.uses) return;
                     calls++;
 
@@ -583,6 +583,245 @@ module.exports = {
     },
 
     /**
+     * @typedef {Object} SelectMenuFactory
+     * @property {(customId: string) => SelectMenuFactory} customId - Sets the customId of the select menu
+     * @property {(disabled: boolean) => SelectMenuFactory} disabled - Sets whether the select menu is disabled
+     * @property {(placeholder: string) => SelectMenuFactory} placeholder - Sets the placeholder of the select menu.
+     * @property {(max: number) => SelectMenuFactory} max - Sets the maximum number of values that can be selected at once.
+     * @property {(min: number) => SelectMenuFactory} min - Sets the minimum number of values that can be selected at once.
+     * @property {(option: string|{ label: string, value?: string, description?: string, emoji?: string, default?: boolean, ignoreEmoteParsing?: boolean }) => SelectMenuFactory} option - Adds an option to the select menu.
+     * @property {(...options: (string|{ label: string, value?: string, description?: string, emoji?: string, default?: boolean, ignoreEmoteParsing?: boolean })) => SelectMenuFactory} options - Adds multiple options to the select menu.
+     * @property {(uses: number, callback?: (menu: import('../structures/SentMessageSelectMenu')) => void) => SelectMenuFactory} maxUses - Sets the maximum number of uses of the select menu, and the callback to be called once the select menu has been used that many times
+     * @property {(ms: number, callback?: (menu: import('../structures/SentMessageSelectMenu')) => void) => SelectMenuFactory} maxTime - Sets the maximum time the select menu will work for, and the callback to be called once the time limit expires
+     * @property {(usersOrRoles: string[]) => SelectMenuFactory} acceptsSelectionsFrom - Sets the IDs of users and roles that can use the select menu. Defaults to all users and roles
+     * @property {({time: number|string|bigint, row: MessageSelectMenuResolvable[]}) => SelectMenuFactory} toggleRow - Toggles the visibility of the provided component row whenever the select menu is used. The row auto-hides after the provided time, if specified. Can be specified along with or in place of onSelect.
+     * @property {(row: number) => SelectMenuFactory} coords - Sets the row of the select menu. Defaults to the last available row, and column is always set to 0.
+     * @property {(handler: (interaction: import('../structures/ComponentInteraction') & import('../structures/SentMessageSelectMenu') & { selected: string }) => void) => SelectMenuFactory} onSelect - Sets the handler to be called each time the select menu is used
+     * @property {(handler: (interaction: import('../structures/SentMessageSelectMenu') & { selected: string }, reason: "uses"|"time") => void) => SelectMenuFactory} onEnd - The handler to be called once the select-menu-handling has ended (once max time or uses has been reached).
+     * @property {() => MessageSelectMenuResolvable} toJSON - Returns the JSON representation of the button
+     */
+
+    /**
+     * @typedef {Object} MessageSelectMenuResolvable
+     * @property {string} customId - The customId of the select menu
+     * @property {boolean} [disabled = false] - Whether the select menu is disabled
+     * @property {string} placeholder - The placeholder of the select menu
+     * @property {number} [max = 0] - The maximum number of values that can be selected at once
+     * @property {number} [min = 0] - The minimum number of values that can be selected at once
+     * @property {(string|{ label: string, value?: string, description?: string, emoji?: string, default?: boolean, ignoreEmoteParsing?: boolean })[]} options - The options of the select menu
+     * @property {{uses: number, callback?: (menu: import('../structures/SentMessageSelectMenu')) => void}} [maxUses] - The maximum number of uses of the select menu, and the callback to be called once the select menu has been used that many times
+     * @property {{time: number|string|bigint, callback?: (menu: import('../structures/SentMessageSelectMenu')) => void}} [maxTime] - The maximum time the select menu will work for, and the callback to be called once the time limit expires
+     * @property {string[]} [acceptsSelectionsFrom] - The IDs of users and roles that can use the select menu. Defaults to all users and roles
+     * @property {{time: number|string|bigint, row: MessageSelectMenuResolvable[]}} [toggleRow] - Toggles the visibility of the provided component row whenever the select menu is used. The row auto-hides after the provided time, if specified. Can be specified along with or in place of onSelect.
+     * @property {number} [row] - The row of the select menu. Defaults to the last available row
+     * @property {(interaction: import('../structures/ComponentInteraction') & import('../structures/SentMessageSelectMenu') & { selected: string }) => void} [onSelect] - Sets the handler to be called each time the select menu is used
+     * @property {(interaction: import('../structures/SentMessageSelectMenu') & { selected: string }, reason: "uses"|"time") => void} [onEnd] - The handler to be called once the select-menu-handling has ended (once max time or uses has been reached).
+     */
+
+    /**
+     * @param {String|MessageSelectMenuResolvable} [optsOrContent] - The options or placeholder of the select menu to create
+     * @returns {SelectMenuFactory}
+     */
+    selectMenu(optsOrContent) {
+        const { MessageSelectMenu } = require("discord.js");
+        const SendableComponentFactory = require('../structures/SendableComponentFactory');
+        const SentMessageSelectMenu = require('../structures/SentMessageSelectMenu');
+        const throws = (err) => { throw new Error(err) };
+
+        const opts = /** @type {MessageSelectMenuResolvable} */ ({ ...(typeof optsOrContent === "string" ? { placeholder: optsOrContent } : optsOrContent) });
+        const settings = new Map([ // All added custom menu settings
+            ["handler", opts.onSelect ?? (() => "noreply")],
+            ["endHandler", opts.onEnd ?? (() => null)],
+            ["maxUses", opts.maxUses ?? {
+                uses: 0,
+                callback: () => null
+            }],
+            ["maxTime", opts.maxTime ?? {
+                time: 0,
+                callback: () => null
+            }],
+            ["canSelect", opts.acceptsSelectionsFrom ?? []],
+            ["toggleableRow", opts.toggleRow ?? {
+                time: 0,
+                row: []
+            }],
+            ["row", opts.row ?? null],
+            ["col", null]
+        ]);
+
+        const providedMenuOptions = opts.options;
+        if (opts.options) delete opts.options; // Prevent option normalization error
+
+        const menu = new MessageSelectMenu(opts);
+        opts.options = providedMenuOptions;
+
+        // All added factory methods specific to select menus
+        const customMethods = {
+            customId(id = throws("At selectMenu(): No ID specified.")) {
+                menu.setCustomId(id);
+                return this;
+            },
+            disabled(disabled = true) {
+                menu.setDisabled(disabled);
+                return this;
+            },
+            placeholder(placeholder = throws("At selectMenu(): No placeholder specified.")) {
+                menu.setPlaceholder(placeholder);
+                return this;
+            },
+            max(selections = throws("At selectMenu(): No max selections specified.")) {
+                menu.setMaxValues(selections);
+                return this;
+            },
+            min(selections = throws("At selectMenu(): No min selections specified.")) {
+                menu.setMinValues(selections);
+                return this;
+            },
+            option(option = throws("At selectMenu(): No option specified."), optionalDescription = null) {
+                if (typeof option === "string") option = { label: option };
+                let { label, value = null, description = optionalDescription, emoji = null, default: selected = null, ignoreEmoteParsing = false } = option;
+
+                value ??= label;
+        
+                const parsedLabel = SentMessageSelectMenu.parseLabelAndEmote(label, ignoreEmoteParsing);
+                label = parsedLabel.label;
+                emoji ??= parsedLabel.emote;
+
+                menu.addOptions({
+                    label,
+                    value,
+                    description,
+                    emoji,
+                    default: selected
+                })
+
+                return this;
+            },
+            options(...opts) {
+                for (const opt of opts.flat()) this.option(opt);
+                return this;
+            },
+            maxUses(uses = 0, callback = () => null) {
+                const maxUses = settings.get("maxUses");
+                maxUses.uses = uses;
+                maxUses.callback = callback;
+                return this;
+            },
+            maxTime(ms = 0, callback = () => null) {
+                const maxTime = settings.get("maxTime");
+                maxTime.time = module.exports.parseTime(ms);
+                maxTime.callback = callback;
+                return this;
+            },
+            acceptsSelectionsFrom(usersOrRoles = []) {
+                settings.set("canSelect", usersOrRoles);
+                return this;
+            },
+            toggleRow(row = throws("At selectMenu(): No row specified."), ms = 0) {
+                ms = module.exports.parseTime(ms);
+                settings.set("toggleableRow", {
+                    row,
+                    ms
+                });
+                return this;
+            },
+            coords(row = null) {
+                settings.set("row", row);
+                settings.set("col", null); // Will default to 0
+                return this;
+            },
+            onSelect(handler = throws("At selectMenu(): No selection handler specified.")) {
+                settings.set("handler", handler);
+                return this;
+            },
+            onEnd(handler = throws("At selectMenu(): No end handler specified.")) {
+                settings.set("endHandler", handler);
+                return this;
+            },
+            /**
+             * @private
+             */
+            toJSON() {
+                return { ...menu, ...settings, toJSON: menu.toJSON.bind(menu) };
+            },
+            /** 
+             * @private
+             * @param {import("../structures/Message")} message
+             */
+            onSend(message) {
+                if (!message) return;
+                const client = /** @type {import('../client/Client')} */ (message.client);
+                const ComponentInteraction = require('../structures/ComponentInteraction');
+                const sentMenu = new SentMessageSelectMenu(menu, message);
+                let calls = 0;
+                let toggleableRowTimeout = null;
+
+                const handler = settings.get("handler");
+                const endHandler = settings.get("endHandler");
+                const canSelect = settings.get("canSelect");
+                const toggleableRow = settings.get("toggleableRow");
+                const maxUses = settings.get("maxUses");
+                const maxTime = settings.get("maxTime");
+
+                if (maxTime.time) setTimeout(() => {
+                    if (calls > -1) {
+                        maxTime.callback(sentMenu);
+                        endHandler(sentMenu, "time");
+                    }
+                    calls = -1;
+                }, maxTime.time);
+
+                const toggleRow = async (actionRow) => {
+                    if (message.components.has(actionRow[0].customId)) {
+                        const index = message.components.get(actionRow[0].customId).row;
+                        toggleableRow.row = [...message.components.getRow(index).values()];
+                        await message.components.delete(index);
+                    }
+                    else {
+                        const index = message.components.findMax(c => c.row).row + 1;
+                        await message.components.add(actionRow.map(c => {
+                            let b = module.exports.parseComponent(c);
+                            if (calls == 1) b.onSend(message);
+                            return b.toJSON()
+                        }), index);
+
+                        if (toggleableRowTimeout) clearTimeout(toggleableRowTimeout);
+                        if (toggleableRow.time) toggleableRowTimeout = setTimeout(toggleRow, toggleableRow.time);
+                    }
+                    
+                    return true;
+                }
+
+                if (handler || canSelect.length || maxUses.uses) client?.onRaw("interactionCreate", i => {
+                    if (!i.isSelectMenu() || i.customId != menu.customId) return;
+                    const menuInteraction = ComponentInteraction.asSelectMenu(i);
+
+                    if (calls < 0) return;
+                    if (canSelect.length && !canSelect.some(id => menuInteraction.user.id === id || menuInteraction.member?.roles.has(id))) return menuInteraction.reply("> **You do not have permission to use this select menu.**", true);;
+                    if (maxUses.uses && calls >= maxUses.uses) return;
+                    calls++;
+
+                    if (Array.isArray(toggleableRow?.row) && toggleableRow.row.length) toggleRow(toggleableRow.row);
+                    
+                    if (handler(menuInteraction) === "noreply"/* && Array.isArray(toggleableRow?.row) && toggleableRow.row.length*/) menuInteraction.noReply();
+                    if (maxUses.uses && calls == maxUses.uses) {
+                        calls = -1;
+                        maxUses.callback(menuInteraction);
+                        return endHandler(sentMenu, "uses");
+                    }
+                });
+            }
+        };
+
+        // Call custom methods that have modified behavior from the base or that use custom property names
+        if (opts.options) customMethods.options(...opts.options);
+        if (opts.max) customMethods.max(opts.max);
+        if (opts.min) customMethods.min(opts.min);
+
+        return new SendableComponentFactory(customMethods);
+    },
+
+    /**
      * Parses an elisif message component from a resolvable or builder function form, into a SendableComponentFactory instance.
      * @param {MessageButtonResolvable | MessageSelectMenuResolvable | (c: ButtonFactory|SelectMenuFactory) => void} componentOrBuilder 
      * @returns {SendableComponentFactory<ButtonFactory|SelectMenuFactory>}
@@ -601,8 +840,9 @@ module.exports = {
                 }
             }),
             identify: (prop) => {
-                if (prop == "label") identifiers.type = "button"; // Required for buttons
+                if (["label", "style", "color", "emoji"].includes(prop)) identifiers.type = "button"; // Solely for buttons
                 else if (prop == "options" || prop == "option") identifiers.type = "selectMenu"; // Required for select menus
+                else identifiers.type = "button"; // Default to button
             }
         };
 
@@ -658,10 +898,11 @@ module.exports = {
                 const ComponentManager = require('../managers/ComponentManager');
                 const componentManager = new ComponentManager(simulatedMessage);
 
-                if (!(component instanceof require("discord.js").BaseMessageComponent)) component = module.exports.parseComponent(component) ?? component;
+                if (!(component instanceof require("discord.js").BaseMessageComponent) && !(component instanceof SendableComponentFactory)) component = module.exports.parseComponent(component) ?? component;
                 if (component instanceof SendableComponentFactory) {
                     sendableComponentFactories.push(component);
                     [row, col] = [row ?? component.toJSON().row, col ?? component.toJSON().col];
+                    component = component.toJSON();
                 }
 
                 if (col !== null && col !== undefined) componentManager.set(component, row, col);
@@ -678,7 +919,14 @@ module.exports = {
 
                 return this.component(buttonData);
             },
-            // TODO: add select menu builder
+            /** @param {MessageSelectMenuResolvable|(s: SelectMenuFactory) => void} f */
+            selectMenu(f) {
+                let menuData = module.exports.selectMenu();
+                if (typeof f === 'function') menuData = f(menuData) ?? menuData;
+                else menuData = module.exports.selectMenu(f);
+
+                return this.component(menuData);
+            },
             // TODO: add addPage() builder for pagination
             /**
              * @returns {import('../structures/Message')}

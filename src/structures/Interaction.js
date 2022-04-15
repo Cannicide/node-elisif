@@ -3,11 +3,36 @@ const Timestamp = require('./Timestamp');
 const { extendedFunction, asReplyOptions, Emap, boa } = require('../util');
 const { Interaction: BaseInteraction } = require("discord.js");
 
+const PseudoInteractionAcknowledgedError = `
+Warning: you are attempting to send a reply to an interaction that has already been acknowledged, but has not been replied to yet.
+This means you may be attempting two consecutive replies incorrectly, like so:
+
+    interaction.reply('hi');
+    interaction.reply('another hi');
+
+This warning message replaces the less descriptive error that would occur as a result of that type of faulty code.
+If you need to send two consecutive replies, please use async code to ensure that the first reply sends before attempting the second reply.
+From there, Elisif's built-in system will automatically convert consecutive reply() calls into the usually necessary followUp() calls.
+Corrected example:
+
+    await interaction.reply('hi');
+    interaction.reply('another hi');
+
+Or, alternatively without using async/await syntax:
+
+    interaction.reply('hi')
+    .then(() => interaction.reply('another hi'));
+
+This will prevent both this Elisif warning message and the usual Discord.js error.
+Hope this helps!
+`;
+
 module.exports = class Interaction extends ExtendedStructure {
 
     /** @type {BaseInteraction} */
     #i;
     #cachedReplies = new Emap([]);
+    #acknowledged = false;
     constructor(client, interaction) {
         super(client, interaction);
         this.#i = interaction;
@@ -48,6 +73,10 @@ module.exports = class Interaction extends ExtendedStructure {
         return extendedFunction(async (optsOrContent, ephemeral = false) => {
             let r;
             const opts = asReplyOptions(optsOrContent, ephemeral);
+
+            if (this.#acknowledged && !i.replied) return console.warn(PseudoInteractionAcknowledgedError);
+            // TODO: replace with InteractionAcknowledgedError ^^
+            this.#acknowledged = true;
 
             if (i.replied && this.#cachedReplies.size) r = await i.followUp(opts);
             else if (i.deferred) r = await i.editReply(opts);

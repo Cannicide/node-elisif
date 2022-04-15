@@ -18,7 +18,11 @@ module.exports = class SentMessageButton extends ExtendedStructure {
         super(message?.client, baseButton);
         this.#b = baseButton;
         this.#edit = (key, value) => {
-            message.components.edit(baseButton.customId, c => c[key] = value);
+            message.components.edit(baseButton.customId, c => Object.defineProperty(c, key, {
+                value,
+                writable: true,
+                enumerable: true
+            }));
         };
         this.#remove = () => message.components.delete(baseButton.customId);
 
@@ -72,7 +76,7 @@ module.exports = class SentMessageButton extends ExtendedStructure {
     }
 
     setLabel(label, ignoreEmoteParsing = false) {
-        label = SentMessageButton.parseLabel(label, ignoreEmoteParsing);
+        label = SentMessageButton.parseLabel(label, ignoreEmoteParsing, this);
         this.#edit('label', label);
         this.#b.setLabel(label);
         return this;
@@ -141,10 +145,10 @@ module.exports = class SentMessageButton extends ExtendedStructure {
         return style;
     }
 
-    static parseLabel(label, ignoreEmoteParsing = false) {
+    static parseLabel(label, ignoreEmoteParsing = false, sentMessageButton) {
         const emote = emotes(label, 1)[0];
-        if (emote && !btn.emoji && !ignoreEmoteParsing) {
-            btn.setEmoji(emote);
+        if (emote && !sentMessageButton.emoji && !ignoreEmoteParsing) {
+            sentMessageButton.setEmoji(emote);
             label = nonemotes(label, 1);
         }
 

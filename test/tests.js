@@ -95,7 +95,7 @@ client.on("message", /** @param {import("../src/structures/Message")} m */ async
         //     }
         // })
         .button({
-            label: "Test Toggle",
+            label: "⭐ Test Toggle",
             customId: "maintoggle",
             toggleRow: {
                 time: 0,
@@ -118,7 +118,30 @@ client.on("message", /** @param {import("../src/structures/Message")} m */ async
                         }
                     }
                 ]
-            }
+            },
+            // acceptsClicksFrom: ["Member"]
+        })
+        .selectMenu({
+            placeholder: "Select Me",
+            customId: "selectmenu",
+            onSelect: s => {
+                s.reply("Selected: " + s.selected)
+            },
+            options: [
+                "Taco 1",
+                "Taco 2",
+                {
+                    label: "⭐ Taco 3",
+                    description: "Very taco-y",
+                    value: "tacoette"
+                }
+            ],
+            max: 2,
+            maxUses: {
+                uses: 2,
+                callback: s => s.toggleDisabled()
+            },
+            // acceptsSelectionsFrom: ["668496738511749155"]
         })
         .send(m.channel);
         

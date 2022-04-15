@@ -62,4 +62,24 @@ module.exports = class ComponentInteraction extends Interaction {
         return componentInteraction;
     }
 
+    /**
+     * 
+     * @param {*} baseInteraction 
+     * @returns {import('./SentMessageSelectMenu') & ComponentInteraction & { selected: string }}
+     */
+    static asSelectMenu(baseInteraction) {
+        const SentSelectMenu = require('../structures/SentMessageSelectMenu');
+        const [componentInteraction, baseComponent] = this.getParts(baseInteraction);
+
+        const selectMenu = new SentSelectMenu(baseComponent, componentInteraction.message);
+        deepExtendInstance(componentInteraction, selectMenu);
+
+        // Add 'selected' property, works similar to 'values' but doesn't always return array (like String.match())
+        if (!componentInteraction.values?.length) Object.defineProperty(componentInteraction, "selected", { value: null, writable: false });
+        else if (componentInteraction.values.length == 1) Object.defineProperty(componentInteraction, "selected", { value: componentInteraction.values[0], writable: false });
+        else Object.defineProperty(componentInteraction, "selected", { value: componentInteraction.values, writable: true });
+
+        return componentInteraction;
+    }
+
 }

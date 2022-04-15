@@ -77,7 +77,7 @@ module.exports = class ComponentManager extends CacheManager {
         const rowWidth = this.#m.components[initialRow].components.reduce((sum, c) => sum + ComponentManager.widthOf(c.type), 0);
 
         if (rowWidth + ComponentManager.widthOf(component.type) > ComponentManager.maxRowWidth) {
-            if (row !== undefined) throw new Error("Cannot add component to row " + row + " because it would exceed the maximum row width of " + ComponentManager.maxRowWidth + ".");
+            if (row !== null && row !== undefined) throw new Error("Cannot add component to row " + row + " because it would exceed the maximum row width of " + ComponentManager.maxRowWidth + ".");
             // Automatically recursively add the component to the next available row:
             return this.add(component, initialRow + 1);
         }
