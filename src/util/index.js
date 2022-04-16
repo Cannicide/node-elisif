@@ -199,7 +199,7 @@ module.exports = {
      * @param {*} source - The object to use to extend the target object.
      */
     deepExtendInstance(target, source) {
-        for (const key in source) if (!(key in target)) Object.defineProperty(target, key, { value: source[key] });
+        for (const key in source) if (!(key in target)) Object.defineProperty(target, key, { value: source[key], writable: true, configurable: true, enumerable: true });
 
         let proto = source;
         const extendPrototype = () => {
@@ -822,6 +822,17 @@ module.exports = {
     },
 
     /**
+     * Creates a new modal,or retrieves an existent modal.
+     * All created modals are saved in a cache, and can be retrieved easily via their customId.
+     * @param {String|import('../structures/BaseModal').BaseModalResolvable|import('../structures/BaseModal')} [optsOrId] - The options of the modal to create, or the base modal object or custom id of an existent modal
+     * @returns {import('../structures/BaseModal')}
+     */
+    modal(optsOrId) {
+        const BaseModal = require('../structures/BaseModal');
+        return BaseModal.get(optsOrId);
+    },
+
+    /**
      * Parses an elisif message component from a resolvable or builder function form, into a SendableComponentFactory instance.
      * @param {MessageButtonResolvable | MessageSelectMenuResolvable | (c: ButtonFactory|SelectMenuFactory) => void} componentOrBuilder 
      * @returns {SendableComponentFactory<ButtonFactory|SelectMenuFactory>}
@@ -1123,23 +1134,28 @@ class Edict extends Emap {
         });
     }
 
-    set(key, value) {
-        if (typeof key !== 'number') {
-            super.set(key, value);
+    set(key, value, isAdding = false) {
+        if (!isAdding && !this.has("NODE-ELISIF-EDIST-" + key)) {
+            super.set("NODE-ELISIF-EDIST-" + key, value);
             this.add(value);
         }
-        else super.set(Number(key), value);
+        else {
+            super.set(key, value);
+        }
 
         return this;
     }
 
     add(value) {
-        super.set(this.size - 1, value);
-        return this;
+        return this.set("" + Math.floor(this.size / 2), value, true);
+    }
+
+    get(idOrObjectOrIndex) {
+        return super.get("NODE-ELISIF-EDIST-" + idOrObjectOrIndex) ?? super.get(idOrObjectOrIndex);
     }
 
     toArray() {
-        return [...this.filter((_, k) => typeof k === 'number').sort((_, __, a, b) => a - b).values()];
+        return [...this.filter((_, k) => !k.startsWith("NODE-ELISIF-EDIST-")).sort((_, __, a, b) => a - b).values()];
     }
 
     toString() {

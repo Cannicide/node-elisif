@@ -36,6 +36,7 @@ module.exports = class Interaction extends ExtendedStructure {
     constructor(client, interaction) {
         super(client, interaction);
         this.#i = interaction;
+        this.token = this.#i.token;
     }
 
     /**
@@ -108,6 +109,11 @@ module.exports = class Interaction extends ExtendedStructure {
             },
             cached: this.#cachedReplies
         });
+    }
+
+    openModal(baseModalOrId) {
+        const BaseModal = require('./BaseModal');
+        return BaseModal.get(baseModalOrId).open(this);
     }
 
     static from(baseInteraction) {

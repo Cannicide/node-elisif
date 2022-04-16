@@ -192,7 +192,7 @@ module.exports = class ComponentManager extends CacheManager {
     static widthOf(componentType) {
         if (componentType === "BUTTON") return 1;
         if (componentType === "SELECT_MENU") return 5;
-        if (componentType === "MODAL") return 0;
+        if (componentType === "TEXT_INPUT") return 5;
         return -1;
     }
 

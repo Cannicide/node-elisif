@@ -47,7 +47,8 @@ class ElisifClient extends Client {
 
         //Setup extended structures and Elisif extended events
         this.loadFiles(__dirname + "/events", (file, name) => {
-            this.extend(name, file);
+            if (name.startsWith("ws.")) this.ws.on(name.split("ws.")[1], file.bind(null, this)); 
+            else this.extend(name, file);
         });
 
         //Autoinitialization functionality:
@@ -113,7 +114,7 @@ class ElisifClient extends Client {
      * @returns {this} ElisifClient
      */
     onRaw(eventName, listener) {
-        return super.on(eventName, listener);
+        return super.on("raw" + eventName, listener);
     }
 
     /**
@@ -130,6 +131,9 @@ class ElisifClient extends Client {
         if (eventName.startsWith("@")) {
             return this.#customEmitter.emit(eventName, ...args);
         }
+
+        //Support raw event listeners without event extensions:
+        super.emit("raw" + eventName, ...args);
 
         //Support event extensions
         if (this.extensions.has(eventName)) for (const ext of this.extensions.get(eventName)) args = ext.callback(...args);
