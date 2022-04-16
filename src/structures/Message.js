@@ -51,9 +51,14 @@ module.exports = class Message extends ExtendedStructure {
     }
 
     get member() {
-        if (!this.#m.member) return null;
+        let member = this.#m.member;
+        if (!member && this.#m.author.bot) {
+            if (this.#m.author.id == this.client.user.id) member = this.#m.guild?.me;
+            else member = this.#m.guild?.members.cache.get(this.#m.author.id);
+        }
+        if (!member) return null;
         const GuildMember = require('./GuildMember');
-        return new GuildMember(this.client, this.#m.member);
+        return new GuildMember(this.client, member);
     }
 
     get textCommand() {
