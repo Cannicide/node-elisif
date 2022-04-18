@@ -1,7 +1,5 @@
 
 const { Collection } = require('discord.js');
-const { is } = require('express/lib/request');
-const { get } = require('express/lib/response');
 const Boa = require('./Boa');
 
 module.exports = {
@@ -136,6 +134,155 @@ module.exports = {
         return "unknown"
     },
 
+    /**
+     * A basic random number generator that accepts a range of min-max.
+     * @param {Number} min - The minimum of the range to generate a random number from, inclusive.
+     * @param {Number} max - The maximum of the range to generate a random number from, inclusive.
+     * @returns Generated random number between min and max, both inclusive.
+     */
+    random(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    },
+
+    /**
+     * A simple way to debug any method.
+     * Logs messages before and after the provided method is run, identifying whether the method works and what errors it may cause.
+     * @param {Function} method - The method to run and debug.
+     * @param  {...any} args - The arguments to pass to the 'method' function.
+     */
+    debugMethod(method, ...args) {
+        const methodName = method.name ?? "<anonymousFunction>";
+        console.log(`[1/2] About to execute ${methodName}()...`);
+
+        try {
+            method(...args);
+        }
+        catch (e) {
+            throw new Error(`[2/2] Error executing ${methodName}(): ${e.message}`);
+        }
+
+        console.log(`[2/2] Successfully executed ${methodName}() with no caught errors...`);
+    },
+
+    /**
+     * Check the filesize of the file at the specified path. Does not work on directories.
+     * @param {String} path - The absolute path to the file to check the size of.
+     * @returns The filesize of the file at the specified path, in MB.
+     */
+    filesize(path) {
+        const fs = require('fs');
+
+        if (!fs.existsSync(path) || fs.statSync(path).isDirectory()) return 0;
+        let size = fs.statSync(path).size;
+
+        if (size < 1024) return size + " B";
+        if (size < 1048576) return (size / 1024).toFixed(2) + " KB";
+        if (size < 1073741824) return (size / 1048576).toFixed(2) + " MB";
+        if (size < 1099511627776) return (size / 1073741824).toFixed(2) + " GB";
+        return (size / 1099511627776).toFixed(2) + " TB";
+        
+        // if (size < 1125899906842624) return (size / 1099511627776).toFixed(2) + " TB";
+        // if (size < 1152921504606846976) return (size / 1125899906842624).toFixed(2) + " PB";
+        // if (size < 1180591620717411303424) return (size / 1152921504606846976).toFixed(2) + " EB";
+        // if (size < 1208925819614629174706176) return (size / 1180591620717411303424).toFixed(2) + " ZB";
+        // if (size < 1237940039285380274899124224) return (size / 1208925819614629174706176).toFixed(2) + " YB";
+
+    },
+
+    /**
+     * Returns percent of string similarity based on Levenshtein Distance.
+     * Based on https://stackoverflow.com/a/36566052/6901876.
+     * @param {String} s1 - The first string to compare.
+     * @param {String} s2 - The second string to compare.
+     * @returns The percent of similarity between the two strings.
+     */
+    similarity(s1, s2) {
+        function editDistance(s1, s2) {
+            s1 = s1.toLowerCase();
+            s2 = s2.toLowerCase();
+          
+            var costs = new Array();
+            for (var i = 0; i <= s1.length; i++) {
+              var lastValue = i;
+              for (var j = 0; j <= s2.length; j++) {
+                if (i == 0)
+                  costs[j] = j;
+                else {
+                  if (j > 0) {
+                    var newValue = costs[j - 1];
+                    if (s1.charAt(i - 1) != s2.charAt(j - 1))
+                      newValue = Math.min(Math.min(newValue, lastValue),
+                        costs[j]) + 1;
+                    costs[j - 1] = lastValue;
+                    lastValue = newValue;
+                  }
+                }
+              }
+              if (i > 0)
+                costs[s2.length] = lastValue;
+            }
+            return costs[s2.length];
+        }
+
+        var longer = s1;
+        var shorter = s2;
+        if (s1.length < s2.length) {
+            longer = s2;
+            shorter = s1;
+        }
+        var longerLength = longer.length;
+        if (longerLength == 0) {
+            return 1.0;
+        }
+        return (longerLength - editDistance(longer, shorter)) / parseFloat(longerLength);
+    },
+
+    /**
+     * Returns the provided array of Strings, sorted based on similarity to the provided string
+     * @param {String[]} strs - Array of Strings to compare to cStr.
+     * @param {String} cStr - The string to compare against the array of Strings.
+     * @param {Number|"dynamic"} [rThreshold] - Number 0.0-1.0 percent similarity that all returned Strings must be, compared to cStr. Strings below this threshold in similarity will not be returned
+     * @param {Number} [sThreshold] - Number 0.0-1.0 percent similarity that guarantees only one string is returned.
+     */
+    sortedSimilar(strs, cStr, rThreshold = 0.0, sThreshold) {
+        let res = strs.filter(s => {
+            let threshold = rThreshold;
+            if (rThreshold == "dynamic") threshold = cStr.length / s.length - 0.1;
+            if (threshold > 1) threshold = 0.9;
+
+            return module.exports.similarity(s, cStr) > threshold;
+        }).sort((s1, s2) => {
+            return module.exports.similarity(s1, cStr) - this.similarity(s2, cStr);
+        });
+        
+        if (sThreshold !== null) {
+            let sRes = res.filter(s => this.similarity(s, cStr) > sThreshold);
+            if (sRes.length > 0) res = [sRes[0]];
+        }
+
+        return res;
+    },
+
+    /**
+     * Returns a function that accepts a slash command argument and returns the choices that match it closest, sorted by similarity.
+     * Built for use with Elisif's util.command() autocomplete option.
+     * @param {Choice[]} choices - An array of values to compare to the slash command argument.
+     * @returns {({name:string, value:string}, interaction) => Choice[]} A function that returns some or all of the provided choices.
+     */
+    commandAutocompleter(choices) {
+        return ({ value }) => {
+            if (!value) value = "";
+            value = String(value);
+            if (value.length < 1) return choices;
+
+            const results = module.exports.sortedSimilar(choices, value, "dynamic", 0.95);
+            const directMatch = results.filter(r => r.toLowerCase().startsWith(value.toLowerCase()));
+
+            if (!directMatch.length) return results;
+            else return [...new Set([...directMatch, ...results]).values()];
+        };
+    },
+
     asMessageOptions(optsOrContent) {
         if (typeof optsOrContent === "string") optsOrContent = {content: optsOrContent};
         return optsOrContent ?? {};
@@ -231,6 +378,7 @@ module.exports = {
 
     },
 
+    /** @returns {Emap} */
     guilds(structure, ...ids) {
         const GuildManager = require('../managers/GuildManager');
         const guilds = new GuildManager(structure.guilds);
@@ -958,6 +1106,16 @@ module.exports = {
         }
     },
 
+    command(name, description) {
+        const SyntaxCommand = require('../structures/SyntaxCommand');
+        return new SyntaxCommand(name, description);
+    },
+
+    contextMenu(name) {
+        const SyntaxContextMenu = require('../structures/SyntaxContextMenu');
+        return new SyntaxContextMenu(name);
+    },
+
     get boa() {
         return Boa();
     }
@@ -1023,10 +1181,15 @@ class Emap extends Collection {
         return minItem;
     }
 
-    filter(f) {
-        const result = new Emap();
+    filter(f, thisArg, customConstructor) {
+        if (thisArg) f = f.bind(thisArg);
+        const result = new (customConstructor ?? Emap)();
         this.each((x, key) => f(x, key, this) && result.set(key, x));
         return result;
+    }
+
+    partition(f, thisArg) {
+        return [this.filter(f, thisArg), this.filter(x => !f(x), thisArg)];
     }
 }
 
@@ -1110,7 +1273,47 @@ class Equeue {
 
 }
 
-class Edict extends Emap {
+class Eset extends Emap {
+    #index = 0;
+
+    constructor(flatIterable = []) {
+        super([]);
+        for (const value of flatIterable) this.add(value);
+        this.eset = true;
+    }
+
+    add(item) {
+        this.set("" + this.#index++, item);
+    }
+
+    filter(f, thisArg) {
+        return super.filter(f, thisArg, this.constructor);
+    }
+
+    toArray() {
+        return [...this.sort((_, __, a, b) => Number(a) - Number(b)).values()];
+    }
+
+    toString() {
+        return `Eset { [${this.toArray().join(", ")}] }`;
+    }
+
+    *[Symbol.iterator]() {
+        for (const val of this.toArray()) yield val;
+    }
+
+    get [Symbol.toStringTag]() {
+        return this.toString();
+    }
+
+    [Symbol.toPrimitive](hint) {
+        if (hint === 'number') return this.size;
+        if (hint === 'boolean') return this.size != 0;
+        return this.toString();
+    }
+}
+
+class Edist extends Emap {
 
     constructor(iterable = []) {
         super(iterable);
@@ -1154,8 +1357,12 @@ class Edict extends Emap {
         return super.get("NODE-ELISIF-EDIST-" + idOrObjectOrIndex) ?? super.get(idOrObjectOrIndex);
     }
 
+    filter(f, thisArg) {
+        return super.filter(f, thisArg, this.constructor);
+    }
+
     toArray() {
-        return [...this.filter((_, k) => !k.startsWith("NODE-ELISIF-EDIST-")).sort((_, __, a, b) => a - b).values()];
+        return [...this.filter((_, k) => !k.startsWith("NODE-ELISIF-EDIST-")).sort((_, __, a, b) => Number(a) - Number(b)).values()];
     }
 
     toString() {
@@ -1176,10 +1383,23 @@ class Edict extends Emap {
         return this.toString();
     }
 
+    static fromObject(obj) {
+        return new this(Object.entries(obj));
+    }
+
 };
+
+class ReadonlyEdist extends Edist {
+    constructor(iterable = []) {
+        super(iterable);
+        this.set = () => console.warn("Warning: Cannot set property values in a ReadonlyEdist");
+    }
+}
 
 // TODO: TEST BELOW STRUCTURES, MAKE SEPARATE CLASS FOR THEM
 module.exports.Emap = Emap;
 module.exports.Estack = Estack;
 module.exports.Equeue = Equeue;
-module.exports.Edist = Edict;
+module.exports.Eset = Eset;
+module.exports.Edist = Edist;
+module.exports.ReadonlyEdist = ReadonlyEdist;

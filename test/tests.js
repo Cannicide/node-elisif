@@ -1,7 +1,16 @@
 require("../src");
 const Client = require('../src/client/Client');
 const Intent = require('../src/structures/Intent');
-const { loadToken, simulateMessage, channels, createMessage, modal, Edist } = require('../src/util');
+const {
+    loadToken,
+    simulateMessage,
+    channels,
+    createMessage,
+    modal,
+    command,
+    commandAutocompleter,
+    contextMenu
+} = require('../src/util');
 
 const client = new Client(config => {
     config.intents(Intent.ALL)
@@ -11,6 +20,20 @@ const client = new Client(config => {
     .description('A bot for testing')
     .presences(["Hyelp", "Trelp"], 5)
     // .simulation()
+});
+
+modal()
+.setTitle("Test Modal")
+.setCustomId("tmodal800")
+.addComponent({
+    customId: "maininput",
+    label: "The Main Input",
+    max: 10
+})
+.addComponent({
+    customId: "maininput2",
+    label: "The Main Input 2",
+    multiline: true
 });
 
 client.on("ready", async () => {
@@ -36,20 +59,6 @@ client.on("message", /** @param {import("../src/structures/Message")} m */ async
     if (!m.author.bot) {
 
         m.channel.send("Channel: " + m.channel.channelOf({ content: "fake" }));
-
-        modal()
-        .setTitle("Test Modal")
-        .setCustomId("tmodal800")
-        .addComponent({
-            customId: "maininput",
-            label: "The Main Input",
-            max: 10
-        })
-        .addComponent({
-            customId: "maininput2",
-            label: "The Main Input 2",
-            multiline: true
-        });
 
         await createMessage("Test")
         .button({
@@ -114,6 +123,26 @@ client.on("message", /** @param {import("../src/structures/Message")} m */ async
         .send(m.channel);
         
     }
+});
+
+
+// TEST COMMANDS:
+
+command("hapax", "A test elisif command.")
+.guild("668485643487412234")
+.argument("[frst]" , "The first argument.", commandAutocompleter(["Option A", "Choice B", "Selection C"]))
+.require("@Member")
+.action(i => {
+    if (i.args.frst == "Choice B") return i.reply("Are you not entertained?");
+    i.reply("A response.");
+});
+
+contextMenu("Reply To")
+.type("Message")
+.guild("668485643487412234")
+.action(async i => {
+    const m = await i.openModal("tmodal800");
+    m.reply("You wrote: " + m.values[0]);
 });
 
 client.login(loadToken(__dirname + "/token.json"));

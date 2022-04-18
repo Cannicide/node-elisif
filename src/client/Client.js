@@ -3,6 +3,7 @@
 const { Client } = require('discord.js');
 const server = require('express')();
 const { parseBuilder, Emap, boa } = require('../util');
+const { syntax } = require('../features');
 const ElisifConfig = require('./config/Config');
 const EventExtensionManager = require('../managers/EventExtensionManager');
 const ClientUser = require('../structures/ClientUser');
@@ -54,8 +55,7 @@ class ElisifClient extends Client {
         //Autoinitialization functionality:
         this.on("ready", () => {
 
-            // SlashCommand.setupAll(this);
-            // builder.initializeAutocomplete(this);
+            syntax.initialize(this);
             console.log("READY")
 
             //Define simulated ClientUser:

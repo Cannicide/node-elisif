@@ -8,6 +8,9 @@ module.exports = (client, data) => {
     if (!data.type) return;
 
     if (data.type == InteractionType.ModalSubmit) {
+
+        if (!data.message) data.message = { id: "0".repeat(18) };
+
         const baseInteraction = new MessageComponentInteraction(client, data);
         baseInteraction.type = "MODAL_SUBMIT";
         const interaction = new ComponentInteraction(client, baseInteraction);
