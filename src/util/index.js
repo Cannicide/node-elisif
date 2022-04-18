@@ -4,6 +4,9 @@ const Boa = require('./Boa');
 
 module.exports = {
 
+    /**
+     * @private
+     */
     parseBuilder(objOrBuilder, Builder) {
         if (typeof objOrBuilder === 'function') {
             const b = new Builder();
@@ -12,6 +15,11 @@ module.exports = {
         return objOrBuilder;
     },
 
+    /**
+     * Loads a token from a JSON file, if one exists.
+     * @param {String} JSONpath - The absolute path to a JSON file.
+     * @returns {String?}
+     */
     loadToken(JSONpath) {
         const fs = require('fs');
         if (!fs.existsSync(JSONpath)) return null;
@@ -283,11 +291,13 @@ module.exports = {
         };
     },
 
+    /** @private */
     asMessageOptions(optsOrContent) {
         if (typeof optsOrContent === "string") optsOrContent = {content: optsOrContent};
         return optsOrContent ?? {};
     },
 
+    /** @private */
     asReplyOptions(optsOrContent, ephemeral = false) {
         return {
             ...module.exports.asMessageOptions(optsOrContent),
@@ -362,6 +372,7 @@ module.exports = {
         while (Object.getPrototypeOf(proto)) extendPrototype(proto = Object.getPrototypeOf(proto));
     },
 
+    /** @private */
     AppliableInterface: class AppliableInterface {
 
         static applyToClass(target, ignore = []) {
@@ -386,6 +397,7 @@ module.exports = {
         return guilds;
     },
 
+    /** @returns {Emap} */
     channels(structure, ...ids) {
         const ChannelManager = require('../managers/ChannelManager');
         const channels = new ChannelManager(structure.channels);
@@ -393,6 +405,7 @@ module.exports = {
         return channels;
     },
 
+    /** @returns {Emap} */
     users(structure, ...ids) {
         const UserManager = require('../managers/UserManager');
         const users = new UserManager(structure.users);
@@ -690,7 +703,7 @@ module.exports = {
                         }), index);
 
                         if (toggleableRowTimeout) clearTimeout(toggleableRowTimeout);
-                        if (toggleableRow.time) toggleableRowTimeout = setTimeout(toggleRow, toggleableRow.time);
+                        if (toggleableRow.time) toggleableRowTimeout = setTimeout(toggleRow.bind(null, toggleableRow.row), module.exports.parseTime(toggleableRow.time));
                     }
                     
                     return true;
@@ -934,7 +947,7 @@ module.exports = {
                         }), index);
 
                         if (toggleableRowTimeout) clearTimeout(toggleableRowTimeout);
-                        if (toggleableRow.time) toggleableRowTimeout = setTimeout(toggleRow, toggleableRow.time);
+                        if (toggleableRow.time) toggleableRowTimeout = setTimeout(toggleRow.bind(null, toggleableRow.row), module.exports.parseTime(toggleableRow.time));
                     }
                     
                     return true;
@@ -1025,8 +1038,31 @@ module.exports = {
         return component;
     },
 
+    /**
+     * Properties added to this object can be used as custom builder methods in the `createMessage()` utility.
+     * Such methods simply need to modify `this.messageData` with Discord.js message properties and return `this`.
+     * 
+     * This serves as an immensely simply way to extend and simplify message creation.
+     * 
+     * @example
+     * // Define the custom builder:
+     * CREATE_MESSAGE_CUSTOM_METHODS.blockQuote = function() {
+     *  this.messageData.content = `> ${this.messageData.content}`;
+     *  return this;
+     * };
+     * 
+     * // Use the custom builder:
+     * createMessage("Hello world!")
+     * .blockQuote()
+     * .send(yourChannel); // => Sends "> Hello world!" to yourChannel
+     */
     CREATE_MESSAGE_CUSTOM_METHODS: {},
 
+    /**
+     * Creates a sendable message from the provided options and builder functions.
+     * Heavily simplifies the process of adding embeds and components to a message.
+     * @param {String|MessageResolvable} optsOrContent - The content or options of the message.
+     */
     createMessage(optsOrContent) {
         const SendableComponentFactory = require('../structures/SendableComponentFactory');
         const sendableComponentFactories = [];
@@ -1106,22 +1142,62 @@ module.exports = {
         }
     },
 
+    /**
+     * Creates a new elisif-syntax slash command with the given name and description.
+     * @param {String} name - The name of the command.
+     * @param {String} description - The description of the command.
+     */
     command(name, description) {
         const SyntaxCommand = require('../structures/SyntaxCommand');
         return new SyntaxCommand(name, description);
     },
 
+    /**
+     * Creates a new elisif-syntax context menu command with the given name.
+     * @param {String} name - The name of the context menu command.
+     */
     contextMenu(name) {
         const SyntaxContextMenu = require('../structures/SyntaxContextMenu');
         return new SyntaxContextMenu(name);
     },
 
+    /**
+     * Creates a new asynchronous database instance, based on the provided filepath or database URL scheme.
+     * Supports JSON files, SIFDB files, and URL schemes for several databases such as mongodb.
+     * 
+     * Powered by Sifbase.
+     * @param {String} path - The absolute path to a JSON file, SIFDB file, or database URL scheme.
+     */
+    database(path) {
+        const { Sifbase } = require('sifbase');
+        return new Sifbase(path);
+    },
+
+    /**
+     * Creates a new asynchronous settings database for the provided structure or custom locale.
+     * @param {String} databasePath - The absolute path to a file or database URL scheme, representing the database to use.
+     * @param {*} structure - The structure to create settings for (e.g. a User or GuildMember instance).
+     * @param {String} [customLocale] - The ID to use for the settings. Defaults to `structure.id`.
+     */
+    settings(databasePath, structure, customLocale) {
+        // TODO: auto-determine databasePath from client config
+        // TODO: add settings to ClientUser, User, Guild, and GuildMember
+        const { BaseSettings } = require('../features/settings');
+        return new BaseSettings(databasePath, customLocale ?? structure.id);
+    },
+
+    /**
+     * Returns the Boa utilities -- several high-level utility functions including many based on Python's built-in methods.
+     */
     get boa() {
         return Boa();
     }
 
 }
 
+/**
+ * An extended Map utility class, further extending the utility functions of the Discord.js Collection class.
+ */
 class Emap extends Collection {
     constructor(iterable = []) {
         super(iterable);
@@ -1193,6 +1269,9 @@ class Emap extends Collection {
     }
 }
 
+/**
+ * A structure representing a Stack collection (first item in = last item out).
+ */
 class Estack {
 
     #stack;
@@ -1232,6 +1311,9 @@ class Estack {
 
 }
 
+/**
+ * A structure representing a Queue collection (first item in = first item out).
+ */
 class Equeue {
 
     #queue;
@@ -1273,6 +1355,10 @@ class Equeue {
 
 }
 
+/**
+ * An extended Set utility class, further extending the utility functions of the Emap class.
+ * Though an extension of Emap, this functions as both a Set and a Map in terms of retrieving and modifying values.
+ */
 class Eset extends Emap {
     #index = 0;
 
@@ -1288,6 +1374,10 @@ class Eset extends Emap {
 
     filter(f, thisArg) {
         return super.filter(f, thisArg, this.constructor);
+    }
+
+    has(item) {
+        return this.toArray().some(x => x == item);
     }
 
     toArray() {
@@ -1313,6 +1403,10 @@ class Eset extends Emap {
     }
 }
 
+/**
+ * An extended Map utility class, further extending the utility functions of the Emap class.
+ * This functions as a Set, Map, and Array all at once in terms of retrieving and modifying values.
+ */
 class Edist extends Emap {
 
     constructor(iterable = []) {
@@ -1389,6 +1483,10 @@ class Edist extends Emap {
 
 };
 
+/**
+ * Functions the same as an Edist, but is readonly.
+ * Values can only be added to this on instantiation; afterwards, values cannot be modified or added.
+ */
 class ReadonlyEdist extends Edist {
     constructor(iterable = []) {
         super(iterable);
@@ -1396,7 +1494,7 @@ class ReadonlyEdist extends Edist {
     }
 }
 
-// TODO: TEST BELOW STRUCTURES, MAKE SEPARATE CLASS FOR THEM
+// TODO: MAKE SEPARATE CLASS FOR BELOW STRUCTURES
 module.exports.Emap = Emap;
 module.exports.Estack = Estack;
 module.exports.Equeue = Equeue;

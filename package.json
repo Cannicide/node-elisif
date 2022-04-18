@@ -14,7 +14,8 @@
   },
   "scripts": {
     "start": "node ./src/index.js",
-    "test": "node --trace-warnings ./test/tests.js"
+    "test": "node --trace-warnings ./test/tests.js",
+    "test-esm": "node --trace-warnings ./test/tests-esm.mjs"
   },
   "engines": {
     "node": "16.x"

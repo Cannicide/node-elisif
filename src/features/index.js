@@ -4,5 +4,6 @@ module.exports = {
     simulator: require("./simulator"),
     syntax: require("./syntax"),
     voice: require("./voice"),
-    website: require("./website")
+    website: require("./website"),
+    settings: require("./settings")
 }

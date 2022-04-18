@@ -286,13 +286,15 @@ class SyntaxBuilder {
 
     static async initializeCommands(client) {
 
-        // Clear old commands:
-        await client.application.commands.set([]);
-        const guilds = SyntaxCache.all().map(c => c.guilds.toArray()).flat();
-        for (const guild of getGuilds(client, guilds)) await guild?.commands?.set([]);
+        // Filter out and separate application and guild commands:
+        const [ applicationCommands, guildCommands ] = SyntaxCache.all().partition(c => !c.guilds.size);
 
-        // Add current commands:
-        for (const v of SyntaxCache.all().values()) SyntaxBuilder.addToStructures(client, v);
+        // Set application commands:
+        await client.application?.commands?.set(applicationCommands.map(c => c?.json).filter(j => client.debug("ADDED GLOBAL COMMAND:", j.name) || j));
+
+        // Set guild commands:
+        const guilds = guildCommands.map(c => c.guilds.toArray()).flat();
+        for (const guild of getGuilds(client, guilds).values()) await guild?.commands?.set(guildCommands.filter(c => c.guilds.has(guild.id)).map(c => c?.json).filter(j => client.debug("ADDED GUILD COMMAND:", j.name) || j));
 
         // Setup command listener:
         client.on("interactionCreate", async interaction => {
@@ -311,21 +313,6 @@ class SyntaxBuilder {
             action(interaction);
         });
 
-    }
-
-    static addToStructures(client, syntaxData) {
-        const json = syntaxData?.json;
-        const guilds = syntaxData?.guilds;
-        if (!json || !client) return;
-
-        if (guilds?.size) getGuilds(client, guilds.toArray()).each(guild => {
-            guild.commands.create(json)
-            client.debug("ADDED GUILD COMMAND:", syntaxData.command);
-        });
-        else {
-            client.application.commands.create(json);
-            client.debug("ADDED CLIENT COMMAND:", syntaxData.command);
-        }
     }
 
 }

@@ -14,6 +14,7 @@ class ElisifClient extends Client {
     cloneParent = null;
     extensions = new EventExtensionManager();
     static listener = null;
+    static express = server;
     #config;
     #customEmitter = new (require("events"))();
     #simEmitter = new (require("events"))();
@@ -31,7 +32,7 @@ class ElisifClient extends Client {
 
         //Setup HTTP listener
         ElisifClient.listener = ElisifClient.listener ?? server.listen(this.#config.port, () => {
-            console.log(`\n\n${this.#config.name} listening on port ${ElisifClient.listener.address().port}`);
+            this.debug(`\n\n\t${this.#config.name} listening on port ${ElisifClient.listener.address().port}`);
         });
 
         //Setup persistent, scheduled, and ION events
@@ -56,7 +57,7 @@ class ElisifClient extends Client {
         this.on("ready", () => {
 
             syntax.initialize(this);
-            console.log("READY")
+            this.debug(`\t${this.#config.name} is up and running (as of ${this.readyAt.toLocaleString()}).\n\n`);
 
             //Define simulated ClientUser:
             if (this.simulated) this.user = ClientUser.from(client);

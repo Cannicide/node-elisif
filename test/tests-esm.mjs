@@ -1,6 +1,9 @@
+import Elisif from "../src/wrapper.mjs";
+
 const {
     Client,
     Intent,
+    Sifbase,
 
     loadToken,
     simulateMessage,
@@ -10,7 +13,7 @@ const {
     command,
     commandAutocompleter,
     contextMenu
-} = require("../src");
+} = Elisif;
 
 const client = new Client(config => {
     config.intents(Intent.ALL)
@@ -128,7 +131,7 @@ client.on("message", /** @param {import("../src/structures/Message")} m */ async
 
 // TEST COMMANDS:
 
-command("hapax", "A test elisif command.")
+command("esmhapax", "A test elisif command.")
 .guild("668485643487412234")
 .argument("[frst]" , "The first argument.", commandAutocompleter(["Option A", "Choice B", "Selection C"]))
 .require("@Member")
@@ -137,7 +140,7 @@ command("hapax", "A test elisif command.")
     i.reply("A response.");
 });
 
-contextMenu("Reply To")
+contextMenu("ESM Reply To")
 .type("Message")
 .guild("668485643487412234")
 .action(async i => {
@@ -145,4 +148,4 @@ contextMenu("Reply To")
     m.reply("You wrote: " + m.values[0]);
 });
 
-client.login(loadToken(__dirname + "/token.json"));
+client.login(loadToken(Sifbase.__dirname(import.meta) + "/token.json"));
