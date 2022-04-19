@@ -1187,6 +1187,17 @@ module.exports = {
     },
 
     /**
+     * Returns an IonHandler extended function/instance.
+     * The returned value can be used as a function to create an ion event handler, the equivalent of IonHandler#on.
+     * It can also be used as an object to execute the other IonHandler methods.
+     * @returns {IonHandler}
+     */
+    ion(client, databasePath) {
+        const IonHandler = require('../features/ion');
+        return IonHandler.asFunction(client, module.exports.database(databasePath));
+    },
+
+    /**
      * Returns the Boa utilities -- several high-level utility functions including many based on Python's built-in methods.
      */
     get boa() {

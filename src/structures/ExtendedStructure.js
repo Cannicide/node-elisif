@@ -15,6 +15,9 @@ module.exports = class ExtendedStructure {
         if (customProperties) deepExtendInstance(this, customProperties);
         this.#originalStructure = originalStructure;
         this.__base = originalStructure;
+
+        // Gives toJSON() access to the extended properties of the structure:
+        if (this.__base.toJSON) this.toJSON = this.__base.toJSON.bind(this);
     }
 
     is(otherStructure) {

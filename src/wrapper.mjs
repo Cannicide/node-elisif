@@ -29,6 +29,7 @@ export const fetch = elisif.fetch
 export const filesize = elisif.filesize
 export const formatTime = elisif.formatTime
 export const guilds = elisif.guilds
+export const ion = elisif.ion;
 export const hexToRgbColorName = elisif.hexToRgbColorName
 export const loadToken = elisif.loadToken
 export const modal = elisif.modal

@@ -9,10 +9,9 @@ module.exports = class ComponentInteraction extends Interaction {
     constructor(client, interaction) {
         super(client, interaction);
         this.#c = interaction;
-    }
 
-    get interactionId() {
-        return this.#c.id;
+        this.interactionId = this.#c.id;
+        this.messageId = this.#c.message.id;
     }
 
     get message() {
@@ -24,6 +23,10 @@ module.exports = class ComponentInteraction extends Interaction {
     get update() {
         if (!this.message) throw new Error('Cannot call Component#update() on a component without a defined message.');
         return extendedFunction((optsOrContent) => {
+            if (this.acknowledged && !i.replied) return console.warn(Interaction.PseudoInteractionAcknowledgedError);
+            // TODO: replace with InteractionAcknowledgedError ^^
+            this.acknowledged = true;
+
             return this.#c.update(asReplyOptions(optsOrContent));
         }, {
             defer: () => {

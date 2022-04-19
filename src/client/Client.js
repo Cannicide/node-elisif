@@ -239,6 +239,9 @@ class ElisifClient extends Client {
      */
     user; // Here for documentation purposes
 
+    // TODO: add primary database to client
+    // TODO: add ion events to client
+
 }
 
 module.exports = ElisifClient;

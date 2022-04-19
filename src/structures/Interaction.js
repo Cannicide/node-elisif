@@ -32,7 +32,7 @@ module.exports = class Interaction extends ExtendedStructure {
     /** @type {BaseInteraction} */
     #i;
     #cachedReplies = new Emap([]);
-    #acknowledged = false;
+    acknowledged = false;
     constructor(client, interaction) {
         super(client, interaction);
         this.#i = interaction;
@@ -75,9 +75,9 @@ module.exports = class Interaction extends ExtendedStructure {
             let r;
             const opts = asReplyOptions(optsOrContent, ephemeral);
 
-            if (this.#acknowledged && !i.replied) return console.warn(PseudoInteractionAcknowledgedError);
+            if (this.acknowledged && !i.replied) return console.warn(PseudoInteractionAcknowledgedError);
             // TODO: replace with InteractionAcknowledgedError ^^
-            this.#acknowledged = true;
+            this.acknowledged = true;
 
             if (i.replied && this.#cachedReplies.size) r = await i.followUp(opts);
             else if (i.deferred) r = await i.editReply(opts);
@@ -119,5 +119,7 @@ module.exports = class Interaction extends ExtendedStructure {
     static from(baseInteraction) {
         return new this(baseInteraction.client, baseInteraction);
     }
+
+    static PseudoInteractionAcknowledgedError = PseudoInteractionAcknowledgedError;
 
 }
