@@ -1,4 +1,4 @@
-const { Emap } = require('../util');
+const { Emap, parseTime } = require('../util');
 const { InteractionResponseType, ComponentType } = require("discord-api-types/v10");
 const ComponentManager = require('../managers/ComponentManager');
 
@@ -64,6 +64,7 @@ module.exports = class BaseModal {
 
     static parseOptions(options, baseModal) {
         options ??= {};
+        if (typeof options === "string") options = { customId: options };
         
         for (const key in options) Object.defineProperty(baseModal, key, { value: options[key], writable: true, enumerable: true });
     }
@@ -137,8 +138,10 @@ module.exports = class BaseModal {
     /**
      * Opens the modal and displays it as a response to the specified interaction.
      * @param {*} interaction 
+     * @param {Number|String|BigInt} [timeLimit] - A resolvable time limit for the modal, after which it will be assumed that the modal was canceled.
+     * @param {String|Function} [errorMessage] - The optional error message to display if the modal is submitted after being exceeding the time limit. Sends a default message if not specified. Or, specify a function to manually handle the modalCancel interaction.
      */
-    async open(interaction) {
+    async open(interaction, timeLimit, errorMessage) {
         if (interaction.deferred || interaction.replied) throw new Error('Error: INTERACTION_ALREADY_REPLIED\nThe interaction has already been acknowledged; unable to open the modal.');
         await interaction.client.api.interactions(interaction.id, interaction.token).callback.post({
             data: {
@@ -149,15 +152,26 @@ module.exports = class BaseModal {
 
         interaction.replied = true;
         let modalAcknowledged = false;
+        let modalCanceled = false;
 
         return new Promise(resolve => {
             interaction.client.on("interactionCreate", i => {
                 if (i.type != "MODAL_SUBMIT" || modalAcknowledged) return;
+                if (modalCanceled) {
+                    if (typeof errorMessage != "function") return i.reply(errorMessage ?? "> **You exceeded the time limit; the modal has been canceled.**", true);
+                    return errorMessage(i);
+                }
                 if (i.customId !== this.customId) return;
 
                 modalAcknowledged = true;
                 resolve(i);
             });
+
+            if (timeLimit && parseTime(timeLimit)) setTimeout(() => {
+                if (modalAcknowledged || modalCanceled) return;
+                modalCanceled = true;
+                resolve(null);
+            }, parseTime(timeLimit));
         });
     }
 

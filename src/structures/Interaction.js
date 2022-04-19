@@ -111,9 +111,16 @@ module.exports = class Interaction extends ExtendedStructure {
         });
     }
 
-    openModal(baseModalOrId) {
+    /**
+     * Opens the specified modal and displays it as a response to this interaction.
+     * @param {BaseModal|String} baseModalOrId - The base modal instance or string customId of the modal to open.
+     * @param {Number|String|BigInt} [timeLimit] - A resolvable time limit for the modal, after which it will be assumed that the modal was canceled.
+     * @param {String|(i:Interaction) => void} [errorMessage] - The optional error message to display if the modal is submitted after being exceeding the time limit. Sends a default message if not specified. Or, specify a function to manually handle the modalCancel interaction.
+     * @returns {Promise<Interaction|null>} The modalSubmit interaction, or null if the modal time limit was exceeded.
+     */
+    async openModal(baseModalOrId, timeLimit, errorMessage) {
         const BaseModal = require('./BaseModal');
-        return BaseModal.get(baseModalOrId).open(this);
+        return BaseModal.get(baseModalOrId).open(this, timeLimit, errorMessage);
     }
 
     static from(baseInteraction) {
