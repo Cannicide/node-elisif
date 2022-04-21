@@ -3,6 +3,7 @@ import elisif from "./index.js";
 // Manually export all individual properties from 'elisif'
 export let CREATE_MESSAGE_CUSTOM_METHODS = elisif.CREATE_MESSAGE_CUSTOM_METHODS;
 export const Client = elisif.Client;
+export const ClientConfig = elisif.ClientConfig;
 export const Discord = elisif.Discord;
 export const Edist = elisif.Edist;
 export const Emap = elisif.Emap
@@ -25,7 +26,6 @@ export const deepExtendInstance = elisif.deepExtendInstance
 export const embed = elisif.embed
 export const emotes = elisif.emotes
 export const extendedFunction = elisif.extendedFunction
-export const fetch = elisif.fetch
 export const filesize = elisif.filesize
 export const formatTime = elisif.formatTime
 export const guilds = elisif.guilds

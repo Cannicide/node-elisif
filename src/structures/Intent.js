@@ -1,4 +1,5 @@
 const { Intents } = require('discord.js');
+const PRIVILEGED_INTENTS = ["GUILD_PRESENCES", "GUILD_MEMBERS", /*"GUILD_MESSAGES" Not privileged until Aug 2022*/];
 
 module.exports = class Intent {
 
@@ -16,5 +17,13 @@ module.exports = class Intent {
 
     static get ALL() {
         return [...Intent.INTENTS.keys()].map(k => new this(k));
+    }
+
+    static get PRIVILEGED() {
+        return [...Intent.INTENTS.keys()].filter(k => PRIVILEGED_INTENTS.includes(k)).map(k => new this(k));
+    }
+
+    static get UNPRIVILEGED() {
+        return [...Intent.INTENTS.keys()].filter(k => !PRIVILEGED_INTENTS.includes(k)).map(k => new this(k));
     }
 }
