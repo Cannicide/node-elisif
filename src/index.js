@@ -55,17 +55,12 @@ module.exports = {
 
 // Manually export all individual properties from 'util':
 module.exports.CREATE_MESSAGE_CUSTOM_METHODS = util.CREATE_MESSAGE_CUSTOM_METHODS;
-module.exports.Client = util.Client;
-module.exports.ClientConfig = util.ClientConfig;
-module.exports.Discord = util.Discord;
 module.exports.Edist = util.Edist;
 module.exports.Emap = util.Emap
 module.exports.Equeue = util.Equeue
 module.exports.Eset = util.Eset
 module.exports.Estack = util.Estack
-module.exports.Intent = util.Intent
 module.exports.ReadonlyEdist = util.ReadonlyEdist
-module.exports.Sifbase = util.Sifbase
 module.exports.boa = util.boa
 module.exports.button = util.button
 module.exports.channels = util.channels
