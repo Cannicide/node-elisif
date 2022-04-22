@@ -148,4 +148,6 @@ contextMenu("ESM Reply To")
     m.reply("You wrote: " + m.values[0]);
 });
 
+client.loadFiles(Sifbase.__dirname(import.meta) + "/commands");
+
 client.login(loadToken(Sifbase.__dirname(import.meta) + "/token.json"));

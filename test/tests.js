@@ -155,6 +155,8 @@ contextMenu("Reply To")
     m.reply("You wrote: " + m.values[0]);
 });
 
+client.loadFiles(__dirname + "/commands");
+
 // Test ION:
 const ION = ion(client, __dirname + "/db.sifdb");
 

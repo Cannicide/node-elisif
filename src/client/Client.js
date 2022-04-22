@@ -178,22 +178,28 @@ class ElisifClient extends Client {
 
     /**
      * Recursively loads all JS files within the specified directory, including within child directories.
+     * JS files that default export a function named "init" will be automatically called with the ElisifClient instance as the first argument.
+     * Now supports both ESM and CJS module-type javascript files.
      * @param {String} dir - The directory to recursively load files from.
      * @param {(cmd:NodeRequire,name:String)} [forEach] - If specified, will be called on each file with the file's exports and the file's name.
      */
-    loadFiles(dir, forEach = () => null) {
+    async loadFiles(dir, forEach = () => null) {
 
         let files = require("fs").readdirSync(dir);
 
-        files.map(file => {
-            let path = dir + "/" + file;
+        files.map(async file => {
+            let path = dir.replace("C:\\", "/") + "/" + file;
             if (require("fs").lstatSync(path).isDirectory()) {
                 return this.loadFiles(path);
-            } else if (path.endsWith(".js")) {
+            } else if (path.endsWith(".js") || path.endsWith(".cjs") || path.endsWith(".mjs")) {
                 this.debug("Loaded File:", file);
-                let cmd = require(path);
-                if ("init" in cmd) cmd.init(this);
+
+                let cmd = await import(path);
+                cmd = cmd?.default ?? cmd;
+
+                if (cmd && "init" in cmd) cmd.init(this);
                 else if (typeof cmd === "function" && cmd?.name?.toLowerCase() === "init") cmd(this);
+
                 forEach(cmd, file.split(".js")[0]);
                 return cmd;
             }
