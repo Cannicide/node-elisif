@@ -1,6 +1,4 @@
-import Elisif from "../src/wrapper.mjs";
-
-const {
+import {
     Client,
     Intent,
     Sifbase,
@@ -13,7 +11,7 @@ const {
     command,
     commandAutocompleter,
     contextMenu
-} = Elisif;
+} from "../src/wrapper.mjs";
 
 const client = new Client(config => {
     config.intents(Intent.ALL)

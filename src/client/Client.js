@@ -200,7 +200,7 @@ class ElisifClient extends Client {
                 if (cmd && "init" in cmd) cmd.init(this);
                 else if (typeof cmd === "function" && cmd?.name?.toLowerCase() === "init") cmd(this);
 
-                forEach(cmd, file.split(".js")[0]);
+                forEach(cmd, file.split(".js")[0]); // TODO: fix this line
                 return cmd;
             }
         });

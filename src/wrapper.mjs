@@ -46,4 +46,6 @@ export const simulateMessage = elisif.simulateMessage
 export const sortedSimilar = elisif.sortedSimilar
 export const users = elisif.users
 
+// TODO: Manually export all individual structures and managers
+
 export default elisif;
