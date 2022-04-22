@@ -188,7 +188,6 @@ class ElisifClient extends Client {
         files.map(file => {
             let path = dir + "/" + file;
             if (require("fs").lstatSync(path).isDirectory()) {
-                names.push(file + "/");
                 return this.loadFiles(path);
             } else if (path.endsWith(".js")) {
                 this.debug("Loaded File:", file);

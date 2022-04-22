@@ -1505,6 +1505,9 @@ class ReadonlyEdist extends Edist {
     }
 }
 
+// Globals object
+module.exports.globals = new Edist();
+
 // TODO: MAKE SEPARATE CLASS FOR BELOW STRUCTURES
 module.exports.Emap = Emap;
 module.exports.Estack = Estack;

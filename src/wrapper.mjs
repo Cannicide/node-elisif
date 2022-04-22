@@ -28,6 +28,7 @@ export const emotes = elisif.emotes
 export const extendedFunction = elisif.extendedFunction
 export const filesize = elisif.filesize
 export const formatTime = elisif.formatTime
+export const globals = elisif.globals;
 export const guilds = elisif.guilds
 export const ion = elisif.ion;
 export const hexToRgbColorName = elisif.hexToRgbColorName
