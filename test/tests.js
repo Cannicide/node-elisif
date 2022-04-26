@@ -140,11 +140,15 @@ client.on("message", /** @param {import("../src/structures/Message")} m */ async
 
 command("hapax", "A test elisif command.")
 .guild("668485643487412234")
-.argument("[frst]" , "The first argument.", commandAutocompleter(["Option A", "Choice B", "Selection C"]))
+.argument("<frst: voice_OrTextChannel>" , "The first argument.")
 .require("@Member")
 .action(i => {
-    if (i.args.frst == "Choice B") return i.reply("Are you not entertained?");
-    i.reply("A response.");
+    const m = i.args.frst;
+    // return i.reply({
+    //     content: "Replied",
+    //     files: [m]
+    // });
+    return i.reply(`The channel is ${m}`);
 });
 
 contextMenu("Reply To")

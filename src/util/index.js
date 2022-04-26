@@ -1278,6 +1278,10 @@ class Emap extends Collection {
     partition(f, thisArg) {
         return [this.filter(f, thisArg), this.filter(x => !f(x), thisArg)];
     }
+
+    static fromObject(obj) {
+        return new this(Object.entries(obj));
+    }
 }
 
 /**
@@ -1486,10 +1490,6 @@ class Edist extends Emap {
         if (hint === 'number') return this.size;
         if (hint === 'boolean') return this.size != 0;
         return this.toString();
-    }
-
-    static fromObject(obj) {
-        return new this(Object.entries(obj));
     }
 
 };

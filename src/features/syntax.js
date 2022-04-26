@@ -74,6 +74,13 @@ class SyntaxParser {
      */
     static argumentValues(syntaxArgs, interaction) {
 
+        const ChannelManager = require('../managers/ChannelManager');
+        const GuildMember = require('../structures/GuildMember');
+        const Message = require('../structures/Message');
+        const User = require('../structures/User');
+        const { MessageAttachment } = require('discord.js');
+
+        const resolved = interaction.options.resolved;
         const mapper = arg => {
             if (!arg.flag && !interaction.options.get(arg.name)) return { ...arg, value: undefined };
 
@@ -83,6 +90,18 @@ class SyntaxParser {
             }
             else {
                 arg.value = interaction.options.get(arg.name)?.value;
+
+                if (resolved.channels?.has(arg.value)) arg.value = ChannelManager.resolveFrom(interaction.client, resolved.channels.get(arg.value));
+                else if (resolved.members?.has(arg.value)) arg.value = new GuildMember(interaction.client, resolved.members.get(arg.value));
+                else if (resolved.roles?.has(arg.value)) arg.value = resolved.roles.get(arg.value);
+                else if (resolved.messages?.has(arg.value)) arg.value = new Message(interaction.client, resolved.messages.get(arg.value));
+                else if (resolved.users?.has(arg.value)) arg.value = new User(interaction.client, resolved.users.get(arg.value));
+                else if (["attachment", "file", "image"].includes(arg.datatype)) {
+                    const attachment = SyntaxCache.getResolvedAttachment(interaction.id, arg.value);
+                    if (attachment) arg.value = new MessageAttachment(attachment.url, attachment.filename, attachment);
+                    else arg.value = null;
+                }
+
                 return arg;
             }
         };
@@ -331,6 +350,16 @@ class SyntaxCache {
 
     static all() {
         return this.#cache;
+    }
+
+    static #attachments = new Emap();
+
+    static addResolvedAttachments(interactionId, attachmentsObject) {
+        this.#attachments.set(interactionId, Emap.fromObject(attachmentsObject));
+    }
+
+    static getResolvedAttachment(interactionId, attachmentId) {
+        return this.#attachments.get(interactionId)?.get(attachmentId);
     }
 }
 

@@ -2,7 +2,8 @@
 // Partially inspired by the syntax of the `commander` npm module for cli
 
 const { SyntaxBuilder, SyntaxCache } = require("../features/syntax");
-const { SlashCommandBuilder, SlashCommandIntegerOption, SlashCommandNumberOption } = require("@discordjs/builders");
+const { SlashCommandBuilder, SlashCommandIntegerOption, SlashCommandNumberOption, SlashCommandChannelOption } = require("@discordjs/builders");
+const { ChannelType } = require("discord-api-types/v10");
 
 class SyntaxCommand {
 
@@ -23,13 +24,14 @@ class SyntaxCommand {
             let plant = /** @type {SlashCommandBuilder} */ (origplant ?? factory);
             
             if (arg.type == "command") type = factory.addSubcommand.bind(factory);
-            else if (arg.datatype.toLowerCase() == "channel") type = plant.addChannelOption.bind(plant);
+            else if (arg.datatype.toLowerCase().endsWith("channel")) type = plant.addChannelOption.bind(plant);
             else if (arg.datatype.toLowerCase() == "user") type = plant.addUserOption.bind(plant);
             else if (["boolean", "bool"].includes(arg.datatype.toLowerCase())) type = plant.addBooleanOption.bind(plant);
             else if (arg.datatype == "role") type = plant.addRoleOption.bind(plant);
             else if (arg.datatype == "mention" || arg.datatype == "mentionable") type = plant.addMentionableOption.bind(plant);
             else if (["num", "number", "float"].includes(arg.datatype)) type = plant.addNumberOption.bind(plant);
             else if (["int", "integer", "intg"].includes(arg.datatype)) type = plant.addIntegerOption.bind(plant);
+            else if (["attachment", "file", "image"].includes(arg.datatype)) type = plant.addAttachmentOption.bind(plant);
             else type = plant.addStringOption.bind(plant);
 
             type(argument => {
@@ -45,6 +47,15 @@ class SyntaxCommand {
                 if (argument instanceof SlashCommandIntegerOption || argument instanceof SlashCommandNumberOption) {
                     if (arg.min) argument.setMinValue(arg.min);
                     if (arg.max) argument.setMaxValue(arg.max);
+                }
+                else if (argument instanceof SlashCommandChannelOption) {
+                    const type = arg.datatype.replace("channel", "").replace(/[^a-zA-Z]/g, "").toLowerCase().trim();
+                    if (type.match("voice")) argument.addChannelTypes(ChannelType.GuildVoice);
+                    if (type.match("category")) argument.addChannelTypes(ChannelType.GuildCategory);
+                    if (type.match("news")) argument.addChannelTypes(ChannelType.GuildNews);
+                    if (type.match("stage")) argument.addChannelTypes(ChannelType.GuildStageVoice);
+                    if (type.match("thread")) argument.addChannelTypes(ChannelType.GuildNewsThread, ChannelType.GuildPrivateThread, ChannelType.GuildPublicThread);
+                    if (type.match("text")) argument.addChannelTypes(ChannelType.GuildText);
                 }
 
                 if (built.choices.has((origplant ? `${plant.name}:` : "") + arg.name)) argument.addChoices(...built.choices.get((origplant ? `${plant.name}:` : "") + arg.name).map(x => ({name:x, value:x})));

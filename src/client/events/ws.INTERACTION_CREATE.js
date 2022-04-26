@@ -27,4 +27,10 @@ module.exports = (client, data) => {
         client.emit('interactionCreate', interaction);
         return;
     }
+    else if (data.type == InteractionType.ApplicationCommand) {
+        // Allow resolving attachment arguments in slash commands
+        if (data?.data?.resolved?.attachments) {
+            require("../../features/syntax").SyntaxCache.addResolvedAttachments(data.id, data.data.resolved.attachments);
+        }
+    }
 }

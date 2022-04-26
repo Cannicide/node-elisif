@@ -1,6 +1,6 @@
 {
   "name": "elisif",
-  "version": "4.0.4-dev",
+  "version": "4.0.5-dev",
   "description": "A powerful Discord Bot system, slash command handler, and complete extension of discord.js.",
   "main": "./src/index.js",
   "dependencies": {
