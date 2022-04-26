@@ -92,4 +92,5 @@ module.exports.settings = util.settings
 module.exports.similarity = util.similarity
 module.exports.simulateMessage = util.simulateMessage
 module.exports.sortedSimilar = util.sortedSimilar
+module.exports.toggleComponentRow = util.toggleComponentRow;
 module.exports.users = util.users

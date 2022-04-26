@@ -44,6 +44,7 @@ export const settings = elisif.settings
 export const similarity = elisif.similarity
 export const simulateMessage = elisif.simulateMessage
 export const sortedSimilar = elisif.sortedSimilar
+export const toggleComponentRow = elisif.toggleComponentRow;
 export const users = elisif.users
 
 // TODO: Manually export all individual structures and managers

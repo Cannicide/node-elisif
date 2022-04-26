@@ -8,7 +8,7 @@ const {
     createMessage,
     modal,
     command,
-    commandAutocompleter,
+    toggleComponentRow,
     contextMenu,
     ion
 } = require("../src");
@@ -68,46 +68,46 @@ client.on("message", /** @param {import("../src/structures/Message")} m */ async
         //     label: "An ION Button",
         //     customId: "ionbtn"
         // })
-        // .button({
-        //     label: "⭐ Test Toggle",
-        //     customId: "maintoggle",
-        //     toggleRow: {
-        //         time: "30s",
-        //         row: [
-        //             {
-        //                 label: "Toggled 1",
-        //                 customId: "toggle1",
-        //                 color: 0x00ff00,
-        //                 onClick: async btn => {
-        //                     const i = await btn.openModal("tmodal800", "10s", f => f.reply("Nah"));
+        .button({
+            label: "⭐ Test Toggle",
+            customId: "maintoggle",
+            // toggleRow: {
+            //     time: "30s",
+            //     row: [
+            //         {
+            //             label: "Toggled 1",
+            //             customId: "toggle1",
+            //             color: 0x00ff00,
+            //             onClick: async btn => {
+            //                 const i = await btn.openModal("tmodal800", "10s", f => f.reply("Nah"));
 
-        //                     if (!i) return console.log("Failed to submit modal.");
+            //                 if (!i) return console.log("Failed to submit modal.");
 
-        //                     console.log("Submitted", i.values.toArray());
-        //                     console.log("First by get", i.values.get(0));
-        //                     console.log("First", i.values[0]);
-        //                     console.log("By id", i.values.get("maininput"));
-        //                     console.log("By property reference", i.values.maininput);
-        //                     console.log("2nd by get", i.values.get(1));
-        //                     console.log("2nd", i.values[1]);
-        //                     console.log("2nd by id", i.values.get("maininput2"));
-        //                     console.log("2nd by property reference", i.values.maininput2);
-        //                     i.reply("> Test reply to **you**, sir");
-        //                 }
-        //             },
-        //             {
-        //                 label: "Toggled 2",
-        //                 customId: "toggle2",
-        //                 color: 0xff,
-        //                 onClick: btn => {
-        //                     btn.setDisabled();
-        //                     return "noreply";
-        //                 }
-        //             }
-        //         ]
-        //     },
-        //     // acceptsClicksFrom: ["Member"]
-        // })
+            //                 console.log("Submitted", i.values.toArray());
+            //                 console.log("First by get", i.values.get(0));
+            //                 console.log("First", i.values[0]);
+            //                 console.log("By id", i.values.get("maininput"));
+            //                 console.log("By property reference", i.values.maininput);
+            //                 console.log("2nd by get", i.values.get(1));
+            //                 console.log("2nd", i.values[1]);
+            //                 console.log("2nd by id", i.values.get("maininput2"));
+            //                 console.log("2nd by property reference", i.values.maininput2);
+            //                 i.reply("> Test reply to **you**, sir");
+            //             }
+            //         },
+            //         {
+            //             label: "Toggled 2",
+            //             customId: "toggle2",
+            //             color: 0xff,
+            //             onClick: btn => {
+            //                 btn.setDisabled();
+            //                 return "noreply";
+            //             }
+            //         }
+            //     ]
+            // },
+            // acceptsClicksFrom: ["Member"]
+        })
         // .selectMenu({
         //     placeholder: "Select Me",
         //     customId: "selectmenu",
@@ -137,6 +137,46 @@ client.on("message", /** @param {import("../src/structures/Message")} m */ async
         
     }
 });
+
+client.on("interactionCreate", i => {
+    if (!i.isButton() || i.customId != "maintoggle") return;
+    i.noReply();
+    toggleComponentRow(i.message, {
+        time: "30s",
+        row: [
+            {
+                label: "Toggled 1",
+                customId: "toggle1",
+                color: 0x00ff00,
+                onClick: async btn => {
+                    const i = await btn.openModal("tmodal800", "10s", f => f.reply("Nah"));
+
+                    if (!i) return console.log("Failed to submit modal.");
+
+                    console.log("Submitted", i.values.toArray());
+                    console.log("First by get", i.values.get(0));
+                    console.log("First", i.values[0]);
+                    console.log("By id", i.values.get("maininput"));
+                    console.log("By property reference", i.values.maininput);
+                    console.log("2nd by get", i.values.get(1));
+                    console.log("2nd", i.values[1]);
+                    console.log("2nd by id", i.values.get("maininput2"));
+                    console.log("2nd by property reference", i.values.maininput2);
+                    i.reply("> Test reply to **you**, sir");
+                }
+            },
+            {
+                label: "Toggled 2",
+                customId: "toggle2",
+                color: 0xff,
+                onClick: btn => {
+                    btn.setDisabled();
+                    btn.noReply();
+                }
+            }
+        ]
+    });
+})
 
 
 // TEST COMMANDS:

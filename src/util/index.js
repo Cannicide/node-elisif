@@ -1164,6 +1164,45 @@ module.exports = {
     },
 
     /**
+     * Used to save information such as updated row and calls data.
+     * @private
+     */
+    toggleComponentRowData: new Map(),
+
+    /**
+     * Toggles a component row on the specified message.
+     * @param {import("../structures/Message")} message 
+     * @param {{ row:any[], time:number }} opts 
+     * @returns 
+     */
+    async toggleComponentRow(message, opts) { // TODO: use toggleComponentRow() in button() and selectMenu()
+        opts = module.exports.toggleComponentRowData.get(opts.row[0].customId) ?? opts;
+        module.exports.toggleComponentRowData.set(opts.row[0].customId, opts);
+
+        opts.calls ??= 0;
+        opts.calls++;
+
+        if (message.components.has(opts.row[0].customId)) {
+            const index = message.components.get(opts.row[0].customId).row;
+            opts.row = [...message.components.getRow(index).values()];
+            await message.components.delete(index);
+        }
+        else {
+            const index = message.components.findMax(c => c.row).row + 1;
+            await message.components.add(opts.row.map(c => {
+                let b = module.exports.parseComponent(c);
+                if (opts.calls == 1) b.onSend(message);
+                return b.toJSON()
+            }), index);
+
+            if (opts.timeout) clearTimeout(opts.timeout);
+            if (opts.time) opts.timeout = setTimeout(module.exports.toggleComponentRow.bind(null, message, opts), module.exports.parseTime(opts.time));
+        }
+        
+        return true;
+    },
+
+    /**
      * Creates a new elisif-syntax slash command with the given name and description.
      * @param {String} name - The name of the command.
      * @param {String} description - The description of the command.
