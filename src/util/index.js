@@ -507,8 +507,8 @@ module.exports = {
                 embed.setTitle(title, url);
                 return this;
             },
-            send(channel) {
-                return channel?.send({ embed });
+            send(channel, opts, ...args) {
+                return channel?.send({ embed, ...opts }, ...args);
             },
             toJSON() {
                 const output = embed.toJSON();
@@ -1147,17 +1147,17 @@ module.exports = {
             /**
              * @returns {import('../structures/Message')}
              */
-            async send(channel) {
-                const m = await channel?.send(this.messageData);
+            async send(channel, ...args) {
+                const m = await channel?.send(this.messageData, ...args);
                 sendableComponentFactories.forEach(f => f.onSend(m));
                 return m;
             },
-            async reply(messageOrInteraction) {
-                const m = await messageOrInteraction?.reply(this.messageData);
+            async reply(messageOrInteraction, ...args) {
+                const m = await messageOrInteraction?.reply(this.messageData, ...args);
                 sendableComponentFactories.forEach(f => f.onSend(m));
                 return m;
             },
-            get() {
+            toJSON() {
                 return this.messageData;
             }
         }
