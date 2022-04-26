@@ -740,7 +740,7 @@ module.exports = {
 
                     if (Array.isArray(toggleableRow?.row) && toggleableRow.row.length) toggleRow(toggleableRow.row);
                     
-                    if (handler(buttonInteraction) === "noreply"/* && Array.isArray(toggleableRow?.row) && toggleableRow.row.length*/) buttonInteraction.noReply();
+                    if (handler(buttonInteraction) === "noreply" && Array.isArray(toggleableRow?.row) && toggleableRow.row.length) buttonInteraction.noReply();
                     if (maxUses.uses && calls == maxUses.uses) {
                         calls = -1;
                         maxUses.callback(buttonInteraction);
@@ -984,7 +984,7 @@ module.exports = {
 
                     if (Array.isArray(toggleableRow?.row) && toggleableRow.row.length) toggleRow(toggleableRow.row);
                     
-                    if (handler(menuInteraction) === "noreply"/* && Array.isArray(toggleableRow?.row) && toggleableRow.row.length*/) menuInteraction.noReply();
+                    if (handler(menuInteraction) === "noreply" && Array.isArray(toggleableRow?.row) && toggleableRow.row.length) menuInteraction.noReply();
                     if (maxUses.uses && calls == maxUses.uses) {
                         calls = -1;
                         maxUses.callback(menuInteraction);
