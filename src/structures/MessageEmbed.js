@@ -13,6 +13,10 @@ module.exports = class MessageEmbed extends ExtendedStructure {
         if (asMessageOptions(embedOrContent).content) this.setContent(embedOrContent);
     }
 
+    toJSON() {
+        return { ...this.#e.toJSON(), content: this.content };
+    }
+
     get author() {
         return this.#e.author;
     }

@@ -427,8 +427,23 @@ module.exports = {
      * @property {(timestamp = null) => EmbedFactory} timestamp - Sets the timestamp of the embed
      * @property {(title, url) => EmbedFactory} title - Sets the title of the embed
      * @property {(channel) => Promise<Message>} send - Sends the embed to the specified channel
-     * @property {() => MessageEmbed} get - Returns the embed object
+     * @property {() => MessageEmbed} toJSON - Returns the embed object
      * @property {() => EmbedFactory} debug - Readably stringifies and logs the embed object to console
+     */
+
+    /**
+     * @typedef {Object} MessageEmbedResolvable
+     * @property {{name:string, value:string, inline:boolean}[]} fields - Sets the fields of the embed
+     * @property {{name:string, url:string, iconURL:string}} author - Sets the author of the embed
+     * @property {string|number} color - Sets the color of the embed
+     * @property {string} description - Sets the description of the embed
+     * @property {string} content - Sets the content of the embed's message
+     * @property {{text:string, iconURL:string}} footer - Sets the footer of the embed
+     * @property {{url:string}} image - Sets the image of the embed
+     * @property {{url:string}} thumbnail - Sets the thumbnail of the embed
+     * @property {data|number} timestamp - Sets the timestamp of the embed
+     * @property {string} title - Sets the title of the embed
+     * @property {string} url - Sets the URL of the title of the embed
      */
 
     /**
@@ -496,14 +511,19 @@ module.exports = {
                 return channel?.send({ embed });
             },
             toJSON() {
-                return { ...embed };
+                const output = embed.toJSON();
+                if (output.fields && !output.fields.length) output.fields = null;
+                return output;
+            },
+            onSend() {
+                return null;
             },
             set(optsOrContent) {
                 embed.set(optsOrContent);
                 return this;
             },
             debug() {
-                console.log(JSON.stringify(this.get(), null, '\t'));
+                console.log(JSON.stringify(this.toJSON(), null, '\t'));
                 return this;
             }
         });
@@ -1072,13 +1092,14 @@ module.exports = {
                 ...module.exports.asMessageOptions(optsOrContent)
             },
             ...module.exports.CREATE_MESSAGE_CUSTOM_METHODS,
-            embed(/** @type {EmbedResolvable|(e: EmbedFactory) => void} */ f) {
+            embed(/** @type {MessageEmbedResolvable|(e: EmbedFactory) => void} */ f) {
                 let embedData = module.exports.embed();
                 if (typeof f === 'function') embedData = f(embedData) ?? embedData;
                 else embedData = module.exports.embed(f);
 
                 if (embedData instanceof SendableComponentFactory) {
                     sendableComponentFactories.push(embedData);
+                    embedData = embedData.toJSON();
                 }
 
                 this.messageData.embeds = [].concat(this.messageData.embeds ?? []).concat(embedData);
