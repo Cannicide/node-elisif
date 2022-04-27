@@ -173,6 +173,10 @@ client.on("interactionCreate", i => {
                     btn.setDisabled();
                     btn.noReply();
                 }
+            },
+            {
+                label: "Toggled 3",
+                url: "https://github.com/"
             }
         ]
     });

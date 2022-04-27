@@ -1,6 +1,16 @@
 const CacheManager = require('./CacheManager');
 const { BaseMessageComponent, MessageActionRow } = require('discord.js');
 
+class ComponentIdManager {
+
+    static BASE_ID = "NODE-ELISIF-NO-ID-COMPONENT-";
+    static ID_NUMBER = 0;
+
+    static customId(component) {
+        return component.customId ?? ComponentIdManager.BASE_ID + ++ComponentIdManager.ID_NUMBER;
+    }
+}
+
 module.exports = class ComponentManager extends CacheManager {
 
     #m;
@@ -12,7 +22,7 @@ module.exports = class ComponentManager extends CacheManager {
                 return c;
             })).flat();
 
-            return comps.map(c => [c.customId, c]);
+            return comps.map(c => [ComponentIdManager.customId(c), c]);
         })(), BaseMessageComponent);
         this.#m = baseMessage;
     }
