@@ -1,6 +1,6 @@
 const ExtendedStructure = require('./ExtendedStructure');
 const Timestamp = require('./Timestamp');
-const { boa, guilds } = require('../util');
+const { wait, guilds } = require('../util');
 const { VoiceChannel: BaseVBC } = require("discord.js");
 
 /**
@@ -45,7 +45,7 @@ module.exports = class VoiceBasedChannel extends ExtendedStructure {
     
     async delete({ timeout = 0, filter = () => true } = {}) {
         if (filter(this)) {
-            await boa.wait(timeout);
+            await wait(timeout);
             return this.#c.delete();
         }
         return null;

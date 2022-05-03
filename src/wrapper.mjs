@@ -13,6 +13,7 @@ export const Estack = elisif.Estack
 export const Intent = elisif.Intent
 export const ReadonlyEdist = elisif.ReadonlyEdist
 export const Sifbase = elisif.Sifbase
+export const SIFDB = elisif.SIFDB
 export const boa = elisif.boa
 export const button = elisif.button
 export const channels = elisif.channels
@@ -21,6 +22,7 @@ export const commandAutocompleter = elisif.commandAutocompleter
 export const contextMenu = elisif.contextMenu
 export const createMessage = elisif.createMessage
 export const database = elisif.database
+export const debugDatabase = elisif.debugDatabase
 export const debugMethod = elisif.debugMethod
 export const deepExtendInstance = elisif.deepExtendInstance
 export const embed = elisif.embed
@@ -46,6 +48,7 @@ export const simulateMessage = elisif.simulateMessage
 export const sortedSimilar = elisif.sortedSimilar
 export const toggleComponentRow = elisif.toggleComponentRow;
 export const users = elisif.users
+export const wait = elisif.wait
 
 // TODO: Manually export all individual structures and managers
 

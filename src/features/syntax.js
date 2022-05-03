@@ -126,6 +126,8 @@ class SyntaxParser {
 class SyntaxBuilder {
 
     static autocompleteMap = new Map();
+    static initialized = false;
+    static client = null;
 
     data = {
         command: null,
@@ -305,15 +307,25 @@ class SyntaxBuilder {
 
     static async initializeCommands(client) {
 
+        this.client = client;
+
         // Filter out and separate application and guild commands:
         const [ applicationCommands, guildCommands ] = SyntaxCache.all().partition(c => !c.guilds.size);
 
         // Set application commands:
-        await client.application?.commands?.set(applicationCommands.map(c => c?.json).filter(j => client.debug("ADDED GLOBAL COMMAND:", j.name) || j));
+        if (applicationCommands.size) await client.application?.commands?.set(applicationCommands.map(c => c?.json).map(j => {
+            client.delayedDebug(250, "ADDED GLOBAL COMMAND:", j.name);
+            return j;
+        }));
 
         // Set guild commands:
         const guilds = guildCommands.map(c => c.guilds.toArray()).flat();
-        for (const guild of getGuilds(client, guilds).values()) await guild?.commands?.set(guildCommands.filter(c => c.guilds.has(guild.id)).map(c => c?.json).filter(j => client.debug("ADDED GUILD COMMAND:", j.name) || j));
+        for (const guild of getGuilds(client, guilds).values()) await guild?.commands?.set(guildCommands.filter(c => c.guilds.has(guild.id)).map(c => c?.json).map(j => {
+            client.delayedDebug(250, `ADDED GUILD <${guild.id}> COMMAND:`, j.name);
+            return j;
+        }));
+
+        // TODO: figure out why setting commands is no longer working
 
         // Setup command listener:
         client.on("interactionCreate", async interaction => {
@@ -332,6 +344,28 @@ class SyntaxBuilder {
             action(interaction);
         });
 
+        return true;
+
+    }
+
+    static async postInitializeCommand(command) {
+        const client = this.client;
+        if (!client || !command?.json) return;
+
+        if (command.guilds.size) {
+            // Add guild command:
+            for (const guild of getGuilds(client, command.guilds.toArray()).values()) {
+                const output = await guild?.commands?.create(command.json);
+                if (!output) return;
+                client.debug(`ADDED GUILD <${guild.id}> COMMAND:`, command.json.name)
+            }
+        }
+        else {
+            // Add application command:
+            const output = await client.application?.commands?.create(command.json);
+            if (!output) return;
+            client.debug("ADDED GLOBAL COMMAND:", command.json.name)
+        }
     }
 
 }
@@ -344,8 +378,9 @@ class SyntaxCache {
         return this.#cache.get(commandName) ?? null;
     }
 
-    static set(commandName, command) {
+    static async set(commandName, command) {
         this.#cache.set(commandName, command);
+        if (await SyntaxBuilder.initialized) SyntaxBuilder.postInitializeCommand(command);
     }
 
     static all() {
@@ -369,6 +404,6 @@ module.exports = {
     SyntaxCache,
     initialize(client) {
         SyntaxBuilder.initializeAutocomplete(client);
-        SyntaxBuilder.initializeCommands(client);
+        SyntaxBuilder.initialized = SyntaxBuilder.initializeCommands(client);
     }
 }

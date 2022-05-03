@@ -2,7 +2,7 @@
 
 const { Client } = require('discord.js');
 const server = require('express')();
-const { parseBuilder, Emap, boa } = require('../util');
+const { parseBuilder, Emap, boa, wait } = require('../util');
 const { syntax } = require('../features');
 const ElisifConfig = require('./config/Config');
 const EventExtensionManager = require('../managers/EventExtensionManager');
@@ -28,7 +28,7 @@ class ElisifClient extends Client {
         // SyntaxProgram.setClient(this);
         this.#config = config?.data;
         this.simulated = this.#config?.debug?.simulation;
-        // this.constants = boa.dict(new Constants());
+        // this.constants = boa().dict(new Constants());
 
         //Setup HTTP listener
         ElisifClient.listener = ElisifClient.listener ?? server.listen(this.#config.port, () => {
@@ -188,23 +188,36 @@ class ElisifClient extends Client {
         let files = require("fs").readdirSync(dir);
 
         files.map(async file => {
-            let path = dir.replace("C:\\", "/") + "/" + file;
+            let path = dir.replace("C:", "").replace(/\\/g, "/") + "/" + file;
             if (require("fs").lstatSync(path).isDirectory()) {
                 return this.loadFiles(path);
             } else if (path.endsWith(".js") || path.endsWith(".cjs") || path.endsWith(".mjs")) {
-                this.debug("Loaded File:", file);
-
-                let cmd = await import(path);
-                cmd = cmd?.default ?? cmd;
-
-                if (cmd && "init" in cmd) cmd.init(this);
-                else if (typeof cmd === "function" && cmd?.name?.toLowerCase() === "init") cmd(this);
-
-                forEach(cmd, file.split(".js")[0]); // TODO: fix this line
+                let cmd = await this.loadFile(path);
+                forEach(cmd, file.split(".").slice(0, -1).join("."));
                 return cmd;
             }
         });
 
+    }
+
+    /**
+     * Loads a single file from the specified path.
+     * JS files that default export a function named "init" will be automatically called with the ElisifClient instance as the first argument.
+     * This method supports any filetype supported by the built-in node `import()` method.
+     * @param {String} dir - The directory of the file to load.
+     * @returns {Promise<NodeRequire>} The file's exports.
+     */
+    async loadFile(path) {
+        path = path.replace("C:", "").replace(/\\/g, "/");
+        this.debug("Loaded File:", path.split("/").slice(-1)[0]);
+
+        let cmd = await import(path);
+        cmd = cmd?.default ?? cmd;
+
+        if (cmd && "init" in cmd) cmd.init(this);
+        else if (typeof cmd === "function" && cmd?.name?.toLowerCase() === "init") cmd(this);
+
+        return cmd;
     }
 
     extend(eventName, callback) {
@@ -226,17 +239,22 @@ class ElisifClient extends Client {
     debug(...args) {
         if (this.#config?.debug?.logs) {
             args = args.map(arg => {
-                if (arg && boa.isObject(arg)) {
+                if (arg && boa().isObject(arg)) {
                     arg = Object.assign(Array.isArray(arg) ? [] : {}, arg);
-                    if (Array.isArray(arg)) arg = arg.map(a => boa.stringify(a, 75) ?? a);
-                    else Object.keys(arg).forEach(key => arg[key] = boa.stringify(arg[key], 75) ?? arg[key]);
-                    return `\n${boa.table(arg)}\n`;
+                    if (Array.isArray(arg)) arg = arg.map(a => boa().stringify(a, 75) ?? a);
+                    else Object.keys(arg).forEach(key => arg[key] = boa().stringify(arg[key], 75) ?? arg[key]);
+                    return `\n${boa().table(arg)}\n`;
                 }
                 return arg;
             });
 
             console.log(...args);
         }
+    }
+
+    async delayedDebug(delayTime, ...args) {
+        await wait(delayTime);
+        this.debug(...args);
     }
 
     /**

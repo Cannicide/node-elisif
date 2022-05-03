@@ -1,6 +1,6 @@
 const ExtendedStructure = require('./ExtendedStructure');
 const Timestamp = require('./Timestamp');
-const { Emap, asMessageOptions, boa } = require('../util');
+const { Emap, asMessageOptions, wait } = require('../util');
 const { Message: BaseMessage } = require("discord.js");
 
 /**
@@ -84,7 +84,7 @@ module.exports = class Message extends ExtendedStructure {
 
     async delete({ timeout = 0, filter = () => true } = {}) {
         if (filter(this)) {
-            await boa.wait(timeout);
+            await wait(timeout);
             return this.#m.delete();
         }
         return null;

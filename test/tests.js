@@ -7,9 +7,7 @@ const {
     channels,
     createMessage,
     modal,
-    command,
     toggleComponentRow,
-    contextMenu,
     ion
 } = require("../src");
 
@@ -47,6 +45,7 @@ client.on("ready", async () => {
         });
 
         channels(client, "799791153310072922").first().createMutedChannel("muted-{name}");
+        client.loadFiles(__dirname + "/deferred-commands");
         
     }
 });
@@ -182,30 +181,7 @@ client.on("interactionCreate", i => {
     });
 })
 
-
-// TEST COMMANDS:
-
-command("hapax", "A test elisif command.")
-.guild("668485643487412234")
-.argument("<frst: voice_OrTextChannel>" , "The first argument.")
-.require("@Member")
-.action(i => {
-    const m = i.args.frst;
-    // return i.reply({
-    //     content: "Replied",
-    //     files: [m]
-    // });
-    return i.reply(`The channel is ${m}`);
-});
-
-contextMenu("Reply To")
-.type("Message")
-.guild("668485643487412234")
-.action(async i => {
-    const m = await i.openModal("tmodal800");
-    m.reply("You wrote: " + m.values[0]);
-});
-
+// Load primary commands:
 client.loadFiles(__dirname + "/commands");
 
 // Test ION:
@@ -219,5 +195,8 @@ ION("interactionCreate", "testNamespace", i => {
 ION.off("messageDelete", "testNamespace", m => {
     console.log("DELETED a testNamespace message.");
 });
+
+// Test database:
+// debugDatabase(__dirname + "/db.sifdb", "elisifIon");
 
 client.login(loadToken(__dirname + "/token.json"));

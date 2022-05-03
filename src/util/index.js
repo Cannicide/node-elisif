@@ -1172,20 +1172,21 @@ module.exports = {
     /**
      * Toggles a component row on the specified message.
      * @param {import("../structures/Message")} message 
-     * @param {{ row:any[], time:number }} opts 
-     * @returns 
+     * @param {{ row:(MessageButtonResolvable | MessageSelectMenuResolvable | (c: ButtonFactory|SelectMenuFactory) => void)[], time:Number|BigInt|String }} opts 
+     * @returns {boolean}
      */
     async toggleComponentRow(message, opts) { // TODO: use toggleComponentRow() in button() and selectMenu()
         opts = module.exports.toggleComponentRowData.get(opts.row[0].customId) ?? opts;
         module.exports.toggleComponentRowData.set(opts.row[0].customId, opts);
 
-        opts.calls ??= 0;
-        opts.calls++;
+        opts.calls ??= 0; // TODO: use TimeResolvable to document parsable times across module
+        opts.calls++; // TODO: move all typedefs to separate file
 
         if (message.components.has(opts.row[0].customId)) {
             const index = message.components.get(opts.row[0].customId).row;
             opts.row = [...message.components.getRow(index).values()];
-            await message.components.delete(index);
+
+            await message.components.delete(index).catch(() => null);
         }
         else {
             const index = message.components.findMax(c => c.row).row + 1;
@@ -1233,6 +1234,19 @@ module.exports = {
         return new Sifbase(path);
     },
 
+    async debugDatabase(path, table) {
+        const { Sifbase } = require('sifbase');
+        const db = new Sifbase(path, table);
+
+        const json = {};
+
+        for await (const [k, v] of db) {
+            json[k] = v;
+        }
+
+        return Boa().inspect(json);
+    },
+
     /**
      * Creates a new asynchronous settings database for the provided structure or custom locale.
      * @param {String} databasePath - The absolute path to a file or database URL scheme, representing the database to use.
@@ -1259,9 +1273,44 @@ module.exports = {
 
     /**
      * Returns the Boa utilities -- several high-level utility functions including many based on Python's built-in methods.
+     * @returns {Boa}
      */
     get boa() {
-        return Boa();
+        return Boa.bind(Boa);
+    },
+
+    /**
+     * An asynchronous form of setTimeout().
+     * The arguments of this method can be passed in any order, or used without specifying a callback function at all.
+     * Unlike boa().wait(), this method also utilizes parseTime() to handle String, Number, and BigInt time values.
+     * 
+     * @example
+     *
+     *  // Method 1:
+     *  wait(() => console.log("2 seconds passed"), 2000);
+     *
+     *  // Method 2:
+     *  wait(2000, () => console.log("2 seconds passed"));
+     *
+     *  // Method 3:
+     *  await wait(2000);
+     *  console.log("2 seconds passed");
+     * 
+     *  // Other time methods:
+     *  await wait("2s");
+     *  console.log("2 seconds passed");
+     *  await wait(5n);
+     *  console.log("5 minutes passed");
+     * 
+     * @param {Function|String|Number|BigInt} functionOrTime The function to execute, or the number of milliseconds to wait before executing.
+     * @param {String|Number|BigInt|Function} [timeOrFunction] The number of milliseconds to wait before executing, or the function to execute. This will be the opposite of whichever option the previous argument is.
+     * @returns 
+     */
+    wait(functionOrTime, timeOrFunction) {
+        if (typeof functionOrTime !== 'function') functionOrTime = module.exports.parseTime(functionOrTime);
+        else if (typeof timeOrFunction !== 'function') timeOrFunction = module.exports.parseTime(timeOrFunction);
+
+        return Boa().wait(functionOrTime, timeOrFunction);
     }
 
 }

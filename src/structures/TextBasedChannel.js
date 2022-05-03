@@ -1,6 +1,6 @@
 const ExtendedStructure = require('./ExtendedStructure');
 const Timestamp = require('./Timestamp');
-const { asMessageOptions, boa, guilds } = require('../util');
+const { asMessageOptions, wait, guilds } = require('../util');
 const { DMChannel: BaseTBC, Message: BaseMessage, MessagePayload: APIMessage } = require("discord.js");
 
 /**
@@ -55,7 +55,7 @@ module.exports = class TextBasedChannel extends ExtendedStructure {
     
     async delete({ timeout = 0, filter = () => true } = {}) {
         if (filter(this)) {
-            await boa.wait(timeout);
+            await wait(timeout);
             return this.#c.delete();
         }
         return null;

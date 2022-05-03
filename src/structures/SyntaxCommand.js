@@ -17,7 +17,8 @@ class SyntaxCommand {
 
         let args = built.arguments;
         factory.setName(built.command)
-        .setDescription(built.description);
+        .setDescription(built.description)
+        .setDefaultPermission(true);
 
         const argumentHandler = (arg, origplant) => {
             let type;

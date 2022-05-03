@@ -1,6 +1,6 @@
 const ExtendedStructure = require('./ExtendedStructure');
 const Timestamp = require('./Timestamp');
-const { extendedFunction, asReplyOptions, Emap, boa } = require('../util');
+const { extendedFunction, asReplyOptions, Emap, wait } = require('../util');
 const { Interaction: BaseInteraction } = require("discord.js");
 
 const PseudoInteractionAcknowledgedError = `
@@ -91,7 +91,7 @@ module.exports = class Interaction extends ExtendedStructure {
             },
             async delayed(optsOrContent, ms, ephemeral) {
                 if (!i.deferred) await this.defer(ephemeral);
-                await boa.wait(ms);
+                await wait(ms);
                 return this.edit(optsOrContent, ephemeral);
             },
             edit(optsOrContent) {
@@ -99,7 +99,7 @@ module.exports = class Interaction extends ExtendedStructure {
             },
             delete: async ({ timeout = 0, filter = () => true } = {}) => {
                 if (filter(this)) {
-                    await boa.wait(timeout);
+                    await wait(timeout);
                     return i.deleteReply();
                 }
                 return null;

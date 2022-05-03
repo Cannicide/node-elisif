@@ -4,7 +4,7 @@ const ClientConfig = require('./client/config/Config');
 const util = require('./util');
 
 const Discord = require("discord.js");
-const { Sifbase } = require("sifbase");
+const { Sifbase, SIFDB } = require("sifbase");
 
 
 // Override certain packet handlers:
@@ -49,7 +49,8 @@ module.exports = {
     /** The Discord.js library object. */
     Discord,
     /** The Sifbase library object, used for working with databases. */
-    Sifbase
+    Sifbase,
+    SIFDB
 
 }
 
@@ -69,6 +70,7 @@ module.exports.commandAutocompleter = util.commandAutocompleter
 module.exports.contextMenu = util.contextMenu
 module.exports.createMessage = util.createMessage
 module.exports.database = util.database
+module.exports.debugDatabase = util.debugDatabase;
 module.exports.debugMethod = util.debugMethod
 module.exports.deepExtendInstance = util.deepExtendInstance
 module.exports.embed = util.embed
@@ -94,3 +96,4 @@ module.exports.simulateMessage = util.simulateMessage
 module.exports.sortedSimilar = util.sortedSimilar
 module.exports.toggleComponentRow = util.toggleComponentRow;
 module.exports.users = util.users
+module.exports.wait = util.wait;
