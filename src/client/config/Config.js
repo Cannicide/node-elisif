@@ -155,6 +155,28 @@ module.exports = class ElisifConfig {
     }
 
     /**
+     * Sets the deployment mode, i.e. whether the bot is in production mode or development mode.
+     * This option makes it extremely easy to switch from testing commands locally to publishing them globally.
+     * 
+     * If in development mode, all bot commands will only be available in the specified test guilds.
+     * If in production mode, all bot commands that do not have guilds explicitly set will be available globally.
+     * If neither is specified or this option is not used, the mode and test guilds will be ignored.
+     * @param {"production"|"development"|"prod"|"dev"} mode - Whether in production or development mode.
+     * @param {String[]} [testGuilds] - The IDs of test guilds to publish the commands to, if in development mode. 
+     */
+    mode(mode = this.data.commands.mode, testGuilds = this.data.commands.testGuilds) {
+        const modes = {
+            production: "production",
+            development: "development",
+            prod: "production",
+            dev: "development"
+        };
+
+        this.data.commands.mode = modes[mode.toLowerCase()] ?? null;
+        this.data.commands.testGuilds = testGuilds;
+    }
+
+    /**
      * Enables simulation mode. Runs a simulated version of the ElisifClient, with simulated structures and no actual HTTP requests.
      * Incredibly useful for debugging and testing, or for working on features while the Discord API is down.
      * @returns {this} ElisifConfig
@@ -170,6 +192,14 @@ module.exports = class ElisifConfig {
             ...customs,
             intents: this.data.intents
         }
+    }
+
+    static from(optsOrBuilder) {
+        const { parseBuilder } = require('../../util');
+        optsOrBuilder = parseBuilder(optsOrBuilder, this);
+
+        if (!(optsOrBuilder instanceof this)) return new this(optsOrBuilder);
+        return optsOrBuilder;
     }
 
 }

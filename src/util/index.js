@@ -1557,6 +1557,7 @@ class Edist extends Emap {
         return this;
     }
 
+    /** @private */
     add(value) {
         return this.set("" + Math.floor(this.size / 2), value, true);
     }
@@ -1600,7 +1601,11 @@ class Edist extends Emap {
 class ReadonlyEdist extends Edist {
     constructor(iterable = []) {
         super(iterable);
-        this.set = () => console.warn("Warning: Cannot set property values in a ReadonlyEdist");
+    }
+
+    set(k, v) {
+        if (this.has("NODE-ELISIF-EDIST-" + k)) return console.warn("Warning: Cannot modify property values in a ReadonlyEdist");
+        return super.set(k, v);
     }
 }
 

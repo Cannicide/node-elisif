@@ -40,7 +40,7 @@ const { Client, ClientConfig, Intent } = require('elisif');
 import { Client, ClientConfig, Intent } from 'elisif';
 ```
 
-To create the bot, use `Client`. It works the same as a regular discord.js client, but with slightly different construction. Currently, it is required to use a builder function or `ClientConfig` object as the argument to the `Client` constructor in order to create a bot client. Additional, simpler ways of constructing the client will be added later, and the current way may also be completely modified later. Here is an example using the `ClientConfig` object:
+To create the bot, use `Client`. It works the same as a regular discord.js client, but with slightly different construction. It is ~~currently required to use a builder function or `ClientConfig` object as the argument to the `Client` constructor in order to create a bot client~~ (as of v4.0.10-dev, a plain object literal can now be used as well; in the below example, simply remove the config constructor that is wrapped around the object literal). Here is an example using the `ClientConfig` object:
 
 ```js
 const client = new Client(new ClientConfig({

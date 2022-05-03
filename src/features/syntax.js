@@ -305,9 +305,19 @@ class SyntaxBuilder {
         });
     }
 
-    static async initializeCommands(client) {
+    static async initializeCommands(client, commandConfig) {
 
         this.client = client;
+        this.config = commandConfig;
+
+        // Add development config-mode testing guilds, if applicable:
+        if (commandConfig.mode == "development") {
+            for (const command of SyntaxCache.all().values()) {
+                for (const guild of commandConfig.testGuilds) {
+                    if (!command.guilds.has(guild)) command.guilds.add(guild);
+                }
+            }
+        }
 
         // Filter out and separate application and guild commands:
         const [ applicationCommands, guildCommands ] = SyntaxCache.all().partition(c => !c.guilds.size);
@@ -350,7 +360,15 @@ class SyntaxBuilder {
 
     static async postInitializeCommand(command) {
         const client = this.client;
+        const config = this.config;
         if (!client || !command?.json) return;
+
+        // Add development config-mode testing guilds, if applicable:
+        if (config.mode == "development") {
+            for (const guild of config.testGuilds) {
+                if (!command.guilds.has(guild)) command.guilds.add(guild);
+            }
+        }
 
         if (command.guilds.size) {
             // Add guild command:
@@ -402,8 +420,8 @@ module.exports = {
     SyntaxBuilder,
     SyntaxParser,
     SyntaxCache,
-    initialize(client) {
+    initialize(client, commandConfig) {
         SyntaxBuilder.initializeAutocomplete(client);
-        SyntaxBuilder.initialized = SyntaxBuilder.initializeCommands(client);
+        SyntaxBuilder.initialized = SyntaxBuilder.initializeCommands(client, commandConfig);
     }
 }

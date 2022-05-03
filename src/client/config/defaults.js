@@ -18,5 +18,9 @@ module.exports = {
         logs: false,
         uncaughtErrors: false,
         simulation: false
+    },
+    commands: {
+        mode: null,
+        testGuilds: []
     }
 }

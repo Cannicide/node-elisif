@@ -2,7 +2,7 @@
 
 const { Client } = require('discord.js');
 const server = require('express')();
-const { parseBuilder, Emap, boa, wait } = require('../util');
+const { Emap, ReadonlyEdist, boa, wait } = require('../util');
 const componentUtility = require('../util/components');
 const { syntax } = require('../features');
 const ElisifConfig = require('./config/Config');
@@ -25,28 +25,23 @@ class ElisifClient extends Client {
      * @param {ElisifConfig|(config:ElisifConfig) => ElisifConfig} config 
      */
     constructor(config) {
-        super((config = parseBuilder(config, ElisifConfig))?.toDiscordOptions());
-        // SyntaxProgram.setClient(this);
+        super((config = ElisifConfig.from(config))?.toDiscordOptions());
         this.#config = config?.data;
         this.simulated = this.#config?.debug?.simulation;
-        // this.constants = boa().dict(new Constants());
+        this.debugging = this.#config?.debug?.logs;
+        this.constants = new ReadonlyEdist();
 
         //Setup HTTP listener
         ElisifClient.listener = ElisifClient.listener ?? server.listen(this.#config.port, () => {
-            this.debug(`\n\n\t${this.#config.name} listening on port ${ElisifClient.listener.address().port}`);
+            this.debug(`\n\n\t${this.#config.name} listening on port ${ElisifClient.listener.address().port} ${this.#config.commands.mode ? "(" + this.#config.commands.mode[0].toUpperCase() + this.#config.commands.mode.substring(1) + ")" : ""}`);
         });
 
-        //Setup persistent, scheduled, and ION events
-        // this.#events.initialize();
-
-        //Set debug mode
-        // this.setting("debug_mode", config.debug);
-
         //Enable @error custom event if in debug mode
-        // if (config.debug && config.uncaughtErrors) process.on('uncaughtException', (err) => {
-        //     this.emit("@error", err);
-        //     throw new Error(err);
-        // });
+        if (this.#config?.debug?.uncaughtErrors) process.on('uncaughtException', async (err) => {
+            this.emit("@error", err);
+            await wait(2000);
+            throw new Error(err);
+        });
 
         //Setup extended structures and Elisif extended events
         this.loadFiles(__dirname + "/events", (file, name) => {
@@ -57,9 +52,9 @@ class ElisifClient extends Client {
         //Autoinitialization functionality:
         this.on("ready", () => {
 
-            syntax.initialize(this);
+            syntax.initialize(this, this.#config.commands);
             componentUtility.initialize(this);
-            this.debug(`\t${this.#config.name} is up and running (as of ${this.readyAt.toLocaleString()}).\n\n`);
+            this.debug(`\t${this.#config.name} is up and running (as of ${this.readyAt.toLocaleString()})\n\n`);
 
             //Define simulated ClientUser:
             if (this.simulated) this.user = ClientUser.from(client);
@@ -239,7 +234,7 @@ class ElisifClient extends Client {
     }
 
     debug(...args) {
-        if (this.#config?.debug?.logs) {
+        if (this.debugging) {
             args = args.map(arg => {
                 if (arg && boa().isObject(arg)) {
                     arg = Object.assign(Array.isArray(arg) ? [] : {}, arg);

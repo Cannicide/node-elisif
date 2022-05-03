@@ -1,7 +1,7 @@
 const { command } = require("../../src");
 
 command("hapax", "A test elisif command.")
-.guild("668485643487412234")
+.guild("schaconga")
 .argument("<frst: voice_OrTextChannel>" , "The first argument.")
 .require("@Member")
 .action(i => {

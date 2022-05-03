@@ -1,7 +1,7 @@
 const { command } = require("../../src");
 
 command("deferred", "A deferred test elisif command.")
-.guild("668485643487412234")
+.guild("schmluck")
 .argument("<user: user>" , "A user.")
 .require("@Member")
 .action(i => {

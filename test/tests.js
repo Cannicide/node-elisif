@@ -20,6 +20,7 @@ const client = new Client(config => {
     .debug()
     .description('A bot for testing')
     .presences(["Hyelp", "Trelp"], 5)
+    .mode("dev", ["668485643487412234"])
     // .simulation()
 });
 
@@ -36,6 +37,7 @@ modal("tmodal800")
     multiline: true
 });
 
+// client.constants.set("thekey", "value");
 client.on("ready", async () => {
     client.debug("Ready!");
     // client.debug(client);
@@ -48,6 +50,10 @@ client.on("ready", async () => {
 
         channels(client, "799791153310072922").first().createMutedChannel("muted-{name}");
         client.loadFiles(__dirname + "/deferred-commands");
+
+        // client.debug("Loaded constant:", client.constants.thekey);
+        // client.constants.set("thekey", "trying to modify a constant will not work")
+        // client.debug("Reloaded constant:", client.constants.get("thekey"));
         
     }
 });
