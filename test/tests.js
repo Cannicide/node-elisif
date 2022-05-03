@@ -57,8 +57,14 @@ client.on("message", /** @param {import("../src/structures/Message")} m */ async
 
     if (!m.author.bot) {
 
-        m.channel.send("Channel: " + m.channel.channelOf({ content: "fake" }));
+        // Test createMessage().sendAs():
 
+        // await m.delete();
+        // createMessage(m.content).sendAs(m.author, m.channel, { enableMassMentions: false });
+        // return;
+
+        // Test components and createMessage():
+        
         const a = await createMessage("Test")
         .embed({
             description: "Test description"

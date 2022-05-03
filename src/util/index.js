@@ -1157,6 +1157,41 @@ module.exports = {
                 sendableComponentFactories.forEach(f => f.onSend(m));
                 return m;
             },
+            /**
+             * Sends this message as another user.
+             * (This method uses webhooks to simulate sending as another user).
+             * 
+             * Any @everyone and @here mentions in the message are automatically disabled, to avoid malicious use.
+             * To disable the automatic mass-mention disabling, set `dataArgs.enableMassMentions` to `true`.
+             * @returns {import('../structures/Message')}
+             */
+            async sendAs(user, channel, dataArgs) {
+                const Message = require("../structures/Message");
+
+                const webhook = await channel?.createWebhook(user?.username ?? user?.user?.username ?? "" + user, {
+                    avatar: user?.displayAvatarURL?.() ?? user?.user?.displayAvatarURL?.(),
+                    reason: `Simulating user: ${user}`
+                });
+
+                if (this.messageData.content && !dataArgs?.enableMassMentions) this.messageData.content = this.messageData.content.replace(/(\\|)@(everyone|here)/g, "*@*$2");
+                let m;
+                
+                try {
+                    m = await webhook?.send({
+                        ...this.messageData,
+                        ...dataArgs,
+                        components: []
+                    });
+                }
+                catch (err) {
+                    user?.client?.debug(`\nAn error occurred while attempting to send a message as user: ${user}\n`, err.toString(), "\n");
+                }
+
+                // Errors in sending message are handled above to allow below webhook deletion to work:
+                await webhook?.delete(`Finished simulating user: ${user}`);
+
+                return m && new Message(m.client, m);
+            },
             toJSON() {
                 return this.messageData;
             }
