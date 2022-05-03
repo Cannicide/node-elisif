@@ -687,11 +687,8 @@ module.exports = {
              */
             onSend(message) {
                 if (!message) return;
-                const client = /** @type {import('../client/Client')} */ (message.client);
-                const ComponentInteraction = require('../structures/ComponentInteraction');
+                const components = require('./components');
                 const sentButton = new SentMessageButton(btn, message);
-                let calls = 0;
-                let toggleableRowTimeout = null;
 
                 const handler = settings.get("handler");
                 const endHandler = settings.get("endHandler");
@@ -700,53 +697,19 @@ module.exports = {
                 const maxUses = settings.get("maxUses");
                 const maxTime = settings.get("maxTime");
 
-                if (maxTime.time) setTimeout(() => {
-                    if (calls > -1) {
-                        maxTime.callback(sentButton);
-                        endHandler(sentButton, "time");
-                    }
-                    calls = -1;
-                }, maxTime.time);
-
-                const toggleRow = async (actionRow) => {
-                    if (message.components.has(actionRow[0].customId)) {
-                        const index = message.components.get(actionRow[0].customId).row;
-                        toggleableRow.row = [...message.components.getRow(index).values()];
-                        await message.components.delete(index);
-                    }
-                    else {
-                        const index = message.components.findMax(c => c.row).row + 1;
-                        await message.components.add(actionRow.map(c => {
-                            let b = module.exports.parseComponent(c);
-                            if (calls == 1) b.onSend(message);
-                            return b.toJSON()
-                        }), index);
-
-                        if (toggleableRowTimeout) clearTimeout(toggleableRowTimeout);
-                        if (toggleableRow.time) toggleableRowTimeout = setTimeout(toggleRow.bind(null, toggleableRow.row), module.exports.parseTime(toggleableRow.time));
-                    }
-                    
-                    return true;
+                const comp = {
+                    type: "button",
+                    calls: 0,
+                    handler,
+                    endHandler,
+                    canUse: canClick,
+                    toggleableRow,
+                    maxUses,
+                    maxTime,
+                    sent: sentButton
                 }
 
-                if (handler || canClick.length || maxUses.uses) client?.onRaw("interactionCreate", i => {
-                    if (!i.isButton() || i.customId != btn.customId) return;
-                    const buttonInteraction = ComponentInteraction.asButton(i);
-
-                    if (calls < 0) return;
-                    if (canClick.length && !canClick.some(id => buttonInteraction.user.id === id || buttonInteraction.member?.roles.has(id))) return buttonInteraction.reply("> **You do not have permission to use this button.**", true);
-                    if (maxUses.uses && calls >= maxUses.uses) return;
-                    calls++;
-
-                    if (Array.isArray(toggleableRow?.row) && toggleableRow.row.length) toggleRow(toggleableRow.row);
-                    
-                    if (handler(buttonInteraction) === "noreply" && Array.isArray(toggleableRow?.row) && toggleableRow.row.length) buttonInteraction.noReply();
-                    if (maxUses.uses && calls == maxUses.uses) {
-                        calls = -1;
-                        maxUses.callback(buttonInteraction);
-                        return endHandler(sentButton, "uses");
-                    }
-                });
+                components.add(comp);
             }
         };
 
@@ -931,11 +894,8 @@ module.exports = {
              */
             onSend(message) {
                 if (!message) return;
-                const client = /** @type {import('../client/Client')} */ (message.client);
-                const ComponentInteraction = require('../structures/ComponentInteraction');
+                const components = require('./components');
                 const sentMenu = new SentMessageSelectMenu(menu, message);
-                let calls = 0;
-                let toggleableRowTimeout = null;
 
                 const handler = settings.get("handler");
                 const endHandler = settings.get("endHandler");
@@ -944,53 +904,19 @@ module.exports = {
                 const maxUses = settings.get("maxUses");
                 const maxTime = settings.get("maxTime");
 
-                if (maxTime.time) setTimeout(() => {
-                    if (calls > -1) {
-                        maxTime.callback(sentMenu);
-                        endHandler(sentMenu, "time");
-                    }
-                    calls = -1;
-                }, maxTime.time);
-
-                const toggleRow = async (actionRow) => {
-                    if (message.components.has(actionRow[0].customId)) {
-                        const index = message.components.get(actionRow[0].customId).row;
-                        toggleableRow.row = [...message.components.getRow(index).values()];
-                        await message.components.delete(index);
-                    }
-                    else {
-                        const index = message.components.findMax(c => c.row).row + 1;
-                        await message.components.add(actionRow.map(c => {
-                            let b = module.exports.parseComponent(c);
-                            if (calls == 1) b.onSend(message);
-                            return b.toJSON()
-                        }), index);
-
-                        if (toggleableRowTimeout) clearTimeout(toggleableRowTimeout);
-                        if (toggleableRow.time) toggleableRowTimeout = setTimeout(toggleRow.bind(null, toggleableRow.row), module.exports.parseTime(toggleableRow.time));
-                    }
-                    
-                    return true;
+                const comp = {
+                    type: "menu",
+                    calls: 0,
+                    handler,
+                    endHandler,
+                    canUse: canSelect,
+                    toggleableRow,
+                    maxUses,
+                    maxTime,
+                    sent: sentMenu
                 }
 
-                if (handler || canSelect.length || maxUses.uses) client?.onRaw("interactionCreate", i => {
-                    if (!i.isSelectMenu() || i.customId != menu.customId) return;
-                    const menuInteraction = ComponentInteraction.asSelectMenu(i);
-
-                    if (calls < 0) return;
-                    if (canSelect.length && !canSelect.some(id => menuInteraction.user.id === id || menuInteraction.member?.roles.has(id))) return menuInteraction.reply("> **You do not have permission to use this select menu.**", true);;
-                    if (maxUses.uses && calls >= maxUses.uses) return;
-                    calls++;
-
-                    if (Array.isArray(toggleableRow?.row) && toggleableRow.row.length) toggleRow(toggleableRow.row);
-                    
-                    if (handler(menuInteraction) === "noreply" && Array.isArray(toggleableRow?.row) && toggleableRow.row.length) menuInteraction.noReply();
-                    if (maxUses.uses && calls == maxUses.uses) {
-                        calls = -1;
-                        maxUses.callback(menuInteraction);
-                        return endHandler(sentMenu, "uses");
-                    }
-                });
+                components.add(comp);
             }
         };
 
@@ -1229,7 +1155,7 @@ module.exports = {
                 let b = module.exports.parseComponent(c);
                 if (opts.calls == 1) b.onSend(message);
                 return b.toJSON()
-            }), index);
+            }), index).catch(() => null);
 
             if (opts.timeout) clearTimeout(opts.timeout);
             if (opts.time) opts.timeout = setTimeout(module.exports.toggleComponentRow.bind(null, message, opts), module.exports.parseTime(opts.time));
@@ -1346,7 +1272,36 @@ module.exports = {
         else if (typeof timeOrFunction !== 'function') timeOrFunction = module.exports.parseTime(timeOrFunction);
 
         return Boa().wait(functionOrTime, timeOrFunction);
-    }
+    },
+
+    /**
+     * A method that generates an Array of consecutive numbers from start to end, increasing by step.
+     * @param {Number} [start] - The starting number of the array, inclusive; defaults to 0.
+     * @param {Number} [end] - The ending number of the array, exclusive; if unspecified, start is used as the ending number instead.
+     * @param {Number} [step = 1] - The amount to increase between each consecutive number; defaults to 1.
+     * @returns {Number[]} An Array of Numbers in ascending numeric order, from start to end, increasing by step.
+     */
+    range(start, end, step = 1) {
+
+        if (typeof start === 'number') {
+            if (typeof end === 'number') {
+                if (typeof step === 'number') {
+                    return [...Array(Math.ceil((end - start) / step)).keys()].map(i => start + i * step);
+                }
+                else {
+                    return [...Array(end - start).keys()].map(i => start + i);
+                }
+            }
+            else {
+                return [...Array(start).keys()];
+            }
+        }
+        else if (typeof end === 'number') {
+            return [...Array(end).keys()];
+        }
+
+        return [];
+    },
 
 }
 

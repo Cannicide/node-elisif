@@ -8,7 +8,9 @@ const {
     createMessage,
     modal,
     toggleComponentRow,
-    ion
+    ion,
+    range,
+    Eset
 } = require("../src");
 
 const client = new Client(config => {
@@ -57,6 +59,23 @@ client.on("message", /** @param {import("../src/structures/Message")} m */ async
 
     if (!m.author.bot) {
 
+        // Test fixing eventemitter memory leak due to too many button events:
+        const g = createMessage("Test!");
+
+        for (let x of range(0, 10, 2)) {
+            g.button({
+                label: `Button ${x}`,
+                customId: `button-${x}`,
+                color: new Eset([0xff0000, 0x00ff00, 0x0000ff]).random(),
+                onClick: b => {
+                    b.setDisabled();
+                    b.noReply();
+                }
+            });
+        }
+
+        await g.send(m.channel);
+
         // Test createMessage().sendAs():
 
         // await m.delete();
@@ -65,54 +84,54 @@ client.on("message", /** @param {import("../src/structures/Message")} m */ async
 
         // Test components and createMessage():
         
-        const a = await createMessage("Test")
-        .embed({
-            description: "Test description"
-        })
-        // .button({ // To test ION
-        //     label: "An ION Button",
-        //     customId: "ionbtn"
+        // const a = await createMessage("Test")
+        // .embed({
+        //     description: "Test description"
         // })
-        .button({
-            label: "⭐ Test Toggle",
-            customId: "maintoggle",
-            // toggleRow: {
-            //     time: "30s",
-            //     row: [
-            //         {
-            //             label: "Toggled 1",
-            //             customId: "toggle1",
-            //             color: 0x00ff00,
-            //             onClick: async btn => {
-            //                 const i = await btn.openModal("tmodal800", "10s", f => f.reply("Nah"));
+        // // .button({ // To test ION
+        // //     label: "An ION Button",
+        // //     customId: "ionbtn"
+        // // })
+        // .button({
+        //     label: "⭐ Test Toggle",
+        //     customId: "maintoggled",
+        //     toggleRow: {
+        //         time: "30s",
+        //         row: [
+        //             {
+        //                 label: "Toggled 1",
+        //                 customId: "toggle1",
+        //                 color: 0x00ff00,
+        //                 onClick: async btn => {
+        //                     const i = await btn.openModal("tmodal800", "10s", f => f.reply("Nah"));
 
-            //                 if (!i) return console.log("Failed to submit modal.");
+        //                     if (!i) return console.log("Failed to submit modal.");
 
-            //                 console.log("Submitted", i.values.toArray());
-            //                 console.log("First by get", i.values.get(0));
-            //                 console.log("First", i.values[0]);
-            //                 console.log("By id", i.values.get("maininput"));
-            //                 console.log("By property reference", i.values.maininput);
-            //                 console.log("2nd by get", i.values.get(1));
-            //                 console.log("2nd", i.values[1]);
-            //                 console.log("2nd by id", i.values.get("maininput2"));
-            //                 console.log("2nd by property reference", i.values.maininput2);
-            //                 i.reply("> Test reply to **you**, sir");
-            //             }
-            //         },
-            //         {
-            //             label: "Toggled 2",
-            //             customId: "toggle2",
-            //             color: 0xff,
-            //             onClick: btn => {
-            //                 btn.setDisabled();
-            //                 return "noreply";
-            //             }
-            //         }
-            //     ]
-            // },
-            // acceptsClicksFrom: ["Member"]
-        })
+        //                     console.log("Submitted", i.values.toArray());
+        //                     console.log("First by get", i.values.get(0));
+        //                     console.log("First", i.values[0]);
+        //                     console.log("By id", i.values.get("maininput"));
+        //                     console.log("By property reference", i.values.maininput);
+        //                     console.log("2nd by get", i.values.get(1));
+        //                     console.log("2nd", i.values[1]);
+        //                     console.log("2nd by id", i.values.get("maininput2"));
+        //                     console.log("2nd by property reference", i.values.maininput2);
+        //                     i.reply("> Test reply to **you**, sir");
+        //                 }
+        //             },
+        //             {
+        //                 label: "Toggled 2",
+        //                 customId: "toggle2",
+        //                 color: 0xff,
+        //                 onClick: btn => {
+        //                     btn.setDisabled();
+        //                     btn.noReply();
+        //                 }
+        //             }
+        //         ]
+        //     },
+        //     acceptsClicksFrom: ["Member"]
+        // })
         // .selectMenu({
         //     placeholder: "Select Me",
         //     customId: "selectmenu",
@@ -135,7 +154,7 @@ client.on("message", /** @param {import("../src/structures/Message")} m */ async
         //     },
         //     // acceptsSelectionsFrom: ["668496738511749155"]
         // })
-        .send(m.channel);
+        // .send(m.channel);
 
         // Test adding ION:
         // ION.add("testNamespace", a.id, ["ionbtn"]);

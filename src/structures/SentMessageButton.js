@@ -16,6 +16,7 @@ module.exports = class SentMessageButton extends ExtendedStructure {
     #colorBeforeGrayed = "PRIMARY";
     constructor(baseButton, message) {
         super(message?.client, baseButton);
+        this.message = message;
         this.#b = baseButton;
         this.#edit = (key, value) => {
             message.components.edit(baseButton.customId, c => Object.defineProperty(c, key, {

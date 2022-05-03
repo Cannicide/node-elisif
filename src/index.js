@@ -89,6 +89,7 @@ module.exports.parseBuilder = util.parseBuilder
 module.exports.parseComponent = util.parseComponent
 module.exports.parseTime = util.parseTime
 module.exports.random = util.random
+module.exports.range = util.range;
 module.exports.selectMenu = util.selectMenu
 module.exports.settings = util.settings
 module.exports.similarity = util.similarity

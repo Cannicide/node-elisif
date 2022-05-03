@@ -14,6 +14,7 @@ module.exports = class SentMessageSelectMenu extends ExtendedStructure {
     #s;
     constructor(baseMenu, message) {
         super(message?.client, baseMenu);
+        this.message = message;
         this.#s = baseMenu;
         this.#edit = (key, value) => {
             message.components.edit(baseMenu.customId, c => Object.defineProperty(c, key, {

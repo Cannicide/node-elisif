@@ -41,6 +41,7 @@ export const parseBuilder = elisif.parseBuilder
 export const parseComponent = elisif.parseComponent
 export const parseTime = elisif.parseTime
 export const random = elisif.random
+export const range = elisif.range
 export const selectMenu = elisif.selectMenu
 export const settings = elisif.settings
 export const similarity = elisif.similarity

@@ -3,6 +3,7 @@
 const { Client } = require('discord.js');
 const server = require('express')();
 const { parseBuilder, Emap, boa, wait } = require('../util');
+const componentUtility = require('../util/components');
 const { syntax } = require('../features');
 const ElisifConfig = require('./config/Config');
 const EventExtensionManager = require('../managers/EventExtensionManager');
@@ -57,6 +58,7 @@ class ElisifClient extends Client {
         this.on("ready", () => {
 
             syntax.initialize(this);
+            componentUtility.initialize(this);
             this.debug(`\t${this.#config.name} is up and running (as of ${this.readyAt.toLocaleString()}).\n\n`);
 
             //Define simulated ClientUser:
