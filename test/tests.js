@@ -54,6 +54,7 @@ client.on("ready", async () => {
         // client.debug("Loaded constant:", client.constants.thekey);
         // client.constants.set("thekey", "trying to modify a constant will not work")
         // client.debug("Reloaded constant:", client.constants.get("thekey"));
+        // client.debug(client.constants.size);
         
     }
 });

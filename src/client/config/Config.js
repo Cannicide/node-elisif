@@ -155,6 +155,18 @@ module.exports = class ElisifConfig {
     }
 
     /**
+     * Enables simulation mode. Runs a simulated version of the ElisifClient, with simulated structures and no actual HTTP requests.
+     * Incredibly useful for debugging and testing, or for working on features while the Discord API is down.
+     * 
+     * Simulation is currently experimental and supports only a few structures and requests. Full support for simulation will only be coming in node-elisif v5.
+     * @returns {this} ElisifConfig
+     */
+    simulation() {
+        this.data.debug.simulation = true;
+        return this;
+    }
+
+    /**
      * Sets the deployment mode, i.e. whether the bot is in production mode or development mode.
      * This option makes it extremely easy to switch from testing commands locally to publishing them globally.
      * 
@@ -174,15 +186,6 @@ module.exports = class ElisifConfig {
 
         this.data.commands.mode = modes[mode.toLowerCase()] ?? null;
         this.data.commands.testGuilds = testGuilds;
-    }
-
-    /**
-     * Enables simulation mode. Runs a simulated version of the ElisifClient, with simulated structures and no actual HTTP requests.
-     * Incredibly useful for debugging and testing, or for working on features while the Discord API is down.
-     * @returns {this} ElisifConfig
-     */
-    simulation() {
-        this.data.debug.simulation = true;
         return this;
     }
 

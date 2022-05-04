@@ -1531,7 +1531,7 @@ class Edist extends Emap {
             get(target, prop, receiver) {
                 if (!(prop in target)) return target.get(prop);
 
-                const getter = Reflect.get(target, prop, receiver);
+                const getter = Reflect.get(target, prop);
                 if (typeof getter === 'function') return getter.bind(target);
                 return getter;
             },
@@ -1559,7 +1559,7 @@ class Edist extends Emap {
 
     /** @private */
     add(value) {
-        return this.set("" + Math.floor(this.size / 2), value, true);
+        return this.set("" + Math.floor(super.size / 2), value, true);
     }
 
     get(idOrObjectOrIndex) {
@@ -1576,6 +1576,10 @@ class Edist extends Emap {
 
     toString() {
         return `Edist { [${this.toArray().join(", ")}] }`;
+    }
+
+    get size() {
+        return Math.floor(super.size / 2);
     }
 
     *[Symbol.iterator]() {
