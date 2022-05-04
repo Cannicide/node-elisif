@@ -24,6 +24,11 @@ module.exports = class Guild extends ExtendedStructure {
 
     // TODO: settings manager
 
+    get me() {
+        const GuildMember = require('../structures/GuildMember');
+        return new GuildMember(this.client, this.#g.me);
+    }
+
     get members() {
         const GuildMemberManager = require('../managers/GuildMemberManager');
         return new GuildMemberManager(this.#g.members);
