@@ -1,0 +1,25 @@
+<main>
+    A <b>homepage</b> for <template>page/another.html</template>
+    <if name="name">
+        Name: {{name}}
+    </if>
+    Client constant 'thekey': <discord>client.constants.get("thekey")</discord>
+    Serving members: <discord>this.guilds.cache.map(g => g.members.cache.size).reduce((acc, size) => acc + size, 0);</discord>
+</main>
+<script>
+    import "elisif/jquery";
+    import "elisif/templates";
+    import "elisif/discord"
+</script>
+<if name="name">
+    <script>
+        import "elisif/linebreaks"
+    </script>
+</if>
+<script>
+    $("b").css("color", "red");
+    const value = "{{ name }}";
+</script>
+<script>
+    import "importable";
+</script>

@@ -2,6 +2,7 @@ const PacketManager = require('./managers/PacketManager');
 const Client = require('./client/Client');
 const ClientConfig = require('./client/config/Config');
 const util = require('./util');
+const { WebsiteManager } = require("./features/website");
 
 const Discord = require("discord.js");
 const { Sifbase, SIFDB } = require("sifbase");
@@ -62,6 +63,7 @@ module.exports.Equeue = util.Equeue
 module.exports.Eset = util.Eset
 module.exports.Estack = util.Estack
 module.exports.ReadonlyEdist = util.ReadonlyEdist
+module.exports.Website = WebsiteManager;
 module.exports.boa = util.boa
 module.exports.button = util.button
 module.exports.channels = util.channels

@@ -1,4 +1,5 @@
 import elisif from "./index.js";
+import BaseWebsite from "./features/website";
 
 // Manually export all individual properties from 'elisif'
 export let CREATE_MESSAGE_CUSTOM_METHODS = elisif.CREATE_MESSAGE_CUSTOM_METHODS;
@@ -14,6 +15,7 @@ export const Intent = elisif.Intent
 export const ReadonlyEdist = elisif.ReadonlyEdist
 export const Sifbase = elisif.Sifbase
 export const SIFDB = elisif.SIFDB
+export const Website = BaseWebsite.WebsiteManager
 export const boa = elisif.boa
 export const button = elisif.button
 export const channels = elisif.channels

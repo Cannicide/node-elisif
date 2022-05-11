@@ -16,6 +16,7 @@ class ElisifClient extends Client {
     extensions = new EventExtensionManager();
     static listener = null;
     static express = server;
+    static instance = null;
     #config;
     #customEmitter = new (require("events"))();
     #simEmitter = new (require("events"))();
@@ -31,8 +32,11 @@ class ElisifClient extends Client {
         this.debugging = this.#config?.debug?.logs;
         this.constants = new ReadonlyEdist();
 
+        //Setup initial instance
+        ElisifClient.instance ??= this;
+
         //Setup HTTP listener
-        ElisifClient.listener = ElisifClient.listener ?? server.listen(this.#config.port, () => {
+        ElisifClient.listener ??= server.listen(this.#config.port, () => {
             this.debug(`\n\n\t${this.#config.name} listening on port ${ElisifClient.listener.address().port} ${this.#config.commands.mode ? "(" + this.#config.commands.mode[0].toUpperCase() + this.#config.commands.mode.substring(1) + ")" : ""}`);
         });
 
@@ -178,7 +182,7 @@ class ElisifClient extends Client {
      * JS files that default export a function named "init" will be automatically called with the ElisifClient instance as the first argument.
      * Now supports both ESM and CJS module-type javascript files.
      * @param {String} dir - The directory to recursively load files from.
-     * @param {(cmd:NodeRequire,name:String)} [forEach] - If specified, will be called on each file with the file's exports and the file's name.
+     * @param {(cmd:NodeRequire,name:String,path:String)} [forEach] - If specified, will be called on each file with the file's exports and the file's name.
      */
     async loadFiles(dir, forEach = () => null) {
 
@@ -190,7 +194,7 @@ class ElisifClient extends Client {
                 return this.loadFiles(path);
             } else if (path.endsWith(".js") || path.endsWith(".cjs") || path.endsWith(".mjs")) {
                 let cmd = await this.loadFile(path);
-                forEach(cmd, file.split(".").slice(0, -1).join("."));
+                forEach(cmd, file.split(".").slice(0, -1).join("."), path);
                 return cmd;
             }
         });

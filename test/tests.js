@@ -10,7 +10,8 @@ const {
     toggleComponentRow,
     ion,
     range,
-    Eset
+    Eset,
+    Website
 } = require("../src");
 
 const client = new Client(config => {
@@ -37,7 +38,8 @@ modal("tmodal800")
     multiline: true
 });
 
-// client.constants.set("thekey", "value");
+client.constants.set("thekey", "value");
+
 client.on("ready", async () => {
     client.debug("Ready!");
     // client.debug(client);
@@ -230,5 +232,8 @@ ION.off("messageDelete", "testNamespace", m => {
 
 // Test database:
 // debugDatabase(__dirname + "/db.sifdb", "elisifIon");
+
+// Test website:
+Website.load(__dirname + "/website");
 
 client.login(loadToken(__dirname + "/token.json"));
