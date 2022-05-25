@@ -4,7 +4,7 @@ const Router = require("express").Router;
 
 class WebsiteManager {
 
-    static #dir = process.cwd()?.replace("C:", "").replace(/\\/g, "/");
+    static #dir = process.cwd()?.replace("C:", "").replace(/\\/g, "/") + "/website";
     static static = new Set();
 
     /**
