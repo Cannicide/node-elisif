@@ -1,5 +1,5 @@
 import elisif from "./index.js";
-import BaseWebsite from "./features/website";
+import BaseWebsite from "./features/website.js";
 
 // Manually export all individual properties from 'elisif'
 export let CREATE_MESSAGE_CUSTOM_METHODS = elisif.CREATE_MESSAGE_CUSTOM_METHODS;
